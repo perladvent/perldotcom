@@ -358,18 +358,10 @@ The `Apache::Timeit` package is a part of the *Apache-Perl-contrib* files collec
 References
 ---------------------------------------
 
--   The mod\_perl site's URL:
-    <http://perl.apache.org>
--   httperf -- webserver Benchmarking tool
-    <http://www.hpl.hp.com/personal/David_Mosberger/httperf.html>
--   http\_load -- another webserver Benchmarking tool
-    <http://www.acme.com/software/http_load/>
--   Apache-Perl-contrib package
-    <https://web.archive.org/web/20020602043342/http://perl.apache.org/dist/contrib/>
--   [Time::HiRes]({{<mcpan "Time::HiRes" >}}) and [Benchmark]({{<mcpan "Benchmark" >}}) is a part of the Core Perl
--   `LWP` (libwww-perl)
-    <https://metacpan.org/release/libwww-perl>
+- [The mod\_perl site's URL](http://perl.apache.org)
+- [httperf](http://www.hpl.hp.com/personal/David_Mosberger/httperf.html) -- webserver Benchmarking tool
+- [http\_load](http://www.acme.com/software/http_load/) -- another webserver Benchmarking tool
+- [Apache-Perl-contrib package](http://perl.apache.org/download/third_party.html)
+- [Time::HiRes]({{<mcpan "Time::HiRes" >}}) and [Benchmark]({{<mcpan "Benchmark" >}}) is a part of the Core Perl
+- [LWP (libwww-perl)](https://metacpan.org/release/libwww-perl)
 
-------------------------------------------------------------------------
-
-Return to [Perl.com](/)

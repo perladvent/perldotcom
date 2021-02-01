@@ -43,7 +43,7 @@ mod\_perl allows you to configure your Apache server and handlers in Perl (using
 
 ### How Fast and Stable Is mod\_perl?
 
-Many people ask, \`\`How much of a performance improvement does mod\_perl give?'' Well, it all depends on what you are doing with mod\_perl -- and possibly whom you ask. Developers report speed boosts from 200 percent to 2,000 percent. The best way to measure is to try it and see for yourself! (see <http://perl.apache.org/tidbits.html> and <https://web.archive.org/web/20020202121445/http://perl.apache.org/stories/> for the facts).
+Many people ask, \`\`How much of a performance improvement does mod\_perl give?'' Well, it all depends on what you are doing with mod\_perl -- and possibly whom you ask. Developers report speed boosts from 200 percent to 2,000 percent. The best way to measure is to try it and see for yourself! (see [mod_perl Articles in Printed and Online media](http://perl.apache.org/docs/offsite/articles.html) and [Success Stories](http://perl.apache.org/outstanding/index.html) for the facts).
 
 Every second of every day, thousands of Web sites all over the world are using mod\_perl to serve hundreds of thousands of Web pages. Apache and mod\_perl are some of the best-tested programs ever written. Of course, they are continually being developed and improved, but you do not have to work on the \`\`bleeding edge'' of development -- you can use the stable products for your sites and let others do the testing of the new versions for you.
 

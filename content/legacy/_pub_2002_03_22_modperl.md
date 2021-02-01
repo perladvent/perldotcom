@@ -25,7 +25,7 @@ In this article I'll show step-by-step installation and configuration scenarios,
 
 The mod\_perl installation was tested on many mainstream Unix platforms, so unless you have a nonstandard system, you shouldn't have any problems building the basic mod\_perl server.
 
-If you are a Windows user, then the easiest way is to use the binary package available from <http://perl.apache.org/distributions.html> From the same location, you can download the Linux RPM version and CVS snapshots. However, I always recommend to build the mod\_perl from the source, and as you will see in a moment, it's an easy thing to do.
+If you are a Windows user, then the easiest way is to use the binary package available from [http://perl.apache.org/distributions.html](http://perl.apache.org/distributions.html) From the same location, you can download the Linux RPM version and CVS snapshots. However, I always recommend to build the mod\_perl from the source, and as you will see in a moment, it's an easy thing to do.
 
 ### Installing mod\_perl Is Easy
 
@@ -66,7 +66,7 @@ Now we download the latest source distributions of Apache and mod\_perl. If you 
       % lwp-download http://www.apache.org/dist/httpd/apache_1.3.20.tar.gz
       % lwp-download http://perl.apache.org/dist/mod_perl-1.26.tar.gz
 
-You can make sure that you're downloading the latest stable versions by visiting the following distribution directories: *<http://www.apache.org/dist/httpd/>* and *<https://web.archive.org/web/20020204183625/http://perl.apache.org/dist/>*. As you have guessed already, the former URL is the main Apache distribution directory, the latter is the same thing for mod\_perl.
+You can make sure that you're downloading the latest stable versions by visiting the following distribution directories: [http://www.apache.org/dist/httpd/](http://www.apache.org/dist/httpd/) and [http://perl.apache.org/download/index.html](http://perl.apache.org/download/index.html). As you have guessed already, the former URL is the main Apache distribution directory, the latter is the same thing for mod\_perl.
 
 Untar both sources. You have to uncompress and untar the files. In addition to its main usage for tarring and untarring files, the GNU `tar` utility is able to uncompress files compressed by the `gzip` utility, when the `-z` option is used.
 
@@ -158,7 +158,7 @@ Note that you have to be *root* when starting the server if the server is going 
 
 After you start the server, check in the *error\_log* file (*/usr/local/apache/logs/error\_log* is the file's default location) that the server has indeed started. Don't rely on the status `apachectl` reports. You should see something like this:
 
-      [Thu Jun 22 17:14:07 2000] [notice] Apache/1.3.20 (Unix) 
+      [Thu Jun 22 17:14:07 2000] [notice] Apache/1.3.20 (Unix)
       mod_perl/1.26 configured -- resuming normal operations
 
 Now point your browser to *<http://localhost/>* or *<http://your.server.name/>* as configured with the `ServerName` directive. If you have set a `Port` directive with a value different from `80`, then apply this port number at the end of the server name. If you have used port 8080, then test the server with *<http://localhost:8080/>* or *<http://your.server.name:8080/>*. You should see the infamous *\`\`It worked''* page, which is an `index.html` file that `make install` in the Apache source tree installs for you. If you don't see this page, then something is wrong and you should check the contents of the *error\_log* file. You will find the path of the error log file by looking it up in the `ErrorLog` directive in *httpd.conf*.
