@@ -37,7 +37,7 @@ Perl.com has a [GitHub issue](https://github.com/tpf/perldotcom/issues/203) wher
 * [ravada](https://github.com/UPC/ravada) is a Perl module for remote virtual desktops managers.
 * [Task::Kensho](https://github.com/EnlightenedPerlOrganisation/task-kensho) is a list of recommended modules for Enlightened Perl development and [needs some help](http://blogs.perl.org/users/grinnz/2019/09/taskkensho-needs-your-help.html).
 
-To help you get your Pull Request accepted, [Mohammad S Anwar](https://www.perl.com/article/how-to-get-pull-request-accepted-/#author-bio-mohammad-anwar) has some advice:
+To help you get your Pull Request accepted, [Mohammad S Anwar](/article/how-to-get-pull-request-accepted-/#author-bio-mohammad-anwar) has some advice:
 
 * [How to become a CPAN contributor, Part 1](/article/how-to-become-cpan-contributor/) and [Part 2](/article/how-to-become-cpan-contributor-part-2/)
 * [How to get your Pull Request accepted?](/article/how-to-get-pull-request-accepted-/)
@@ -62,7 +62,7 @@ Follow hacktoberfest
 --------------------
 
 * Follow [@hacktoberfest](https://twitter.com/hacktoberfest) or [#hacktoberfest](https://twitter.com/hashtag/hacktoberfest)
-* See Perl.com's [earlier articles](https://www.perl.com/tags/hacktoberfest/).
+* See Perl.com's [earlier articles](/tags/hacktoberfest/).
 
 \
 Cover image © [DigitalOcean](https://www.digitalocean.com)

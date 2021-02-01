@@ -416,7 +416,7 @@ Whoops! Don't make the mistake I just made! `make cpan` must run as the root use
     Running install for module Text::Levenshtein
     Running make for J/JG/JGOLDBERG/Text-Levenshtein-0.05.tar.gz
     Fetching with LWP:
-      http://www.perl.com/CPAN/authors/id/J/JG/JGOLDBERG/Text-Levenshtein-0.05.tar.gz
+      http://www.cpan.org/CPAN/authors/id/J/JG/JGOLDBERG/Text-Levenshtein-0.05.tar.gz
 
     &x2026;
 

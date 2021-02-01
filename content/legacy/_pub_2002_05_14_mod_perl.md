@@ -227,7 +227,7 @@ Before we proceed, let's define what we mean by *module*, *library* and *program
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="http://perl.com/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
+<p><a href="/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
 <br />
 <a href="/pub/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
 <br />

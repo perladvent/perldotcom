@@ -37,7 +37,7 @@ The important outcome of this is that we now have a [Grand Unified Todo List](ht
 
 ### <span id="Perl_Power_Tools">Perl Power Tools</span>
 
-The discussion on what's left to do and the discussion on Perl website updates (see "Various") both touched on the [Perl Power Tools project](http://language.perl.com/). This was one of Tom's ideas - a set of standard Unix utilities, rewritten in Perl. The tools are very useful, and I can personally testify to their utility when I'm stuck out in the big, bad non-Unix world. Unfortunately, Tom had a hard disk crash a while ago, wiping out the mailing list for the project and some contributions; with one thing (Camel 3) or another, (a rather nasty accident recently) he's not found time to keep the project up to date.
+The discussion on what's left to do and the discussion on Perl website updates (see "Various") both touched on the [Perl Power Tools project](https://perlpowertools.com/). This was one of Tom's ideas - a set of standard Unix utilities, rewritten in Perl. The tools are very useful, and I can personally testify to their utility when I'm stuck out in the big, bad non-Unix world. Unfortunately, Tom had a hard disk crash a while ago, wiping out the mailing list for the project and some contributions; with one thing (Camel 3) or another, (a rather nasty accident recently) he's not found time to keep the project up to date.
 
 Both Casey West and Sean Dague made offers to take over the project, with Sean also proposing a CPAN-style "Bundle" of the tools. There's been no response from Tom yet.
 
