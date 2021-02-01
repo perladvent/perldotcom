@@ -74,7 +74,7 @@ With this code the first line looks the same except `:unix` has been appended to
 
 ### Yet another way
 
-In the comments section of a blog [post](http://blogs.perl.org/users/leon_timmermans/2013/05/why-you-dont-need-fileslurp.html), Damien Krotkine showed that it's also possible to slurp a file in "one line" of Perl, or at least without using `open`:
+In the comments section of a blog [post](https://web.archive.org/web/20130609035412/http://blogs.perl.org/users/leon_timmermans/2013/05/why-you-dont-need-fileslurp.html), Damien Krotkine showed that it's also possible to slurp a file in "one line" of Perl, or at least without using `open`:
 
 ```perl
 my $file_content = do{local(@ARGV,$/)=$filename;<>};

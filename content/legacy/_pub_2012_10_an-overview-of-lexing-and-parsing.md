@@ -106,7 +106,7 @@ There are many situations where the only path to a solution requires a lexer and
                 -> {label: is the key to}
                 [Victory]{fillcolor: red}
 
-    That's simpler for sure, but how does [Graph::Easy::Marpa]({{<mcpan "Graph::Easy::Marpa" >}}) work? Easy: *lex*, *parse*, render. More samples of [Graph::Easy::Marpa]({{<mcpan "Graph::Easy::Marpa" >}})'s work are [my Graph::Easy::Marpa examples](http://savage.net.au/Perl-modules/html/graph.easy.marpa/index.html).
+    That's simpler for sure, but how does [Graph::Easy::Marpa]({{<mcpan "Graph::Easy::Marpa" >}}) work? Easy: *lex*, *parse*, render. More samples of [Graph::Easy::Marpa]({{<mcpan "Graph::Easy::Marpa" >}})'s work are [my Graph::Easy::Marpa examples](https://web.archive.org/web/20121010094737/http://savage.net.au/Perl-modules/html/graph.easy.marpa/).
 
 It should be clear by now that lexing and parsing are in fact widespread, although they often operate out of sight, with only their rendered output visible to the average programmer, user, or web surfer.
 
@@ -361,7 +361,7 @@ This is a working column, in which I put formulas so that I can refer to them in
 Interpretation
 Comments to myself.
 
-I've put the STT for [STT for GraphViz2::Marpa](http://savage.net.au/Perl-modules/html/graphviz2.marpa/default.stt.html) online.
+I've put the STT for [STT for GraphViz2::Marpa](https://web.archive.org/web/20121007031749/http://savage.net.au/Perl-modules/html/graphviz2.marpa/default.stt.html) online.
 
 This spreadsheet has various advantages:
 
@@ -649,7 +649,7 @@ I've made available sample output from my wrapper scripts:
 
 [GraphViz2::Marpa](http://savage.net.au/Perl-modules/html/graphviz2.marpa/)
 
-[Graph::Easy::Marpa](http://savage.net.au/Perl-modules/html/graph.easy.marpa/)
+[Graph::Easy::Marpa](https://web.archive.org/web/20121010094737/http://savage.net.au/Perl-modules/html/graph.easy.marpa/)
 
 Be Patient with the Grammar
 ---------------------------

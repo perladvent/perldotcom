@@ -43,7 +43,7 @@ Of course the Graphviz package itself provides a set of programs which parse DOT
 
 Alternately you might provide add-on services to the Graphviz package. For instance, some users might want to find all clusters of nodes, where a cluster is a set of nodes connected to each other, but not connected to any nodes outside the cluster. Yet other uses might want to find all paths of a given length emanating from a given node.
 
-I myself have written algorithms which provide these last two features. See the module [GraphViz2::Marpa::PathUtils]({{<mcpan "GraphViz2::Marpa::PathUtils" >}}) and the [PathUtils demo page](http://savage.net.au/Perl-modules/html/graphviz2.pathutils/index.html).
+I myself have written algorithms which provide these last two features. See the module [GraphViz2::Marpa::PathUtils]({{<mcpan "GraphViz2::Marpa::PathUtils" >}}) and the [PathUtils demo page](https://web.archive.org/web/20130301074453/http://savage.net.au/Perl-modules/html/graphviz2.pathutils/).
 
 But back to using `Marpa::R2` from within `GraphViz2::Marpa`.
 
@@ -493,7 +493,7 @@ You've seen samples of lexer output and some parts of the grammar which both def
 
 Just like in the lexer, callback functions stockpile items which have passed Marpa::R2's attempt to match up input tokens with rule descriptors. This technique records exactly which rules fired in which order. After Marpa::R2 has run to completion, you have a stack of items whose elements are a (lexed and) parsed version of the original file. Your job is then to output that stack to a file, or await the caller of the parser to ask for the stack as an array reference. From there, the world.
 
-For more details, consult [my July 2011 article on Marpa::R2](http://savage.net.au/Ron/html/writing.graph.easy.marpa.html%3E).
+For more details, consult [my July 2011 article on Marpa::R2](https://web.archive.org/web/20120318014507/http://savage.net.au/Ron/html/writing.graph.easy.marpa.html).
 
 The Lexer and the State Transition Table - Revisited
 ----------------------------------------------------
@@ -539,7 +539,7 @@ I've provided several links of sample output for your perusal.
 
 -   [GraphViz2 (non-Marpa)](http://savage.net.au/Perl-modules/html/graphviz2/)
 -   [GraphViz2::Marpa](http://savage.net.au/Perl-modules/html/graphviz2.marpa/)
--   [GraphViz2::Marpa::PathUtils](http://savage.net.au/Perl-modules/html/graphviz2.pathutils/)
--   [Graph::Easy::Marpa](http://savage.net.au/Perl-modules/html/graph.easy.marpa/)
+-   [GraphViz2::Marpa::PathUtils](https://web.archive.org/web/20130301074453/http://savage.net.au/Perl-modules/html/graphviz2.pathutils/)
+-   [Graph::Easy::Marpa](https://web.archive.org/web/20130116143231/http://savage.net.au/Perl-modules/html/graph.easy.marpa/)
 
 Happy lexing and parsing!

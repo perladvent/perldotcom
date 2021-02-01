@@ -18,11 +18,11 @@
 }
 
 
-*Would you like to display beautiful syntax-highlighted Perl code on the web without using JavaScript? Maybe you'd like to use an existing [CSS markup theme](http://google-code-prettify.googlecode.com/svn/trunk/styles/index.html) without having to write in-line CSS in your Perl code? If yes, take a look at [PPI::Prettify]({{<mcpan "PPI::Prettify" >}}).*
+*Would you like to display beautiful syntax-highlighted Perl code on the web without using JavaScript? Maybe you'd like to use an existing [CSS markup theme](https://web.archive.org/web/20110315012239/http://google-code-prettify.googlecode.com/svn/trunk/styles/index.html) without having to write in-line CSS in your Perl code? If yes, take a look at [PPI::Prettify]({{<mcpan "PPI::Prettify" >}}).*
 
 ### Background
 
-The [prettify.js](https://code.google.com/p/google-code-prettify/) library does a wonderful job of robustly syntax coloring a large number of different languages for displaying code on the web. It's used on blogs.perl.org; we use it on PerlTricks.com. But because Perl is an ambiguous language, prettify.js often doesn't tokenize all of the code correctly. What's worse is if a user has JavaScript disabled, the code will not be highlighted at all. That's why I wrote [PPI::Prettify]({{<mcpan "PPI::Prettify" >}}). It runs in the backend using PPI::Document so it's faster more accurate than prettify.js, but outputs the same HTML codes as prettify.js does, enabling you to re-use any of the existing CSS themes available ([here](http://google-code-prettify.googlecode.com/svn/trunk/styles/index.html), [here](%0Ahttp://jmblog.github.io/color-themes-for-google-code-prettify/) and [here](%0Ahttp://stanleyhlng.com/prettify-js/#theme-bootstrap-light) for example).
+The [prettify.js](https://code.google.com/p/google-code-prettify/) library does a wonderful job of robustly syntax coloring a large number of different languages for displaying code on the web. It's used on blogs.perl.org; we use it on PerlTricks.com. But because Perl is an ambiguous language, prettify.js often doesn't tokenize all of the code correctly. What's worse is if a user has JavaScript disabled, the code will not be highlighted at all. That's why I wrote [PPI::Prettify]({{<mcpan "PPI::Prettify" >}}). It runs in the backend using PPI::Document so it's faster more accurate than prettify.js, but outputs the same HTML codes as prettify.js does, enabling you to re-use any of the existing CSS themes available ([here](https://web.archive.org/web/20110315012239/http://google-code-prettify.googlecode.com/svn/trunk/styles/index.html), [here](%0Ahttp://jmblog.github.io/color-themes-for-google-code-prettify/) and [here](%0Ahttp://stanleyhlng.com/prettify-js/#theme-bootstrap-light) for example).
 
 ### Requirements
 

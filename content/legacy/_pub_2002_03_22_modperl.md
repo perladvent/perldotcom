@@ -17,7 +17,7 @@
 
 
 
-### <span id="introduction">Introduction</span>
+### Introduction
 
 In the [previous article](/pub/2002/02/26/whatismodperl.html), I've shown quite amazing Web performance reports from companies that have deployed mod\_perl heavily. You might be surprised but you can quite easily get similarly amazing results if you move your service to mod\_perl as well. In fact, getting started with mod\_perl shouldn't take you more than 30 minutes -- the time it takes to compile and configure the server on a decent machine and get it running.
 
@@ -25,9 +25,9 @@ In this article I'll show step-by-step installation and configuration scenarios,
 
 The mod\_perl installation was tested on many mainstream Unix platforms, so unless you have a nonstandard system, you shouldn't have any problems building the basic mod\_perl server.
 
-If you are a Windows user, then the easiest way is to use the binary package available from <http://perl.apache.org/distributions.html.> From the same location, you can download the Linux RPM version and CVS snapshots. However, I always recommend to build the mod\_perl from the source, and as you will see in a moment, it's an easy thing to do.
+If you are a Windows user, then the easiest way is to use the binary package available from [http://perl.apache.org/distributions.html](http://perl.apache.org/distributions.html) From the same location, you can download the Linux RPM version and CVS snapshots. However, I always recommend to build the mod\_perl from the source, and as you will see in a moment, it's an easy thing to do.
 
-### <span id="installing mod_perl is easy">Installing mod\_perl Is Easy</span>
+### Installing mod\_perl Is Easy
 
 So let's start with the installation process. If you are an experienced Unix user, then you need no explanation for the following commands. Just copy and paste them and you will get the server installed.
 
@@ -51,7 +51,7 @@ What's left is to add a few configuration lines to *httpd.conf*, an Apache confi
 
 If you have stumbled upon a problem at any of the above steps, then don't despair -- the next section will explain in detail each step.
 
-### <span id="installing mod_perl detailed">Installing mod\_perl Detailed</span>
+### Installing mod\_perl Detailed
 
 If you didn't have the courage to try the steps in the previous section or you simply want to understand more before you try, then let's go through the fine details of the installation process. If you have successfully installed mod\_perl following the short scenario in the previous section, then you can skip this section and move on to the next one.
 
@@ -66,7 +66,7 @@ Now we download the latest source distributions of Apache and mod\_perl. If you 
       % lwp-download http://www.apache.org/dist/httpd/apache_1.3.20.tar.gz
       % lwp-download http://perl.apache.org/dist/mod_perl-1.26.tar.gz
 
-You can make sure that you're downloading the latest stable versions by visiting the following distribution directories: *<http://www.apache.org/dist/httpd/>* and *<http://perl.apache.org/dist/>*. As you have guessed already, the former URL is the main Apache distribution directory, the latter is the same thing for mod\_perl.
+You can make sure that you're downloading the latest stable versions by visiting the following distribution directories: [http://www.apache.org/dist/httpd/](http://www.apache.org/dist/httpd/) and [http://perl.apache.org/download/index.html](http://perl.apache.org/download/index.html). As you have guessed already, the former URL is the main Apache distribution directory, the latter is the same thing for mod\_perl.
 
 Untar both sources. You have to uncompress and untar the files. In addition to its main usage for tarring and untarring files, the GNU `tar` utility is able to uncompress files compressed by the `gzip` utility, when the `-z` option is used.
 
@@ -140,7 +140,7 @@ When the `make install` process completes, it will tell you how to start a fresh
 
 So far, we have completed the building and installation of the mod\_perl enabled Apache. The next steps are to configure *httpd.conf*, write a little test script, start the server and check that the test script is working.
 
-### <span id="configuring and starting mod_perl server">Configuring and Starting mod\_perl Server</span>
+### Configuring and Starting mod\_perl Server
 
 First things first; we want to make sure that our Apache was built correctly and that we can serve plain HTML files with it. Why do that? To minimize the number of possible trouble makers, if we find out that mod\_perl doesn't work. After you know that Apache can serve HTML files, you don't have to worry about it anymore. And if something goes wrong with mod\_perl, you have eliminated the possibility that the *httpd* binary or basic configurations are broken, you know that you are allowed to bind to the port you have configured your server to listen to, and that the browser you're testing with is just fine. Again, you should follow these guidelines when installing mod\_perl for the first time.
 
@@ -158,7 +158,7 @@ Note that you have to be *root* when starting the server if the server is going 
 
 After you start the server, check in the *error\_log* file (*/usr/local/apache/logs/error\_log* is the file's default location) that the server has indeed started. Don't rely on the status `apachectl` reports. You should see something like this:
 
-      [Thu Jun 22 17:14:07 2000] [notice] Apache/1.3.20 (Unix) 
+      [Thu Jun 22 17:14:07 2000] [notice] Apache/1.3.20 (Unix)
       mod_perl/1.26 configured -- resuming normal operations
 
 Now point your browser to *<http://localhost/>* or *<http://your.server.name/>* as configured with the `ServerName` directive. If you have set a `Port` directive with a value different from `80`, then apply this port number at the end of the server name. If you have used port 8080, then test the server with *<http://localhost:8080/>* or *<http://your.server.name:8080/>*. You should see the infamous *\`\`It worked''* page, which is an `index.html` file that `make install` in the Apache source tree installs for you. If you don't see this page, then something is wrong and you should check the contents of the *error\_log* file. You will find the path of the error log file by looking it up in the `ErrorLog` directive in *httpd.conf*.
@@ -182,7 +182,7 @@ Save the modified file.
 
 This configuration causes each URI starting with */perl* to be handled by the Apache mod\_perl module. It will use the handler from the Perl module `Apache::Registry`.
 
-### <span id="preparing the scripts directory">Preparing the Scripts Directory</span>
+### Preparing the Scripts Directory
 
 Now create a */home/httpd/perl/* directory if it doesn't yet exist. In order for you and Apache to be able to read, write and execute files we have to set correct permissions. You could get away by simply doing:
 
@@ -190,7 +190,7 @@ Now create a */home/httpd/perl/* directory if it doesn't yet exist. In order for
 
 This is very, very insecure and you **should not** follow this approach on the production machine. This is good enough when you just want to try things out and want to have as few obstacles as possible. Once you understand how things work, you should tighten the permissions of files served by Apache. In future articles, we will talk about setting proper file permissions.
 
-### <span id="the mod_perl rules apache::registry script">The \`\`mod\_perl rules'' Apache::Registry Script</span>
+### The \`\`mod\_perl rules'' Apache::Registry Script
 
 As you probably know, mod\_perl allows you to reuse CGI scripts written in Perl that were previously used under mod\_cgi. Therefore, our first test script can be as simple as:
 
@@ -285,7 +285,7 @@ If you have a problem with your scripts, then a good approach is to replace `Apa
 
 Now your scripts should work, unless there is something in them mod\_perl doesn't accept. We will discuss these nuances in future articles.
 
-### <span id="the mod_perl rules apache perl module">The \`\`mod\_perl rules'' Apache Perl Module</span>
+### The \`\`mod\_perl rules'' Apache Perl Module
 
 mod\_perl is about running both scripts and handlers. Although I have started to present mod\_perl using scripts, because it's easier if you have written CGI scripts before, the more advanced use of mod\_perl is about writing handlers. But have no fear. As you will see in a moment, writing handlers is almost as easy as writing scripts.
 
@@ -365,7 +365,7 @@ And to test use the URI:
 
       http://localhost/mod_perl_rules2
 
-### <span id="is this all i need to know about mod_perl">Is This All I Need to Know About mod\_perl?</span>
+### Is This All I Need to Know About mod\_perl?
 
 Obviously, the next question you'll ask is: *\`\`Is this all I need to know about mod\_perl?''*.
 
@@ -415,6 +415,6 @@ The *No* part:
 
 There are many more things to learn about mod\_perl and Web programming in general. In future articles, I'll talk in details about all these issues.
 
-#### <span id="acknowledgements">Acknowledgements</span>
+#### Acknowledgements
 
 Many thanks to Eric Cholet for reviewing this article.

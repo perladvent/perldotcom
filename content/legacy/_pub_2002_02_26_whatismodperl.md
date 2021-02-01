@@ -19,13 +19,13 @@
 
 In this article, I'll give an initial introduction to mod\_perl, make you want to give it a try and present a few examples of the well-known sites that are powered by mod\_perl enabled Apache.
 
-### <span id="what is mod_perl">What Is mod\_perl?</span>
+### What Is mod\_perl?
 
 mod\_perl is at the heart of the Apache/Perl integration project, which brings together the full power of the Perl programming language and the Apache Web server.
 
 From the outset, Apache was designed so that you can extend it by the addition of \`\`modules.'' Modules can do anything you need to do, such as rewrite HTTP requests, restrict access to certain pages and perform database lookups. Modules are normally written in C, which can be hard work. mod\_perl is a module that allows you to do all of these things, and more, by using Perl -- making the development much quicker than C. Apache is the most popular Web server on the Internet and mod\_perl is one of the most popular modules for extending it.
 
-### <span id="why is mod_perl so popular">Why Is mod\_perl So Popular?</span>
+### Why Is mod\_perl So Popular?
 
 If you love Perl and your favorite Web server is Apache, then you will love mod\_perl at first sight. Once you try it in action, you will never look back -- you will find mod\_perl has everything you need. But even if you do find that there is something missing, then just speak up. Before you can count to three, someone will have made it for you. Which, of course, will make you want to give something in return. Eventually you will contribute something on your own, and that will save time for a huge mod\_perl community so that they can create even more things for others to use.
 
@@ -41,9 +41,9 @@ There is little run-time overhead. In particular, under mod\_perl, there is no n
 
 mod\_perl allows you to configure your Apache server and handlers in Perl (using the `PerlSetVar` directive and the &lt;Perl&gt; sections). This makes the administration of servers with many virtual hosts and complex configuration a piece of cake. Hey, you can even define your own configuration directives!
 
-### <span id="how fast and stable is mod_perl">How Fast and Stable Is mod\_perl?</span>
+### How Fast and Stable Is mod\_perl?
 
-Many people ask, \`\`How much of a performance improvement does mod\_perl give?'' Well, it all depends on what you are doing with mod\_perl -- and possibly whom you ask. Developers report speed boosts from 200 percent to 2,000 percent. The best way to measure is to try it and see for yourself! (see <http://perl.apache.org/tidbits.html> and <http://perl.apache.org/stories/> for the facts).
+Many people ask, \`\`How much of a performance improvement does mod\_perl give?'' Well, it all depends on what you are doing with mod\_perl -- and possibly whom you ask. Developers report speed boosts from 200 percent to 2,000 percent. The best way to measure is to try it and see for yourself! (see [mod_perl Articles in Printed and Online media](http://perl.apache.org/docs/offsite/articles.html) and [Success Stories](http://perl.apache.org/outstanding/index.html) for the facts).
 
 Every second of every day, thousands of Web sites all over the world are using mod\_perl to serve hundreds of thousands of Web pages. Apache and mod\_perl are some of the best-tested programs ever written. Of course, they are continually being developed and improved, but you do not have to work on the \`\`bleeding edge'' of development -- you can use the stable products for your sites and let others do the testing of the new versions for you.
 
@@ -55,17 +55,17 @@ I want to show you just a few of the many busy and popular sites that are driven
 -   **CMPnet** -- <http://www.cmpnet.com,> a technology information network serves about 600k page views per day.
 -   **CitySearch.com** -- <http://www.citysearch.com/> is providing online city guides for more than 100 cities worldwide, citysearch.com helps people find and plan what they want to do and then lets them take action, offering local transactions such as buying event tickets and making hotel and restaurant reservations online. Its traffic exceeds 100 million page views a month.
 
-### <span id="how many sites are running a mod_perl enabled apache webserver">How Many Sites Are Running a mod\_perl Enabled Apache Web Server?</span>
+### How Many Sites Are Running a mod\_perl Enabled Apache Web Server?
 
 According to Netcraft ( <http://netcraft.com> ), as of August 2001 - 18 million hosts are running the free Apache Web server, which is about 60 percent of all checked in survey hosts!
 
 [Here is the graph](http://www.netcraft.com/survey/) of "Server Share in Internet Web Sites."
-What about mod\_perl? <http://perl.apache.org/netcraft/> reports that sites running mod\_perl account for 2,823,060 host names and 283,180 unique IP addresses. This is actually an underestimate, since when hosts are scanned for running Web servers only well-known ports are checked (80, 81, 8080 and a few others). If a server runs on unusual port, then it does not enter the count unless the owner has manually added it to the Netcraft database. Here is a graph of the growth in mod\_perl usage:
+What about mod\_perl? <https://web.archive.org/web/20020206221356/http://perl.apache.org/netcraft/> reports that sites running mod\_perl account for 2,823,060 host names and 283,180 unique IP addresses. This is actually an underestimate, since when hosts are scanned for running Web servers only well-known ports are checked (80, 81, 8080 and a few others). If a server runs on unusual port, then it does not enter the count unless the owner has manually added it to the Netcraft database. Here is a graph of the growth in mod\_perl usage:
 
 <img src="/images/_pub_2002_02_26_whatismodperl/mod_perl.jpg" alt="mod_perl growth graph" width="450" height="257" />
-For the latest numbers see <http://perl.apache.org/netcraft/> .
+For the latest numbers see <https://web.archive.org/web/20020206221356/http://perl.apache.org/netcraft/> .
 
-### <span id="the road ahead">The Road Ahead</span>
+### The Road Ahead
 
 You probably are excited about the release of Apache 2.0, the next generation of the best Web server. The major new features of this new generation of the Web server are threaded processes, which should make the server more scalable, and, of course, the very-welcomed filtering layer.
 
@@ -77,24 +77,24 @@ Do you believe in coincidences? Both Perl 5.6 and Apache 2.0 were released in th
 
 Of course, there are lots of bumps ahead of us. It will take time before all our applications will be able to benefit from the threading features. The main reason lies in fact that most of the Perl modules available from CPAN aren't thread safe. But you shouldn't despair. You can turn off threads for Perl code that is not thread safe or that uses modules that aren't thread safe.
 
-### <span id="i want mod_perl now, where do i get it">I Want mod\_perl Now, Where Do I Get It?</span>
+### I Want mod\_perl Now, Where Do I Get It?
 
 mod\_perl's home is <http://perl.apache.org>. From the site you will be able to download the latest mod\_perl software and various documentation; find commercial products and free third-party modules; read the success stories; and learn more about mod\_perl.
 
 It's quite important to get yourself subscribed to the mod\_perl list. If you want know what happens with mod\_perl, if you want to know what new features are being developed, if you want to influence and contribute or if you simply want to get help, then you don't want to skip this mailing list. To subscribe to the list send an empty e-mail to <modperl-subscribe@apache.org> .
 
-### <span id="are there any mod_perl books and documentation">Are There Any mod\_perl Books and Documentation?</span>
+### Are There Any mod\_perl Books and Documentation?
 
 Lincoln Stein and Doug MacEachern wrote [**Writing Apache Modules with Perl and C**](http://www.modperl.com/) . It can be purchased online from [O'Reilly](http://www.ora.com/catalog/wrapmod/) and [Amazon.com](http://www.amazon.com/exec/obidos/ASIN/156592567X/writinapachemodu).
 You will find a vast list of mod\_perl documentation on the mod\_perl home page: <http://perl.apache.org/> .
 
-### <span id="i love mod_perl, i want to know who wrote this great free product!">I Love mod\_perl, I Want to Know Who Wrote This Great Free Product!</span>
+### I Love mod\_perl, I Want to Know Who Wrote This Great Free Product!
 
 Well, Doug MacEachern is the person to blame :). He is the guy who gave mod\_perl to the mod\_perl community. He is the Linus of the mod\_perl project.
 
 But as you know in a big community, there are always people who love to help, and there is a bunch of developers from all around the world who patch mod\_perl, develop entire Perl modules for it, debug the server and advocate it. I'm afraid the list of contributing developers is too long to include here. But you are welcome to join the mod\_perl mailing list and see all these folks in action. I promise you, you won't regret the show, since you are going to learn much more than just about mod\_perl. See for yourself.
 
-### <span id="getting involved">Getting Involved</span>
+### Getting Involved
 
 If you are using mod\_perl or planning to use it, then it's a good idea to subscribe to the users mod\_perl mailing list. You should send an empty e-mail to <modperl-subscribe@apache.org> in order to do that.
 
@@ -102,7 +102,7 @@ If you are interested in helping out with development of mod\_perl 2.0, then you
 
 If you are familiar with mod\_perl, then you probably know about the big fat mod\_perl guide that I maintain with help of many people (http://perl.apache.org/guide/). However, mod\_perl 2.0 has quite a few things changed so the new documentation project has been started. You are welcome to check the updates on the <http://perl.apache.org/> site and subscribe to the documentation mailing list to stay up to date by sending e-mail to <docs-dev-subscribe@perl.apache.org> .
 
-### <span id="references">References</span>
+### References
 
 -   The Apache site's URL: <http://www.apache.org/>
 
