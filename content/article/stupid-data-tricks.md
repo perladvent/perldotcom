@@ -47,7 +47,6 @@ my $csv = Text::CSV_XS->new;
 while( my $row = $csv->getline(*DATA) ) {
 	say join ':', $row->@[3,7];
     }
-close $fh;
 
 __DATA__
 ...many CSV lines...
