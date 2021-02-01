@@ -24,7 +24,7 @@
         for (i=0; i < 10; i++){
           linkDomain = extractDomain(response[i].url);
           // skip links to articles on the host's own website
-          if (hosts.include(linkDomain) {
+          if (hosts.include(linkDomain)) {
             continue;
           }
           links.push('<li><a href="' + response[i].url + '">' + response[i].title + '</a><br/>' + linkDomain + '</li>');
