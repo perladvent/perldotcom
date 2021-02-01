@@ -47,7 +47,7 @@ Note that at the moment a few people already have Perforce access, such as Gurus
 
 ### <span id="Regex_Negation">Regex Negation</span>
 
-Jeff Pinyan noted that a new Java regex package contained support for the following regular expression negation: `[\w'\-[^\d]]`, which matches any word character, apostrophe, or hyphen, EXCEPT digits, and asked whether support was planned for Perl. He was pointed to the [Unicode Regular Expression Guidelines](http://web.archive.org/web/20050403115502/http://www.unicode.org:80/unicode/reports/tr18/), which proposed a syntax: `[AEIOU[^A]]`, but was rather unclear on many points. The backwards compatibility police made an appearance, but otherwise nothing was resolved.
+Jeff Pinyan noted that a new Java regex package contained support for the following regular expression negation: `[\w'\-[^\d]]`, which matches any word character, apostrophe, or hyphen, EXCEPT digits, and asked whether support was planned for Perl. He was pointed to the [Unicode Regular Expression Guidelines](http://www.unicode.org/reports/tr18/tr18-20.html), which proposed a syntax: `[AEIOU[^A]]`, but was rather unclear on many points. The backwards compatibility police made an appearance, but otherwise nothing was resolved.
 
 ### <span id="Various">Various</span>
 

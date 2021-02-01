@@ -196,7 +196,7 @@ Actually the real birthday was on 17 October, 1994, but there is an error in `pe
 
 ### <span id="Unicode_Character_Classes_Revisi">Unicode Character Classes Revisited</span>
 
-[Last week there was discussion of use of Unicode properties to define regex character classes](/pub/1999/10/p5pdigest/THISWEEK-19991017.html#charclasses). People interested should also consider reading the [Unicode Regular Expression Guidelines](http://web.archive.org/web/20050403115502/http://www.unicode.org:80/unicode/reports/tr18/).
+[Last week there was discussion of use of Unicode properties to define regex character classes](/pub/1999/10/p5pdigest/THISWEEK-19991017.html#charclasses). People interested should also consider reading the [Unicode Regular Expression Guidelines](http://unicode.org/reports/tr18/tr18-5.1.html).
 
 ### <span id="Sarathy_says_Yikes_again">Sarathy says \`Yikes' again</span>
 
