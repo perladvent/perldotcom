@@ -42,7 +42,7 @@ Last week I added the "Community Articles" toolbar to this website. It's a JavaS
 
 The list of links is updated hourly, served over HTTPS and hosted on GitHub pages. The widget is clever enough to skip links to articles from the host domain too (it never shows links to PerlTricks.com on this site).
 
-If you'd rather not add that sidebar, consider adding a [widget](http://web.archive.org/web/20170504023532/https://www.reddit.com/r/perl/widget) for `/r/perl`. The Reddit widget respects Do Not Track.
+If you'd rather not add that sidebar, consider adding a  **Editor's Note: Reddit does not support widgets anymore** for `/r/perl`. The Reddit widget respects Do Not Track.
 
 Finally, participate on [/r/perl](https://reddit.com/r/perl) and Twitter! Link to Perl resources and content you like; upvote or retweet Perl-related tweets. If you have something to say, reply to tweets or add yours comments to the subreddit links. Use the `#perl` hashtag.
 
