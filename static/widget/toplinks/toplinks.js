@@ -12,7 +12,7 @@
   }
 
   function buildLinksList() {
-    var hosts = [ 'perl.com', 'perldotcom.perl.org' ];
+    var hosts = [ 'www.perl.com', 'perl.com', 'perldotcom.perl.org' ];
     if (httpRequest.readyState === XMLHttpRequest.DONE) {
       if (httpRequest.status === 200 || httpRequest.status === 304) {
         response = JSON.parse(httpRequest.responseText);
