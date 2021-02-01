@@ -83,12 +83,12 @@ An ISP has three choices:
           ...
           # Included so that user can set his own configuration
           Include username.httpd.conf
-          
+
           # User-specific settings which will override any potentially
           # dangerous configuration directives in username.httpd.conf
           ...
           ...
-          
+
           username.httpd.conf
           -------------------
           # Settings that your user would like to add/override, like
@@ -127,9 +127,9 @@ Here are the specifics of this company:
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="http://perl.com/pub/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br />
+<p><a href="/pub/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br />
 <br />
-<a href="http://perl.com/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
+<a href="/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
 <br />
 <a href="/pub/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
 <br />

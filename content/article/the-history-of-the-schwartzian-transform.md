@@ -64,7 +64,7 @@ the parameters are the list, the function, and the predicate for the sort."
 
 Even with a little LISP knowledge you can tease out the same algorithm. You see the `mapcar`, `stable-sort`, and `mapcar`. (I used [SBCL](http://www.sbcl.org) for this).
 
-In 1995 Tom Christiansen wrote [Far More Than Everything You've Ever Wanted to Know About Sorting](http://www.perl.com/doc/FMTEYEWTK/sort.html) and extensively covered Randal's code even though he hadn't labeled yet. He didn't like it that much, but, to be fair, he says at the end:
+In 1995 Tom Christiansen wrote [Far More Than Everything You've Ever Wanted to Know About Sorting](/doc/FMTEYEWTK/sort.html) and extensively covered Randal's code even though he hadn't labeled yet. He didn't like it that much, but, to be fair, he says at the end:
 
 > I'm not ragging on Randal, merely teasing a bit. He's just trying to be clever, and that's what he does. I'm just submitting a sample chapter for his perusal for inclusion the mythical Alpaca Book :-)
 >
@@ -94,7 +94,7 @@ Tom Christiansen's April 1996 post in _comp.lang.perl.misc_ for [Read directory 
 
 In July, Colin Howarth started the thread ["Schwartzian transform of %$self ... help?"](https://groups.google.com/d/msg/comp.lang.perl.misc/6NEeX4XJx54/nmpMmReMIbcJ).
 
-In October, Tom posted [an expanded draft of perllol](https://groups.google.com/d/msg/comp.lang.perl.misc/VIKNMCeNFAM/18UApg1hWy8J) as part of his [Perl Data Structures Cookbook](http://www.perl.com/doc/FMTEYEWTK/pdsc/), which turned into [perldsc](http://perldoc.perl.org/perldsc.html) and [perllol](http://perldoc.perl.org/perllol.html). He uses the full term "Schwartzian Transform". The term was catching on.
+In October, Tom posted [an expanded draft of perllol](https://groups.google.com/d/msg/comp.lang.perl.misc/VIKNMCeNFAM/18UApg1hWy8J) as part of his [Perl Data Structures Cookbook](/doc/FMTEYEWTK/pdsc/), which turned into [perldsc](http://perldoc.perl.org/perldsc.html) and [perllol](http://perldoc.perl.org/perllol.html). He uses the full term "Schwartzian Transform". The term was catching on.
 
 ### Gaining notoriety
 

@@ -15,7 +15,7 @@
 
 
 
-### <span id="Notes">Notes</span>
+### Notes
 
 You can subscribe to an email version of this summary by sending an empty message to [`perl5-porters-digest-subscribe@netthink.co.uk`.](mailto:perl5-porters-digest-subscribe@netthink.co.uk)
 
@@ -23,11 +23,11 @@ Please send corrections and additions to `perl-thisweek-YYYYMM@simon-cozens.org`
 
 This week was slightly more busy than average, but was mainly little bitty threads that didn't really go everywhere; part of the problem may be that the bug reporting system's been playing up recently, and dumped a bunch of old bugs onto the list toward the end of the week.
 
-#### <span id="Help_wanted">Help wanted</span>
+#### Help wanted
 
 Very soon, I will have some rather important exams; in order for me to concentrate on these, I'd appreciate it if someone could help out by taking the P5P summary off my hands for a couple of weeks. If you want to do that, email me at the above address.
 
-### <span id="Cleaning_up_the_Todo_list">Cleaning up the Todo list</span>
+### Cleaning up the Todo list
 
 I started the week by posting a commentary on the three todo files, `perltodo.pod`, `Todo` and `Todo-5.6`. The ensuing discussion helped to weed out the items that had already been done, or that people didn't actually want anyway, or were no longer appropriate. It also raised the possibility of some kind of regexp engine BOF at TPC: either a tag-team bug-fixing effort, or a talk by people such as Jarkko and Hugo.
 
@@ -35,13 +35,13 @@ The important outcome of this is that we now have a [Grand Unified Todo List](ht
 
 > Lost in Space was a campy 1960's American scifi series about a family which was, umm, lost in space. At least once an episode the family's young son Will would get into some sort of trouble (usually due to his friendship with the evil stow-away Dr. Smith) and the family's robot would flail his arms about and yell "Danger, Will Robinson! Danger!"
 
-### <span id="Perl_Power_Tools">Perl Power Tools</span>
+### Perl Power Tools
 
-The discussion on what's left to do and the discussion on Perl website updates (see "Various") both touched on the [Perl Power Tools project](http://language.perl.com/). This was one of Tom's ideas - a set of standard Unix utilities, rewritten in Perl. The tools are very useful, and I can personally testify to their utility when I'm stuck out in the big, bad non-Unix world. Unfortunately, Tom had a hard disk crash a while ago, wiping out the mailing list for the project and some contributions; with one thing (Camel 3) or another, (a rather nasty accident recently) he's not found time to keep the project up to date.
+The discussion on what's left to do and the discussion on Perl website updates (see "Various") both touched on the [Perl Power Tools project](https://perlpowertools.com/). This was one of Tom's ideas - a set of standard Unix utilities, rewritten in Perl. The tools are very useful, and I can personally testify to their utility when I'm stuck out in the big, bad non-Unix world. Unfortunately, Tom had a hard disk crash a while ago, wiping out the mailing list for the project and some contributions; with one thing (Camel 3) or another, (a rather nasty accident recently) he's not found time to keep the project up to date.
 
 Both Casey West and Sean Dague made offers to take over the project, with Sean also proposing a CPAN-style "Bundle" of the tools. There's been no response from Tom yet.
 
-### <span id="Safe_signals">Safe signals</span>
+### Safe signals
 
 [Nick Ing-Simmons](http://simon-cozens.org/writings/whos-who.html#ING-SIMMONS) quietly sneaked safe signal handling into Perl. Benjamin Sugars seemed to understand it, and produced the following summary:
 
@@ -75,7 +75,7 @@ Almost immediately, [Abi](http://simon-cozens.org/writings/whos-who.html#ABIGAIL
 
 Nick also pointed out that PerlIO did manage to arrange the signal despatch at the right times, because it had `PERL_ASYNC_CHECK` in the right places. I don't know if system call restarting has been implemented, but I do know that Nick quietly fixed Abigail's bug as well.
 
-### <span id="Release_Numbering">Release Numbering</span>
+### Release Numbering
 
 [Alan](http://simon-cozens.org/writings/whos-who.html#BURLISON) asked what the release numbering policy for Perl was; his intuitions in fact turned out to be correct:
 > Perl release numbering is composed of a dotted &lt;Language Version&gt; &lt;Major Version&gt; &lt;Minor Version&gt; tuple.
@@ -95,7 +95,7 @@ Andy also explained how to [distribute non-core modules with Perl](http://www.xr
 
 Alan also bemoaned the problem that if Sun ships a Perl compiled with its own compilers, users who only have `gcc` won't be able to build external modules properly; he hacked up a solution whereby " `gccperl`" would see the right configuration.
 
-### <span id="Various">Various</span>
+### Various
 
 I started fiddling with `roffitall`, and then got sidetracked into making `roffitall`, `installperl` and `installman` all use a separate data file for identifying utilities that ship with Perl; [Mike Guy](http://simon-cozens.org/writings/whos-who.html#GUY) fixed up a bug which caused `AutoSplit` to generate bogus line numbers.
 

@@ -80,7 +80,7 @@ Of course, a plan this bold and this unanticipated will inevitably create anxiet
 
 ## Do you follow the development of "Cor"?
 
-Yes, I've been following the Cor project with great interest for the past six months or so. I've occasionally also been consulting on the design of this proposed new mechanism, discussing particular issues and offering suggestions to Ovid on several aspects of the design. *(Editor: See our earlier [interview with Ovid](https://www.perl.com/article/the-perl-ambassador-curtis-poe/))*
+Yes, I've been following the Cor project with great interest for the past six months or so. I've occasionally also been consulting on the design of this proposed new mechanism, discussing particular issues and offering suggestions to Ovid on several aspects of the design. *(Editor: See our earlier [interview with Ovid](/article/the-perl-ambassador-curtis-poe/))*
 
 Needless to say, I'm immensely excited by the prospect of having a genuinely declarative interface for class definitions added right into the core of the language! Even if that happy day is likely to be a few years away yet.
 

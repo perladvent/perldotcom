@@ -121,7 +121,7 @@ Notice that `.` (current directory) is the last directory in the list.
 Now let's load the module `strict.pm` and see the contents of `%INC`:
 
       % perl -e 'use strict; print map {"$_ => $INC{$_}\n"} keys %INC'
-      
+
       strict.pm => /usr/lib/perl5/5.00503/strict.pm
 
 Since `strict.pm` was found in */usr/lib/perl5/5.00503/* directory and */usr/lib/perl5/5.00503/* is a part of `@INC`, `%INC` includes the full path as the value for the key `strict.pm`.
@@ -136,7 +136,7 @@ It does nothing, but returns a true value when loaded. Now let's load it in diff
 
       % cd /tmp
       % perl -e 'use test; print map {"$_ => $INC{$_}\n"} keys %INC'
-      
+
       test.pm => test.pm
 
 Since the file was found relative to `.` (the current directory), the relative path is inserted as the value. If we alter `@INC` by adding */tmp* to the end:
@@ -144,7 +144,7 @@ Since the file was found relative to `.` (the current directory), the relative p
       % cd /tmp
       % perl -e 'BEGIN{push @INC, "/tmp"} use test; \
       print map {"$_ => $INC{$_}\n"} keys %INC'
-      
+
       test.pm => test.pm
 
 Here we still get the relative path, since the module was found first relative to `"."`. The directory */tmp* was placed after `.` in the list. If we execute the same code from a different directory, then the `"."` directory won't match,
@@ -152,7 +152,7 @@ Here we still get the relative path, since the module was found first relative t
       % cd /
       % perl -e 'BEGIN{push @INC, "/tmp"} use test; \
       print map {"$_ => $INC{$_}\n"} keys %INC'
-      
+
       test.pm => /tmp/test.pm
 
 so we get the full path. We can also prepend the path with `unshift()`, so it will be used for matching before `"."` and therefore we will get the full path as well:
@@ -160,7 +160,7 @@ so we get the full path. We can also prepend the path with `unshift()`, so it wi
       % cd /tmp
       % perl -e 'BEGIN{unshift @INC, "/tmp"} use test; \
       print map {"$_ => $INC{$_}\n"} keys %INC'
-      
+
       test.pm => /tmp/test.pm
 
 The code:
@@ -184,7 +184,7 @@ If you use this module, then you don't need to write a hard-coded path. The foll
       load.pl
       -------
       #!/usr/bin/perl
-      
+
       use FindBin ();
       use lib "$FindBin::Bin";
       use test;
@@ -193,7 +193,7 @@ If you use this module, then you don't need to write a hard-coded path. The foll
 In the above example, `$FindBin::Bin` is equal to */tmp*. If we move the script somewhere else... e.g. */tmp/x* in the code above `$FindBin::Bin` equals */home/x*.
 
       % /tmp/load.pl
-      
+
       test.pm => /tmp/test.pm
 
 This is just like `use lib` except that no hard-coded path is required.
@@ -227,7 +227,7 @@ Before we proceed, let's define what we mean by *module*, *library* and *program
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="http://perl.com/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
+<p><a href="/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
 <br />
 <a href="/pub/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
 <br />
@@ -270,7 +270,7 @@ If `require()` fails to load the file, either because it couldn't find the file 
       require.pl
       ----------
       #!/usr/bin/perl -w
-      
+
       eval { require "/file/that/does/not/exists"};
       if ($@) {
         print "Failed to load, because : $@"
@@ -280,12 +280,12 @@ If `require()` fails to load the file, either because it couldn't find the file 
 When we execute the program:
 
       % ./require.pl
-      
+
       Failed to load, because : Can't locate /file/that/does/not/exists in
       @INC (@INC contains: /usr/lib/perl5/5.00503/i386-linux
       /usr/lib/perl5/5.00503 /usr/lib/perl5/site_perl/5.005/i386-linux
       /usr/lib/perl5/site_perl/5.005 .) at require.pl line 3.
-      
+
       Hello
 
 We see that the program didn't die(), because *Hello* was printed. This *trick* is useful when you want to check whether a user has some module installed. If she hasn't, then it's not critical, because the program can run with reduced functionality without this module.
@@ -295,12 +295,12 @@ If we remove the `eval()` part and try again:
       require.pl
       ----------
       #!/usr/bin/perl -w
-      
+
       require "/file/that/does/not/exists";
       print "\nHello\n";
 
       % ./require1.pl
-      
+
       Can't locate /file/that/does/not/exists in @INC (@INC contains:
       /usr/lib/perl5/5.00503/i386-linux /usr/lib/perl5/5.00503
       /usr/lib/perl5/site_perl/5.005/i386-linux
@@ -330,10 +330,10 @@ Internally it calls `require()` to do the loading and compilation chores. When `
 
       use MyModule;
       BEGIN {require MyModule; MyModule->import; }
-      
+
       use MyModule qw(foo bar);
       BEGIN {require MyModule; MyModule->import("foo","bar"); }
-      
+
       use MyModule ();
       BEGIN {require MyModule; }
 

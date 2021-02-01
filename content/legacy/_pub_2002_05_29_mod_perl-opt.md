@@ -51,11 +51,11 @@ Let me stress it again: If you want to be successful in the Web service business
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="http://perl.com/pub/2002/05/22/mod_perl-isp.html">Finding a mod_perl ISP... or Becoming One</a><br />
+<p><a href="/pub/2002/05/22/mod_perl-isp.html">Finding a mod_perl ISP... or Becoming One</a><br />
 <br />
-<a href="http://perl.com/pub/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br />
+<a href="/pub/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br />
 <br />
-<a href="http://perl.com/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
+<a href="/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
 <br />
 <a href="/pub/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
 <br />
@@ -203,11 +203,11 @@ Make sure that the CPU is operating within its specifications. Many boxes are sh
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="http://perl.com/pub/2002/05/22/mod_perl-isp.html">Finding a mod_perl ISP... or Becoming One</a><br />
+<p><a href="/pub/2002/05/22/mod_perl-isp.html">Finding a mod_perl ISP... or Becoming One</a><br />
 <br />
-<a href="http://perl.com/pub/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br />
+<a href="/pub/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br />
 <br />
-<a href="http://perl.com/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
+<a href="/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
 <br />
 <a href="/pub/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
 <br />

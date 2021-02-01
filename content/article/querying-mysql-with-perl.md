@@ -160,6 +160,6 @@ I also had a mechanism that reported my consumption to Twitter, as a means of ac
 
 ## More Info
 
-The documentation for [DBI]({{<mcpan "DBI" >}}) and [DBD::mysql]({{<mcpan "DBD::mysql" >}}) are in-depth and excellent, and there are several articles on Perl.com that are well worth reading. [Mark-Jason Dominus has a Short Guide to DBI](https://www.perl.com/pub/1999/10/DBI.html/)  and [Simon Cozens wrote more generally about DBI](https://www.perl.com/pub/2003/10/23/databases.html/).
+The documentation for [DBI]({{<mcpan "DBI" >}}) and [DBD::mysql]({{<mcpan "DBD::mysql" >}}) are in-depth and excellent, and there are several articles on Perl.com that are well worth reading. [Mark-Jason Dominus has a Short Guide to DBI](/pub/1999/10/DBI.html/)  and [Simon Cozens wrote more generally about DBI](/pub/2003/10/23/databases.html/).
 
 For more on how to protect your databases, [Andy Lester](https://blog.petdance.com/) maintains [Bobby-Tables](http://bobby-tables.com/), which shows you how to avoid SQL injection attacks.

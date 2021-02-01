@@ -57,7 +57,7 @@
 
 So far, we've talked about Perl as a language for mangling numbers, strings, and files - the original purpose of the language. Now it's time to talk about what Perl does on the Web. In this installment, we're going to talk about CGI programming.
 
-### <span id="cgi">What is CGI?</span>
+### What is CGI?
 
 The Web is based on a client-server model: your browser (the client) making requests to a Web server. Most of these are simple requests for documents or images, which the server delivers to the browser for display.
 
@@ -73,7 +73,7 @@ Telling your CGI program that you want to use the CGI module is as simple as thi
 
 The `use CGI ':standard';` statement tells Perl that you want to use the CGI.pm module in your program. This will load the module and make a set of CGI functions available for your code.
 
-### <span id="cgi_program">A Real CGI Program</span>
+### A Real CGI Program
 
 Let's write our first real CGI program. Instead of doing something complex, we'll write something that will simply throw back whatever we throw at it. We'll call this script `backatcha.cgi`:
 
@@ -102,7 +102,7 @@ If this works, you will see in your browser ... a blank page! Don't worry, this 
 
 If it *didn't* work, you probably saw either an error message or the source code of the script. We'll try to diagnose these problems in the next section.
 
-### <span id="uhoh">Uh-Oh!</span>
+### Uh-Oh!
 
 If you saw an error message, your Web server had a problem running the CGI program. This may be a problem with the program or the file permissions.
 
@@ -202,7 +202,7 @@ or call C&lt;param()&gt; in a scalar context first to get only the first value:
 
 Always keep in mind that form items can have more than one value!
 
-### <span id="second_script">Our Second Script</span>
+### Our Second Script
 
 So now we know how to build a CGI program, and we've seen a simple example. Let's write something useful. In the last article, we wrote a pretty good HTTP log analyzer. Why not Web-enable it? This will allow you to look at your usage figures from anywhere you can get to a browser.
 
@@ -298,7 +298,7 @@ Finally, we rewrite the `report_section()` sub to output HTML instead of plain t
      print "</TABLE>\n";
         }
 
-### <span id="sorting">Sorting</span>
+### Sorting
 
 Perl allows you to sort lists with the `sort` keyword. By default, the sort will happen alphanumerically: numbers before letters, uppercase before lowercase. This is sufficient 99 percent of the time. The other 1 percent of the time, you can write a custom sorting routine for Perl to use.
 
@@ -335,7 +335,7 @@ For example, you have a list of names and phone numbers in the format "John Doe 
          } @phone_numbers;
          for $i (@sorted) { print $i, "\n"; }
 
-### <span id="trust">Trust No One</span>
+### Trust No One
 
 Now that we know how CGI programs can do what you want, let's make sure they won't do what you *don't* want. This is harder than it looks, because you can't trust anyone to do what you expect.
 
@@ -343,7 +343,7 @@ Here's a simple example: You want to make sure the HTTP log analyzer will never 
 
 [Download the source code for the HTTP analyzer with security enhancements](/media/_pub_2000_12_begperl4/httpsecured.pl).
 
-We saw that you can modify HTML forms when we pasted the pizza-topping sample code into our backatcha page. You can also use the URL to pass form items to a script - try going to `http://www.perl.com/2000/12/backatcha.cgi?itemsource=URL&typedby=you` in your browser. Obviously, if someone can do this with the backatcha script, they can also do it with your log analyzer and stick any value for `number` in that they want: "ALL" or "25000", or "four score and seven years ago."
+We saw that you can modify HTML forms when we pasted the pizza-topping sample code into our backatcha page. You can also use the URL to pass form items to a script - try going to `http://www.perl.com/2000/12/backatcha.cgi?itemsource=URL&typedby=you` in your browser (*Editor's note: or don't, because this no longer works*). Obviously, if someone can do this with the backatcha script, they can also do it with your log analyzer and stick any value for `number` in that they want: "ALL" or "25000", or "four score and seven years ago."
 
 Your form doesn't allow this, you say. Who cares? People will write custom HTML forms to exploit weaknesses in your programs, or will just pass bad form items to your script directly. You cannot trust anything users or their browsers tell you.
 
@@ -369,7 +369,7 @@ All of this has two significant benefits. First, you simplify your error-handlin
 
 Don't just take my word for it, though. The [CGI Security FAQ](http://www.w3.org/Security/Faq/) has more information about safe CGI programming in Perl than you ever thought could possibly exist, including a section listing some [security holes](http://www.w3.org/Security/Faq/wwwsf4.html#Q35) in real CGI programs.
 
-### <span id="play_around">Play Around!</span>
+### Play Around!
 
 You should now know enough about CGI programming to write a useful Web application. (Oh, and you learned a little bit more about sorting and comparison.)
 

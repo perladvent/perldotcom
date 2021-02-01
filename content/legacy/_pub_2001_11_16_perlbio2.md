@@ -48,7 +48,7 @@ There is some fascinating and important biology involved here; and in the progra
 
 ### Prosite Data
 
-The Prosite data can be downloaded to your computer. It is in the ASCII flat file called [prosite.dat](ftp://ca.expasy.org/databases/prosite/release_with_updates/prosite.dat) and is more than 4MB in size. A small version of this file created for this article, called *prosmall.dat*, is available [here](http://perl.com/2001/11/16/examples/prosmall.dat). This version of the data has just the first few records from the complete file, making it easier for you to download and test, and it's the file that we'll use in the code discussed later in this article.
+The Prosite data can be downloaded to your computer. It is in the ASCII flat file called [prosite.dat](ftp://ca.expasy.org/databases/prosite/release_with_updates/prosite.dat) and is more than 4MB in size. A small version of this file created for this article, called *prosmall.dat*, is available [here](/2001/11/16/examples/prosmall.dat). This version of the data has just the first few records from the complete file, making it easier for you to download and test, and it's the file that we'll use in the code discussed later in this article.
 
 Prosite also provides an accompanying data file, [prosite.doc](ftp://ca.expasy.org/databases/prosite/release_with_updates/prosite.doc), which contains documentation for all the records in *prosite.dat*. Though we will not use it for this article, I do recommend you look at it and think about how to use the information along with the code presented here if you plan on doing more with Prosite.
 
@@ -390,7 +390,7 @@ Now let's see the code at work. The following program uses the subroutines we've
     #
     exit;
 
-This program is available online as the file [parse\_prosite](http://perl.com/2001/11/16/examples/parse_prosite). The tiny example Prosite database is available as the file [prosmall.dat](http://perl.com/2001/11/16/examples/prosmall.dat). If you save these files on your (Unix, Linux, Macintosh, or Windows) computer, you can enter the following command at your command-line prompt (in the same folder in which you saved the two files):
+This program is available online as the file [parse\_prosite](/2001/11/16/examples/parse_prosite). The tiny example Prosite database is available as the file [prosmall.dat](/2001/11/16/examples/prosmall.dat). If you save these files on your (Unix, Linux, Macintosh, or Windows) computer, you can enter the following command at your command-line prompt (in the same folder in which you saved the two files):
 
     % perl parse_prosite
 

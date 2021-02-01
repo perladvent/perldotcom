@@ -16,23 +16,23 @@ A few months ago, as I was familiarizing myself with the old Perl.com source mat
 
 ### Here be Wizards
 
-*Where Wizards Fear to Tread* was a brief, perlguts-focused series started by [Simon Cozens](https://www.perl.com/authors/simon-cozens/). This particular [article]({{< relref "_pub_2002_05_07_optree.md" >}}) discusses the Perl op tree.
+*Where Wizards Fear to Tread* was a brief, perlguts-focused series started by [Simon Cozens](/authors/simon-cozens/). This particular [article]({{< relref "_pub_2002_05_07_optree.md" >}}) discusses the Perl op tree.
 
 I'd love to rekindle this series. If you have a Perl internals article that you'd like to write, please get in touch with [me](mailto:perl.com-editor@perl.org) or see our contributing [guide](https://github.com/dnmfarrell/perldotcom/blob/master/CONTRIBUTING.md) and send us a pull request with a draft article.
 
 ### Naughty Perl
 
-In the old Perl.com source code, I came across several raw documents which didn't appear to have been officially published on the site, but did contain good content. For example [Tom Christiansen's](https://www.perl.com/authors/tom-christiansen/) article [The Seven Deadly Sins of Perl]({{< relref "_doc_FMTEYEWTK_versus_perl.md" >}}) is a fun read worthy of your time. Can you count how many of the "sins" have been addressed since then?
+In the old Perl.com source code, I came across several raw documents which didn't appear to have been officially published on the site, but did contain good content. For example [Tom Christiansen's](/authors/tom-christiansen/) article [The Seven Deadly Sins of Perl]({{< relref "_doc_FMTEYEWTK_versus_perl.md" >}}) is a fun read worthy of your time. Can you count how many of the "sins" have been addressed since then?
 
 ### Just code it in Perl (6)?
 
-[Why not Translate Perl to C?]({{< relref "_pub_2001_06_27_ctoperl.md" >}}) is a sobering reminder by [Mark Jason Dominus](https://www.perl.com/authors/mark-jason-dominus/) that re-writing Perl as C often won't yield faster programs. The article ends with optimistic speculation that Perl 6 may use gradual typing and static data structures to deliver better performance. Fast-forward a few years, and good news! Perl 6 supports [sized and typed data structures](https://perl6advent.wordpress.com/2015/12/18/day-18-sized-typed-shaped/).
+[Why not Translate Perl to C?]({{< relref "_pub_2001_06_27_ctoperl.md" >}}) is a sobering reminder by [Mark Jason Dominus](/authors/mark-jason-dominus/) that re-writing Perl as C often won't yield faster programs. The article ends with optimistic speculation that Perl 6 may use gradual typing and static data structures to deliver better performance. Fast-forward a few years, and good news! Perl 6 supports [sized and typed data structures](https://perl6advent.wordpress.com/2015/12/18/day-18-sized-typed-shaped/).
 
 MJD regularly blogs at his own [site](https://blog.plover.com/).
 
 ### State of the Onion
 
-Larry has a good number of [articles](https://www.perl.com/authors/larry-wall/) on Perl.com, including some of the oldest. The [2nd State of the Onion]({{< relref "_pub_1998_08_show_onion.md" >}}) was published way back in August 1998, and it's still an entertaining read (or re-read if you've forgotten it).
+Larry has a good number of [articles](/authors/larry-wall/) on Perl.com, including some of the oldest. The [2nd State of the Onion]({{< relref "_pub_1998_08_show_onion.md" >}}) was published way back in August 1998, and it's still an entertaining read (or re-read if you've forgotten it).
 
 ### More to come
 

@@ -92,7 +92,7 @@ In order to use Maypole, we need what's called a driver module. This is a very s
     ISellIt->setup("dbi:mysql:isellit");
     ISellIt->config->{uri_base} = "http://localhost/isellit";
     ISellIt->config->{rows_per_page} = 10;
-    ISellIt->config->{loader}->relationship($_) for 
+    ISellIt->config->{loader}->relationship($_) for
         ("a manufacturer has products", "a category has products",
          "a subcategory has products", "a category has subcategories");
 
@@ -125,7 +125,7 @@ Now we use a Perl module that I wrote to help put together Maypole driver classe
 
 We tell `ISellIt` to go connect to the database and work out the tables and columns in our application. In addition, because we haven't changed any class defaults, it's assumed that we're going to use `Class::DBI` and Template Toolkit. We could have said that we want to use `Apache::MVC` with `DBIx::SearchBuilder` and `HTML::Mason`, but we don't.
 
-Maypole's `Class::DBI`-based class uses [`Class::DBI::Loader`]({{<mcpan "Class::DBI::Loader" >}}) to investigate the structure of the database, and then map the `product` table onto a `ISellIt::Product` class, and so on. You can read more about how `Class::DBI`'s table-class mapping works in [Tony's article about it](http://www.perl.com/pub/2002/11/27/classdbi.html).
+Maypole's `Class::DBI`-based class uses [`Class::DBI::Loader`]({{<mcpan "Class::DBI::Loader" >}}) to investigate the structure of the database, and then map the `product` table onto a `ISellIt::Product` class, and so on. You can read more about how `Class::DBI`'s table-class mapping works in [Tony's article about it](/pub/2002/11/27/classdbi.html).
 
 ```
     ISellIt->config->{uri_base} = "http://localhost/isellit";
@@ -140,7 +140,7 @@ Maypole's `Class::DBI`-based class uses [`Class::DBI::Loader`]({{<mcpan "Class::
 This says that we don't want to display the whole product list on one page; there'll be a maximum of 10 items on a page, before we get a page-view of the list.
 
 ```
-    ISellIt->config->{loader}->relationship($_) for 
+    ISellIt->config->{loader}->relationship($_) for
         ("a manufacturer has products", "a category has products",
          "a subcategory has products", "a category has subcategories");
 ```
@@ -175,21 +175,21 @@ Now, I am not very good at HTML design, which is why I like Maypole -- it makes 
     [% INCLUDE header %]
     [% PROCESS macros %]
 
-    <DIV class="nav"> You are in: [% maybe_link_view(product.category) %] > 
+    <DIV class="nav"> You are in: [% maybe_link_view(product.category) %] >
     [% maybe_link_view(product.subcategory) %] </DIV>
 
     <h2> [% product.name %]</h2>
-    <DIV class="manufacturer"> By [% maybe_link_view(product.manufacturer) %] 
+    <DIV class="manufacturer"> By [% maybe_link_view(product.manufacturer) %]
     </DIV>
     <DIV class="description"> [% product.description %] </DIV>
 
     <TABLE class="view">
     <TR>
-        <TD class="field"> Price (ex. VAT) </TD> 
+        <TD class="field"> Price (ex. VAT) </TD>
         <TD> &pound; [% product.cost %] </TD>
     </TR>
     <TR>
-        <TD class="field"> Part number  </TD> 
+        <TD class="field"> Part number  </TD>
         <TD> [% product.part_number %] </TD>
     </TR>
     </TABLE>
