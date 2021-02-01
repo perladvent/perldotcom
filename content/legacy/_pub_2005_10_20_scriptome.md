@@ -47,7 +47,7 @@ When I told Neeraj's story to others in our group, they said that they have stru
 
 ### Harnessing the Power of the Atom
 
-[The Scriptome](http://web.archive.org/web/20141013192711/http://sysbio.harvard.edu/csb/resources/computational/scriptome/) is a cookbook for munging biological data. The cookbook model nicely fits the UNIX paradigm of small tools that do simple operations. Instead of UNIX pipes, though, we encourage the use of intermediate files to avoid errors.
+[The Scriptome](content/legacy/_pub_2005_10_20_scriptome.md) is a cookbook for munging biological data. The cookbook model nicely fits the UNIX paradigm of small tools that do simple operations. Instead of UNIX pipes, though, we encourage the use of intermediate files to avoid errors.
 
 We use a couple of tricks in order to make this cookbook accessible to NPBs. We use the familiar web browser as our GUI and harness the power of hyperlinking to develop a highly granular, hierarchical table of contents for the tools. This means we can include dozens to hundreds of tools, without requiring users to remember command names. Another trick is syntax highlighting. We gray out most of the Perl, to signify that reading it is optional. Parameters--such as filenames, or maximum values to filter a certain column by--we highlight in attention-getting red. Finally, we make a conscious effort to avoid computer science or invented terminology. Instead, we use language biologists find familiar. For example, tools are "atoms," rather than "snippets."
 

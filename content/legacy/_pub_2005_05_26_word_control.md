@@ -20,7 +20,7 @@
 
 
 
-In a recent lightning article, [Customizing Emacs with Perl](/pub/2005/03/31/lightning2.html), [Bob DuCharme](/authors/bob-ducharme) explained how to use the Emacs `shell-command-on-region` function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the time needed to write the [elisp](http://web.archive.org/web/20101228163508/http://www.gnu.org:80/software/emacs/elisp-manual/html_mono/elisp.html) code needed for a particular string manipulation, especially when he knew how much easier it would be for him to do that manipulation with Perl. However, by using the Emacs function `shell-command-on-region`, Bob could have his cake an eat it too--keep editing with Emacs, while using Perl on demand for string manipulation.
+In a recent lightning article, [Customizing Emacs with Perl](/pub/2005/03/31/lightning2.html), [Bob DuCharme](/authors/bob-ducharme) explained how to use the Emacs `shell-command-on-region` function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the time needed to write the [elisp](https://www.gnu.org/software/emacs/manual/elisp.html) code needed for a particular string manipulation, especially when he knew how much easier it would be for him to do that manipulation with Perl. However, by using the Emacs function `shell-command-on-region`, Bob could have his cake an eat it too--keep editing with Emacs, while using Perl on demand for string manipulation.
 
 I've often been in the same boat as Bob, though while using Microsoft Word. When facing a thorny string manipulation problem, I, too, have found myself thinking, *This would be so easy if I could just use Perl!*
 
@@ -32,7 +32,7 @@ VBA doesn't offer any easy way to capture shell command output, so there are act
 
 It's true that VBA does include a `Shell()` function, but when using that function, there's no way to capture the output (if any) of the command invoked. To capture the output of a command run on the DOS shell, I've used a simple Perl script, named `clip2shell.pl` that takes one argument: a single string containing the name of the command to run (including any arguments). The current contents of the Windows clipboard are the input to that command, and the command's output is then put to the clipboard. (The `Win32::Clipboard` module is included in the standard [ActivePerl](http://www.activestate.com/Products/ActivePerl/) distribution). Here's the code:
 
-    # clip2shell.pl 
+    # clip2shell.pl
     # A script for running a DOS shell command
     # on the contents of the clipboard, then
     # putting the command's results back
@@ -125,7 +125,7 @@ With the `clip2shell.pl` script and the `ShellCommandOnRegion` function set up, 
 
 Here's the `OLDate2ISO.pl` script, modified slightly to make its substitution globally on all the dates in its input:
 
-    # Convert Outlook format date to ISO 8309 date 
+    # Convert Outlook format date to ISO 8309 date
     #(e.g. Wed 2/16/2005 5:27 PM to 2005-02-16T17:27)
     while (<>) {
       s{\w+ (\d+)/(\d+)/(\d{4}) (\d+):(\d+) ([AP])M} {

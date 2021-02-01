@@ -96,17 +96,17 @@ With the data structure designed, what's the right way to convert iCalendar data
                     ##-----------------------------------------
                     ## We hit the event end, so store it.
                     ##-----------------------------------------
-                    $calHash->{$eventHash->{'UID'}} = 
+                    $calHash->{$eventHash->{'UID'}} =
                     {
                          'UID'         => $eventHash->{'UID'},
                          'LOCATION'    => $eventHash->{'LOCATION'},
                           #...The rest of our keys...
-                         'URL'         => $eventHash->{'URL'} 
+                         'URL'         => $eventHash->{'URL'}
                     };
                     last SWITCH; }
 
 
-              ## we will split the key:value pair into an array 
+              ## we will split the key:value pair into an array
                  and grab the value (1st element)
             if ( $_ =~ /^UID/ ) {
                     $eventHash->{'UID'} = ( split ( /:/, $_ ) )[1];
@@ -129,7 +129,7 @@ While this example does a good job of showing how to fill the data structure, it
 
 ### The Dot Specification
 
-[Dot](http://www.graphviz.org/Documentation/dotguide.pdf) (PDF) is a diagramming, or directed, graph language created by Emden Gansner, Eleftherios Koutsofios, and Stephen North at Bell Labs. There are several implementations of Dot, including [GraphViz](http://www.graphviz.org), [WebDot](http://web.archive.org/web/20171026075454/http://www.graphviz.org:80/webdot/), and [Grappa](http://www.research.att.com/~john/Grappa/). Interestingly, [OmniGraffle](http://www.omnigroup.com/applications/omnigraffle/), a powerful diagramming tool for Macintosh computers, can read simple Dot files.
+[Dot](http://www.graphviz.org/Documentation/dotguide.pdf) (PDF) is a diagramming, or directed, graph language created by Emden Gansner, Eleftherios Koutsofios, and Stephen North at Bell Labs. There are several implementations of Dot, including [GraphViz](http://www.graphviz.org), [WebDot](https://gitlab.com/graphviz/webdot), and [Grappa](http://www.research.att.com/~john/Grappa/). Interestingly, [OmniGraffle](http://www.omnigroup.com/applications/omnigraffle/), a powerful diagramming tool for Macintosh computers, can read simple Dot files.
 
 ### Creating Dot Files
 
@@ -149,7 +149,7 @@ The specification describes additional complexity in terms of sub-objects/struct
 Consider how you might create a Dot file from the data parsed earlier. If you pass to the function that handles the writing of the Dot file the reference to the filehandle of your Dot input file (the output of your conversion) along with the reference to your parsed data structure, then you might generate your Dot file along these lines:
 
     ##------------------------------
-      ## Name our Dot graph 
+      ## Name our Dot graph
       ##------------------------------
       if ( $raw->{'CALNAME'} ) {
           print { $$file } 'digraph "'. $raw->{'CALNAME'} ."\" {\n\n";
@@ -171,8 +171,8 @@ Consider how you might create a Dot file from the data parsed earlier. If you pa
 
        ##-----------------------------------------
        ## Generate our Dot data
-       ##   we will wrap most data in double-quotes 
-       ##   since most Dot interpreters don't like spaces, 
+       ##   we will wrap most data in double-quotes
+       ##   since most Dot interpreters don't like spaces,
        ##   something allowed in iCal data
        ##-----------------------------------------
        foreach $key ( keys %$raw ) {
@@ -208,12 +208,12 @@ Consider how you might create a Dot file from the data parsed earlier. If you pa
                 ## build relations based upon time
                 ##------------------------------
              push( @timeLine,    '"'. $block->{'START'} .'"' );
-             print { $$file } '   "'. $block->{'UID'} .'":START  
+             print { $$file } '   "'. $block->{'UID'} .'":START
                 -> "'. $block->{'START'} ."\"\;\n\n";
 
              if ( $$block{'END'} ) {
                 push( @timeLine,    '"'. $block->{'END'} .'"' );
-                print { $$file } '   "'. $block->{'UID'} .'":END    
+                print { $$file } '   "'. $block->{'UID'} .'":END
                    -> "'. $block->{'END'} ."\"\;\n\n";
              }
 
@@ -253,13 +253,13 @@ This code will produce the following Dot file:
        ratio    = fill;
        rankdir  = LR;
 
-       "5F88A0EC_AD21_428E_AAAD_005F1B1AB72E" [ shape = record, 
-          label = "Set up File Server | <START> Start | 
+       "5F88A0EC_AD21_428E_AAAD_005F1B1AB72E" [ shape = record,
+          label = "Set up File Server | <START> Start |
           <END> End  | Music server for the kids."];
 
        "5F88A0EC_AD21_428E_AAAD_005F1B1AB72E":START  -> "20050615T180000";
 
-       "BDF17182_CA21_4752_8D4F_40A4FE47C90D" [ shape = record, label = "WWDC | 
+       "BDF17182_CA21_4752_8D4F_40A4FE47C90D" [ shape = record, label = "WWDC |
           <START> Start | <END> End  | Lots of sessions."];
 
        "BDF17182_CA21_4752_8D4F_40A4FE47C90D":START  -> "20050606";

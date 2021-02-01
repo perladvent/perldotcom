@@ -36,7 +36,7 @@ This was a bit of a Unicode-heavy week; maybe it's because that's what I particu
 
 Jarkko got around to implementing a `sprintf` which lets you reorder the parameters, so that you can now say:
 
-            printf "%2\$d %1\$d\n", 12, 34;           
+            printf "%2\$d %1\$d\n", 12, 34;
             # will print "34 12\n"
 
 There was some discussion as to whether that's the right way to do it, but that's the way libc seems to do it, so we should too. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-10/msg00962.html)
@@ -81,7 +81,7 @@ Work on the `Encode` module to convert character sets continues, and it's really
 
 Peter Prymmer's did an excellent job and created an EBCDIC-&gt;Unicode mapping with it; Nick came up with a POD translation of the documentation on [how Encode's mapping files work](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-10/msg01122.html). (We stole them from Tcl! Ha!)
 
-The thread wandered off into discussion of what the Unicode characters `0x0000` and `0xFFFF` mean. Don't just guess, see the [Unicode FAQ](https://unicode.org//faq/)!
+The thread wandered off into discussion of what the Unicode characters `0x0000` and `0xFFFF` mean. Don't just guess, see the [Unicode FAQ](https://unicode.org/faq/)!
 
 ### <span id="Switch">Switch</span>
 

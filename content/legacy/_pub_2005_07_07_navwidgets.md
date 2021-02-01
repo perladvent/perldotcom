@@ -35,7 +35,7 @@ Usually, the items in the navigation menus are a tree structure (as is the case 
 
 Many sites provide links to traverse the pages of the site in order: a *Next* link to go to the next page, a *Previous* link to go to the previous page, an *Up* link to go to the section containing the current page, a *Contents* link to go to the main page, and so on.
 
-HTML can represent these links by using `<head>` tag and `<link rel="next" href="" />`. directives. Mozilla, Firefox, and Opera all support these tags. They can be also visible in the HTML as normal links, as is the case with [GNU Documentation](http://web.archive.org/web/20060204124456/http://www.gnu.org:80/software/make/manual/html_node/make_toc.html).
+HTML can represent these links by using `<head>` tag and `<link rel="next" href="" />`. directives. Mozilla, Firefox, and Opera all support these tags. They can be also visible in the HTML as normal links, as is the case with [GNU Documentation](https://www.gnu.org/software/make/).
 
 #### Site Maps and Breadcrumb Trails
 

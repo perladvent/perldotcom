@@ -51,14 +51,14 @@
 
 ------------------------------------------------------------------------
 
-### <span id="exegesis_5">Exegesis 5</span>
+### Exegesis 5
 
-**<span id="item_Come_gather_round_Mongers%2C_whatever_you_code">*Come gather round Mongers, whatever you code*</span>**
-**<span id="item_And_admit_that_your_forehead%27s_about_to_explode">*And admit that your forehead's about to explode*</span>**
-**<span id="item_%27Cos_Perl_patterns_induce_complete_brain_overloa">*'Cos Perl patterns induce complete brain overload*</span>**
-**<span id="item_If_there%27s_source_code_you_should_be_maintainin%">*If there's source code, you should be maintainin'*</span>**
-**<span id="item_Then_you_better_start_learnin%27_Perl_6_patterns_s">*Then you better start learnin' Perl 6 patterns soon*</span>**
-**<span id="item_For_the_regexes%2C_they_are_a%2Dchangin%27">*For the regexes, they are a-changin'*</span>**
+***Come gather round Mongers, whatever you code***
+***And admit that your forehead's about to explode***
+***'Cos Perl patterns induce complete brain overload***
+***If there's source code, you should be maintainin'***
+***Then you better start learnin' Perl 6 patterns soon***
+***For the regexes, they are a-changin'***
 
 Apocalypse 5 marks a significant departure in the ongoing design of Perl 6.
 
@@ -68,24 +68,6 @@ Larry could have taken the same approach with regular expressions. He could have
 
 Fortunately, however, he's taking a much broader view of Perl's future than that. And he saw that the problem with regular expressions was *not* that they lacked a `(?$var:...)` extension to do named captures, or that they needed a `\R` metatoken to denote a recursive subpattern, or that there was a `[:YourNamedCharClassHere:]` mechanism missing.
 
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td><p>Related articles:</p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p></td>
-</tr>
-</tbody>
-</table>
 
 He saw that those features, laudable as they were individually, would just compound the real problem, which was that Perl 5 regular expressions were already groaning under the accumulated weight of their own metasyntax. And that a decade of accretion had left the once-clean notation arcane, baroque, inconsistent and obscure.
 
@@ -97,9 +79,9 @@ As Piers Cawley has so eloquently misquoted: *“It is a truth universally ackno
 
 ------------------------------------------------------------------------
 
-### <span id="#whats_the_diff">What's the diff?</span>
+### What's the diff?
 
-So let's take a look at some of those new features. To do that, we'll consider a series of examples structured around a common theme: recognizing and manipulating data in the Unix *[diff](http://web.archive.org/web/20031204104626/http://www.gnu.org:80/manual/diffutils-2.8.1/html_node/Detailed-Normal.html)*
+So let's take a look at some of those new features. To do that, we'll consider a series of examples structured around a common theme: recognizing and manipulating data in the Unix *[diff](https://www.gnu.org/software/diffutils/)*
 
 A classic diff consists of zero-or-more text transformations, each of which is known as a “hunk”. A hunk consists of a modification specifier, followed by one or more lines of context. Each hunk is either an append, a delete, or a change, and the type of hunk is specified by a single letter (`'a'`, `'d'`, or `'c'`). Each of these single-letter specifiers is prefixed by the line numbers of the lines in the original document it affects, and followed by the equivalent line numbers in the transformed file. The context information consists of the lines of the original file (each preceded by a `'<'` character), then the lines of the transformed file (each preceded by a `'>'`). Deletes omit the transformed context, appends omit the original context. If both contexts appear, then they are separated by a line consisting of three hyphens.
 
@@ -109,9 +91,9 @@ The preferred way is, of course, to specify such formats as patterns. And, indee
 
         $file = rx/ ^  <$hunk>*  $ /;
 
-        $hunk = rx :i { 
+        $hunk = rx :i {
             [ <$linenum> a :: <$linerange> \n
-              <$appendline>+ 
+              <$appendline>+
             |
               <$linerange> d :: <$linenum> \n
               <$deleteline>+
@@ -138,12 +120,12 @@ The preferred way is, of course, to specify such formats as patterns. And, indee
 
         my $text is from($*ARGS);
 
-        print "Valid diff" 
+        print "Valid diff"
             if $text =~ /<$file>/;
 
 ------------------------------------------------------------------------
 
-### <span id="starting_gently">Starting gently</span>
+### Starting gently
 
 There's a lot of new syntax there, so let's step through it slowly, starting with:
 
@@ -166,7 +148,7 @@ In Perl 6, an embedded variable becomes part of the rule's implementation rather
 
 *Editor's note: this document is out of date and remains here for historic interest. See [Synopsis 5](http://dev.perl.org/perl6/doc/design/syn/S05.html) for the current design information.*
 
-### <span id="lay_it_out_for_me">Lay it out for me</span>
+### Lay it out for me
 
 In Perl 6, each rule implicitly has the equivalent of the Perl 5 `/x` modifier turned on, so we could lay out (and annotate) that first pattern like this:
 
@@ -192,7 +174,7 @@ The compensation is that, in Perl 6, a `\n` in a pattern matches a *logical* new
 
 ------------------------------------------------------------------------
 
-### <span id="interpolate_ye_not">Interpolate ye not ...</span>
+### Interpolate ye not ...
 
 The really new bit in the `$file` rule is the `<$hunk>` element. It's a directive to grab whatever's in the `$hunk` variable (presumably another pattern) and attempt to match it at that point in the rule. The important point is that the contents of `$hunk` are only grabbed when the pattern matching mechanism actually needs to match against them, *not* when the rule is being constructed. So it's like the mysterious `(??{...})` construct in Perl 5 regexes.
 
@@ -214,7 +196,7 @@ which in Perl 5 we'd have to write as:
 
         # Perl 5
         my $target = <>;                  # Get literal string to search for
-        chomp $target;                    # No autochomping in Perl 5 
+        chomp $target;                    # No autochomping in Perl 5
         $text =~ m/ (?:\Q$target\E)* /x;  # Search for it, quoting metas
 
 Raw arrays and hashes interpolate as literals, too. For example, if we use an array in a Perl 6 pattern, then the matcher will attempt to match any of its elements (each as a literal). So:
@@ -226,7 +208,7 @@ Raw arrays and hashes interpolate as literals, too. For example, if we use an ar
 
 is the same as:
 
-        # Perl 5 
+        # Perl 5
         @cmd = ('get','put','try','find','copy','fold','spindle','mutilate');
         $cmd = join '|', map { quotemeta $_ } @cmd;
 
@@ -236,7 +218,7 @@ By the way, putting the array into angle brackets would cause the matcher to try
 
 ------------------------------------------------------------------------
 
-### <span id="the_incredible_hunk">The incredible `$hunk`</span>
+### The incredible `$hunk`
 
 The rule that `<$hunk>` tries to match against is the next one defined in the program. Here's the annotated version of it:
 
@@ -281,7 +263,7 @@ The first thing to note is that, like a Perl 5 `qr`, a Perl 6 `rx` can take (alm
 
 ------------------------------------------------------------------------
 
-### <span id="modified_modifiers">Modified modifiers</span>
+### Modified modifiers
 
 In fact, the only characters not permitted as `rx` delimiters are `':'` and `'('`. That's because `':'` is the character used to introduce pattern modifiers in Perl 6, and `'('` is the character used to delimit any arguments that might be passed to those pattern modifiers.
 
@@ -291,12 +273,12 @@ The only modifier used in the `$hunk` rule is the `:i` (case-insensitivity) modi
 
 The other rule modifiers available in Perl 6 are:
 
-**<span id="item_%3Ae_or_%3Aeach">`:e` or `:each`</span>**
-  
+**`:e` or `:each`**
+
 This is the replacement for Perl 5's `/g` modifier. It causes a match (or substitution) to be attempted as many times as possible. The name was changed because “each” is shorter and clearer in intent than “globally”. And because the `:each` modifier can be combined with other modifiers (see below) in such a way that it's no longer “global” in its effect.
 
-**<span id="item_x">`:x($count)`</span>**
-  
+**`:x($count)`**
+
 This modifier is like `:e`, in that it causes the match or substitution to be attempted repeatedly. However, unlike `:e`, it specifies exactly how many times the match must succeed. For example:
 
         "fee fi "       =~ m:x(3)/ (f\w+) /;  # fails
@@ -314,8 +296,8 @@ There is also a series of tidy abbreviations for all the constant cases:
         m:3x/ pattern /         # same as: m:x(3)/ pattern /
         # etc.
 
-**<span id="item_nth">`:nth($count)`</span>**
-  
+**`:nth($count)`**
+
 This modifier causes a match or substitution to be attempted repeatedly, but to ignore the first `$count-1` successful matches. For example:
 
         my $foo = "fee fi fo fum";
@@ -356,12 +338,12 @@ The various types of repetition modifiers can also be combined by separating the
 
 Note that the order in which the two modifiers are specified doesn't matter.
 
-**<span id="item_%3Ap5_or_%3Aperl5">`:p5` or `:perl5`</span>**
-  
+**`:p5` or `:perl5`**
+
 This modifier causes Perl 6 to interpret the contents of a rule as a regular expression in Perl 5 syntax. This is mainly provided as a transitional aid for porting Perl 5 code. And to mollify the curmudgeonly.
 
-**<span id="item_%3Aw_or_%3Aword">`:w` or `:word`</span>**
-  
+**`:w` or `:word`**
+
 This modifier causes whitespace appearing in the pattern to match optional whitespace in the string being matched. For example, instead of having to cope with optional whitespace explicitly:
 
         $cmd =~ m/ \s* <keyword> \s* \( [\s* <arg> \s* ,?]* \s* \)/;
@@ -384,8 +366,8 @@ rather than:
 
 So it won't accidentally match strings like `"asymmetric ally"` or `"asymmetrically"`.
 
-**<span id="item_%3Aany">`:any`</span>**
-  
+**`:any`**
+
 This modifier causes the rule to match a given string in every possible way, simultaneously, and then return all the possible matches. For example:
 
         my $str = "ahhh";
@@ -393,8 +375,8 @@ This modifier causes the rule to match a given string in every possible way, sim
         @matches =  $str =~ m/ah*/;         # returns "ahhh"
         @matches =  $str =~ m:any/ah*/;     # returns "ahhh", "ahh", "ah", "a"
 
-**<span id="item_%3Au0%2C_%3Au1%2C_%3Au2%2C_%3Au3">`:u0`, `:u1`, `:u2`, `:u3`</span>**
-  
+**`:u0`, `:u1`, `:u2`, `:u3`**
+
 These modifiers specify how the rule matches the dot (`.`) metacharacter against Unicode data. If `:u0` is specified, then dot matches a single byte; if `:u1` is specified, then dot matches a single codepoint (i.e. one or more bytes representing a single Unicode “character”). If `:u2` is specified, then dot matches a single grapheme (i.e. a base codepoint followed by zero or more modifier codepoints, such as accents). If `:u3` is specified, then dot matches an appropriate “something” in a language-dependent manner.
 
 It's OK to ignore this modifier if you're not using Unicode (and maybe even if you are). As usual, Perl will try to do the right thing. To that end, the default behavior of rules is `:u2`, unless an overriding pragma (e.g. `use bytes`) is in effect.
@@ -417,7 +399,7 @@ becomes just:
 
 *Editor's note: this document is out of date and remains here for historic interest. See [Synopsis 5](http://dev.perl.org/perl6/doc/design/syn/S05.html) for the current design information.*
 
-### <span id="take_no_prisoners">Take no prisoners</span>
+### Take no prisoners
 
 The first character of the `$hunk` rule is an opening square bracket. In Perl 5, that denoted the start of a character class, but not in Perl 6. In Perl 6, square brackets mark the boundaries of a noncapturing group. That is, a pair of square brackets in Perl 6 are the same as a `(?:...)` in Perl 5, but less line-noisy.
 
@@ -451,12 +433,12 @@ Explicit character classes were deliberately made a little less convenient in Pe
 
 ------------------------------------------------------------------------
 
-### <span id="meanwhile_back_at_the_hunk">Meanwhile, back at the `$hunk` ...</span>
+### Meanwhile, back at the `$hunk` ...
 
 The noncapturing group of the `$hunk` pattern groups together three alternatives, separated by `|` metacharacters (as in Perl 5). The first alternative:
 
         <$linenum> a :: <$linerange>
-        \n                         
+        \n
         <$appendline>+
 
 grabs whatever is in the `$linenum` variable, treats it as a subpattern, and attempts to match against it. It then matches a literal letter `'a'` (or an `'A'`, because of the `:i` modifier on the rule). Then whatever the contents of the `$linerange` variable match. Then a newline. Then it tries to match whatever the pattern in `$appendline` would match, one or more times.
@@ -465,7 +447,7 @@ But what about that double-colon after the `a`? Shouldn't the pattern have tried
 
 ------------------------------------------------------------------------
 
-### <span id="this_or_nothing">This or nothing</span>
+### This or nothing
 
 Actually, no. The double-colon is a new Perl 6 pattern-control structure. It has no effect (and is ignored) when the pattern is successfully matching, but if the pattern match should fail, and consequently back-track over the double-colon -- for example, to try and rematch an earlier repetition one fewer times -- the double-colon causes the entire surrounding group (i.e. the surrounding `[...]` in this case) to fail as well.
 
@@ -490,7 +472,7 @@ Generally, though, a single colon tells the pattern matcher that there's no poin
 There's also a three-colon directive. Three colons means: “If we have to backtrack past here, cause the entire rule to fail” (i.e. not just this group). If the double-colon in `$hunk` had been triple:
 
         <$linenum> a ::: <$linerange>
-        \n                         
+        \n
         <$appendline>+
 
 then matching a line number and an `'a'` and subsequently failing would cause the entire `$hunk` rule to fail immediately (though the `$file` rule that invoked it might still match successfully in some other way).
@@ -502,7 +484,7 @@ Four colons ... would just be silly. So, instead, there's a special named direct
 If the double-colon in `$hunk` had been a `<commit>` instead:
 
         <$linenum> a <commit> <$linerange>
-        \n                         
+        \n
         <$appendline>+
 
 then matching a line number and an `'a'` and subsequently failing would cause the entire `$hunk` rule to fail immediately, *and* would also cause the `$file` rule that invoked it to fail immediately.
@@ -511,12 +493,12 @@ So, in general, a `<commit>` means: “At this point I'm committed to this way o
 
 ------------------------------------------------------------------------
 
-### <span id="failing_with_style">Failing with style</span>
+### Failing with style
 
 The other two alternatives:
 
         | <$linerange> d :: <$linenum> \n
-          <$deleteline>+                 
+          <$deleteline>+
         | <$linerange> c :: <$linerange> \n
           <$deleteline>+  --- \n  <$appendline>+
 
@@ -534,12 +516,12 @@ The overall effect of the `$hunk` rule is therefore either to match one hunk of 
 
 ------------------------------------------------------------------------
 
-### <span id="home_home_on_the_line_range">Home, home on the (line)range</span>
+### Home, home on the (line)range
 
 The third and fourth rules:
 
         $linerange = rx/ <$linenum> , <$linenum>
-                       | <$linenum> 
+                       | <$linenum>
                        /;
 
         $linenum = rx/ \d+ /;
@@ -552,7 +534,7 @@ which might be marginally more efficient, since it doesn't have to backtrack and
 
 ------------------------------------------------------------------------
 
-### <span id="whats_my_line">What's my line?</span>
+### What's my line?
 
 The final two rules specify the structure of individual context lines in the diff (i.e. the lines that say what text is being added or removed by the hunk):
 
@@ -589,40 +571,40 @@ Whether any of those MTOWTDI is better than just escaping the angle bracket is, 
 
 ------------------------------------------------------------------------
 
-### <span id="the_final_frontier">The final frontier</span>
+### The final frontier
 
 After the leading angle, a single literal space is expected. Again, we could have specified that by escapology (`\ `) or literalness (`<' '>`) or quotemetaphysics (`\Q[ ]`) or character classification (`<[ ]>`), or deterministic nomimalism (`\c[SPACE]`), but Perl 6 also gives us a simple *name* for the space character: `<sp>`. This is the preferred option, since it reduces line-noise and makes the significant space much harder to miss.
 
 Perl 6 provides predefined names for other useful subpatterns as well, including:
 
-**<span id="item_%3Cdot%3E">`<dot>`</span>**
-  
+**`<dot>`**
+
 which matches a literal dot (`'.'`) character (i.e. it's a more elegant synonym for `\.`);
 
-**<span id="item_%3Clt%3E_and_%3Cgt%3E">`<lt>` and `<gt>`</span>**
-  
+**`<lt>` and `<gt>`**
+
 which match a literal `'<'` and `'>'` respectively. These give us yet another way of writing:
 
         $deleteline = rx/^^ <lt> <sp> (\N* \n) /
         $appendline = rx/^^ <gt> <sp> (\N* \n) /
 
-**<span id="item_%3Cws%3E">`<ws>`</span>**
-  
+**`<ws>`**
+
 which matches any sequence of whitespace (i.e. it's a more elegant synonym for `\s+`). Optional whitespace is, therefore, specified as `<ws>?` or `<ws>*` (Perl 6 will accept either);
 
-**<span id="item_%3Calpha%3E">`<alpha>`</span>**
-  
+**`<alpha>`**
+
 which matches a single alphabetic character (i.e. it's like the character class `<[A-Za-z]>` but it handles accented characters and alphabetic characters from non-Roman scripts as well);
 
-**<span id="item_%3Cident%3E">`<ident>`</span>**
-  
+**`<ident>`**
+
 which is a short-hand for `[ [<alpha>|_] \w* ]` (i.e. a standard identifier in many languages, including Perl)
 
 Using named subpatterns like these makes rules clearer in intent, easier to read, and more self-documenting. And, as we'll see [shortly](#what's%20in%20a%20name), they're fully generalizable...we can create our own.
 
 ------------------------------------------------------------------------
 
-### <span id="matchmaker_matchmaker">Match-maker, match-maker...</span>
+### Match-maker, match-maker...
 
 Finally, we're ready to actually read in and match a diff file. In Perl 5, we'd do that like so:
 
@@ -631,7 +613,7 @@ Finally, we're ready to actually read in and match a diff file. In Perl 5, we'd 
         local $/;          # Disable input record separator (enable slurp mode)
         my $text = <>;     # Slurp up input stream into $text
 
-        print "Valid diff" 
+        print "Valid diff"
             if $text =~ /$file/;
 
 We could do the same thing in Perl 6 (though the syntax would differ slightly) and in this case that would be fine. But, in general, it's clunky to have to slurp up the entire input before we start matching. The input might be huge, and we might fail early. Or we might want to match input interactively (and issue an error message as soon as the input fails to match). Or we might be matching a series of different formats. Or we might want to be able to leave the input stream in its original state if the match fails.
@@ -642,26 +624,26 @@ Not in Perl 6 though. In Perl 6, we can bind an input stream to a scalar variabl
 
         my $text is from($*ARGS);       # Bind scalar to input stream
 
-        print "Valid diff" 
+        print "Valid diff"
             if $text =~ /<$file>/;      # Match against input stream
 
 The important point is that, after the match, only those characters that the pattern actually matched will have been removed from the input stream.
 
 It may also be possible to skip the variable entirely and just write:
 
-        print "Valid diff" 
+        print "Valid diff"
             if $*ARGS =~ /<$file>/;     # Match against input stream
 
 or:
 
-        print "Valid diff" 
+        print "Valid diff"
             if <> =~ /<$file>/;         # Match against input stream
 
 but that's yet to be decided.
 
 ------------------------------------------------------------------------
 
-### <span id="a_cleaner_approach">A cleaner approach</span>
+### A cleaner approach
 
 The previous example solves the problem of recognizing a valid diff file quite nicely (and with only six rules!), but it does so by cluttering up the program with a series of variables storing those precompiled patterns.
 
@@ -705,9 +687,9 @@ Here's the previous diff-parsing example rewritten that way (and with a few extr
         grammar Diff {
             rule file { ^  <hunk>*  $ }
 
-            rule hunk :i { 
+            rule hunk :i {
                 [ <linenum> a :: <linerange> \n
-                  <appendline>+ 
+                  <appendline>+
                 |
                   <linerange> d :: <linenum> \n
                   <deleteline>+
@@ -740,12 +722,12 @@ Here's the previous diff-parsing example rewritten that way (and with a few extr
 
         my $text is from($*ARGS);
 
-        print "Valid diff" 
+        print "Valid diff"
             if $text =~ /<Diff.file>/;
 
 ------------------------------------------------------------------------
 
-### <span id="whats_in_a_name">What's in a name?</span>
+### What's in a name?
 
 The `grammar` declaration creates a new namespace for rules (in the same way a `class` or `module` declaration creates a new namespace for methods or subroutines). If a block is specified after the grammar's name:
 
@@ -804,7 +786,7 @@ By the way, we *can* still use interpolated `<$subrule>`-ish subpatterns in a na
 
 ------------------------------------------------------------------------
 
-### <span id="bad_line_no_match">Bad line! No match!</span>
+### Bad line! No match!
 
 This version of the diff parser has an additional rule, named `badline`. This rule illustrates another similarity between rules and subroutines/methods: rules can take arguments. The `badline` rule factors out the error message creation at the end of the `hunk` rule. Previously that rule ended with:
 
@@ -828,7 +810,7 @@ The argument is passed to a subrule by placing it in parentheses after the rule 
 
 The argument can also be passed without the parentheses, but then it is interpreted as if it were the body of a separate rule:
 
-        rule list_of ($pattern) { 
+        rule list_of ($pattern) {
                 <$pattern> [ , <$pattern> ]*
         }
 
@@ -859,7 +841,7 @@ Note that the list's element specifier is itself an anonymous rule, which the `s
 
 *Editor's note: this document is out of date and remains here for historic interest. See [Synopsis 5](http://dev.perl.org/perl6/doc/design/syn/S05.html) for the current design information.*
 
-### <span id="thinking_ahead">Thinking ahead</span>
+### Thinking ahead
 
 The only other change in the grammar version of the diff parser is that the matching of the `'<'` and `'>'` at the start of the context lines has been factored out. Whereas before we had:
 
@@ -878,7 +860,7 @@ That seems like a step backwards, since it complicated the grammar for no obviou
 
 ------------------------------------------------------------------------
 
-### <span id="what_you_match_is_what_you_get">What you match is what you get</span>
+### What you match is what you get
 
 Both the variable-based and grammatical versions of the code above do a great job of *recognizing* a diff, but that's all they do. If we only want syntax checking, that's fine. But, generally, if we're parsing data what we really want is to do something useful with it: transform it into some other syntax, make changes to its contents, or perhaps convert it to a Perl internal data structure for our program to manipulate.
 
@@ -910,7 +892,7 @@ matches, the result object's hash entry for the key `'out_marker'` (i.e. `$0{out
 
 ------------------------------------------------------------------------
 
-### <span id="a_hypothetical_solution_to_a_very_real_problem">A hypothetical solution to a very real problem</span>
+### A hypothetical solution to a very real problem
 
 Named capturing into a hash is very convenient, but it doesn't work so well for a rule like:
 
@@ -962,7 +944,7 @@ Now our result object has a hash entry `$0{from}` and (maybe) one for `$0{to}` (
         rule linerange {
               (<linenum>)
               { let $from := $1 }
-              ,         
+              ,
               (<linenum>)
               { let $to := $2 }
             |
@@ -1013,7 +995,7 @@ where each repetition of the `[...]*` grouping captures two substrings on each r
 
 ------------------------------------------------------------------------
 
-### <span id="the_nesting_instinct">The nesting instinct</span>
+### The nesting instinct
 
 Of course, those line number submatches in:
 
@@ -1026,9 +1008,9 @@ will have returned their own result objects. And it's a reference to those neste
 
 Likewise, in the next higher rule:
 
-        rule hunk :i { 
+        rule hunk :i {
             [ <linenum> a :: <linerange> \n
-              <appendline>+ 
+              <appendline>+
             |
               <linerange> d :: <linenum> \n
               <deleteline>+
@@ -1052,7 +1034,7 @@ So, for example, we could access the “from” digits of the line range of the 
 
 ------------------------------------------------------------------------
 
-### <span id="extracting_the_insertions">Extracting the insertions</span>
+### Extracting the insertions
 
 More usefully, we could locate and print every line in the diff that was being inserted, regardless of whether it was inserted by an “append” or a “change” hunk. Like so:
 
@@ -1069,7 +1051,7 @@ Here, the `if` statement attempts to match the text against the pattern for a di
 
 ------------------------------------------------------------------------
 
-### <span id="dont_just_match_there_do_something">Don't just match there; do something!</span>
+### Don't just match there; do something!
 
 Because Perl 6 patterns can have arbitrary code blocks inside them, it's easy to have a pattern actually perform syntax transformations whilst it's parsing. That's often a useful technique because it allows us to manipulate the various parts of a hierarchical representation locally (within the rules that recognize them).
 
@@ -1080,9 +1062,9 @@ The following code does exactly that:
         grammar ReverseDiff {
             rule file { ^  <hunk>*  $ }
 
-            rule hunk :i { 
+            rule hunk :i {
                 [ <linenum> a :: <linerange> \n
-                  <appendline>+ 
+                  <appendline>+
                   { @$appendline =~ s/<in_marker>/< /;
                     let $0 := "${linerange}d${linenum}\n"
                             _ join "", @$appendline;
@@ -1139,7 +1121,7 @@ All the work of reversing the diff is performed in the `hunk` rule. To do that w
 
 ------------------------------------------------------------------------
 
-### <span id="smarter_alternatives">Smarter alternatives</span>
+### Smarter alternatives
 
 In the first alternative (which matches “append” hunks), we match as before:
 
@@ -1165,7 +1147,7 @@ The changes to the “delete” alternative are exactly symmetrical. Capture the
 In the third alternative:
 
         $from:=<linerange> c :: $to:=<linerange> \n
-        <deleteline>+   
+        <deleteline>+
         --- \n
         <appendline>+
         { @$appendline =~ s/<in_marker>/</;
@@ -1191,7 +1173,7 @@ And, since the `file` rule is now in the ReverseDiff grammar's namespace, we nee
 
 *Editor's note: this document is out of date and remains here for historic interest. See [Synopsis 5](http://dev.perl.org/perl6/doc/design/syn/S05.html) for the current design information.*
 
-### <span id="rearranging_the_deckchairs">Rearranging the deck-chairs</span>
+### Rearranging the deck-chairs
 
 It might have come as a surprise that we were allowed to bind the pattern's `$0` result object directly, but there's nothing magical about it. `$0` turns out to be just another hypothetical variable...the one that happens to be returned when the match is complete.
 
@@ -1269,7 +1251,7 @@ So an even better solution is just to use proper named rules (with their handy a
 
 ------------------------------------------------------------------------
 
-### <span id="deriving_a_benefit">Deriving a benefit</span>
+### Deriving a benefit
 
 As the above examples illustrate, using named rules in grammars provides a cleaner syntax and a reduction in the number of variables required in a parsing program. But, beyond those advantages, and the obvious benefits of moving rule construction from run-time to compile-time, there's yet another significant way to gain from placing named rules inside a grammar: we can *inherit* from them.
 
@@ -1277,9 +1259,9 @@ For example, the ReverseDiff grammar is almost the same as the normal Diff gramm
 
         grammar ReverseDiff is Diff {
 
-            rule hunk :i { 
+            rule hunk :i {
                 [ <linenum> a :: <linerange> \n
-                  <appendline>+ 
+                  <appendline>+
                   { $appendline =~ s/ <in_marker> /</;
                     let $0 := "${linerange}d${linenum}\n"
                             _ join "", @$appendline;
@@ -1319,7 +1301,7 @@ Likewise, in the above example Diff is specified as the base grammar from which 
 
 ------------------------------------------------------------------------
 
-### <span id="different_diffs">Different diffs</span>
+### Different diffs
 
 Grammatical inheritance isn't only useful for tweaking the behaviour of a grammar's rules. It's also handy when two or more related grammars share some characteristics, but differ in some particulars. For example, suppose we wanted to support the “unified” diff format, as well as the “classic”.
 
@@ -1338,7 +1320,7 @@ What *is* important is that we could write another complete grammar for that, li
                 <in_marker><3>  $newfile:=(\S+) $newdate:=[\h* (\N+?) \h*?] \n
             }
 
-            rule hunk { 
+            rule hunk {
                 <header>
                 @spec := ( <contextline>
                          | <appendline>
@@ -1377,7 +1359,7 @@ That represents (and can parse) the new diff format correctly, but it's a needle
                 <in_marker><3>  $newfile:=(\S+) $newdate:=[\h* (\N+?) \h*?] \n
             }
 
-            rule hunk { 
+            rule hunk {
                 <header>
                 @spec := ( <contextline>
                          | <appendline>
@@ -1408,7 +1390,7 @@ And if you're thinking that looks suspiciously like polymorphism, you're absolut
 
 ------------------------------------------------------------------------
 
-### <span id="lets_get_cooking">Let's get cooking</span>
+### Let's get cooking
 
 To sum up: Perl 6 patterns and grammars extend Perl's text matching capacities enormously. But you don't have to start using all that extra power right away. You can ignore grammars and embedded closures and assertions and the other sophisticated bits until you actually need them.
 
@@ -1416,24 +1398,24 @@ The new rule syntax also cleans up much of the “line-noise” of Perl 5 regexe
 
 To demonstrate that, and to round out this exploration of Perl 6 patterns, here are a few common Perl 5 regexes -- some borrowed from the *Perl Cookbook*, and others from the Regexp::Common module -- all ported to equivalent Perl 6 rules:
 
-**<span id="item_Match_a_C_comment%3A">Match a C comment:</span>**
-  
+**Match a C comment:**
+
     # Perl 5
     $str =~ m{ /\* .*? \*/ }xs;
 
     # Perl 6
     $str =~ m{ /\* .*? \*/ };
 
-**<span id="item_Remove_leading_qualifiers_from_a_Perl_identifier">Remove leading qualifiers from a Perl identifier</span>**
-  
+**Remove leading qualifiers from a Perl identifier**
+
     # Perl 5
     $ident =~ s/^(?:\w*::)*//;
 
     # Perl 6
     $ident =~ s/^[\w*\:\:]*//;
 
-**<span id="item_Warn_of_text_with_lines_greater_than_80_characters">Warn of text with lines greater than 80 characters</span>**
-  
+**Warn of text with lines greater than 80 characters**
+
     # Perl 5
     warn "Thar she blows!: $&"
             if $str =~ m/.{81,}/;
@@ -1442,16 +1424,16 @@ To demonstrate that, and to round out this exploration of Perl 6 patterns, here 
     warn "Thar she blows!: $0"
             if $str =~ m/\N<81,>/;
 
-**<span id="item_Match_a_Roman_numeral">Match a Roman numeral</span>**
-  
+**Match a Roman numeral**
+
     # Perl 5
     $str =~ m/ ^ m* (?:d?c{0,3}|c[dm]) (?:l?x{0,3}|x[lc]) (?:v?i{0,3}|i[vx]) $ /ix;
 
     # Perl 6
     $str =~ m:i/ ^ m* [d?c<0,3>|c<[dm]>] [l?x<0,3>|x<[lc]>] [v?i<0,3>|i<[vx]>] $ /;
 
-**<span id="item_Extract_lines_regardless_of_line_terminator">Extract lines regardless of line terminator</span>**
-  
+**Extract lines regardless of line terminator**
+
     # Perl 5
     push @lines, $1
             while $str =~ m/\G([^\012\015]*)(?:\012\015?|\015\012?)/gc;
@@ -1460,16 +1442,16 @@ To demonstrate that, and to round out this exploration of Perl 6 patterns, here 
     push @lines, $1
             while $str =~ m:c/ (\N*) \n /;
 
-**<span id="item_string">Match a quote-delimited string (Friedl-style), capturing contents:</span>**
-  
+**Match a quote-delimited string (Friedl-style), capturing contents:**
+
     # Perl 5
     $str =~ m/ " ( [^\\"]* (?: \\. [^\\"]* )* ) " /x;
 
     # Perl 6
     $str =~ m/ " ( <-[\\"]>* [ \\. <-[\\"]>* ]* ) " /;
 
-**<span id="item_Match_a_decimal_IPv4_address%3A">Match a decimal IPv4 address:</span>**
-  
+**Match a decimal IPv4 address:**
+
     # Perl 5
     my $quad = qr/(?: 25[0-5] | 2[0-4]\d | [0-1]??\d{1,2} )/x;
 
@@ -1485,8 +1467,8 @@ To demonstrate that, and to round out this exploration of Perl 6 patterns, here 
 
     $str =~ m/ <quad> <dot> <quad> <dot> <quad> <dot> <quad> /x;
 
-**<span id="item_Match_a_floating%2Dpoint_number%2C_returning_compo">Match a floating-point number, returning components:</span>**
-  
+**Match a floating-point number, returning components:**
+
     # Perl 5
     ($sign, $mantissa, $exponent) =
             $str =~ m/([+-]?)([0-9]+\.?[0-9]*|\.[0-9]+)(?:e([+-]?[0-9]+))?/;
@@ -1495,8 +1477,8 @@ To demonstrate that, and to round out this exploration of Perl 6 patterns, here 
     ($sign, $mantissa, $exponent) =
             $str =~ m/(<[+-]>?)(<[0-9]>+\.?<[0-9]>*|\.<[0-9]>+)[e(<[+-]>?<[0-9]>+)]?/;
 
-**<span id="item_Match_a_floating%2Dpoint_number_maintainably%2C_re">Match a floating-point number *maintainably*, returning components:</span>**
-  
+**Match a floating-point number *maintainably*, returning components:**
+
     # Perl 5
     my $digit    = qr/[0-9]/;
     my $sign_pat = qr/(?: [+-]? )/x;
@@ -1511,11 +1493,11 @@ To demonstrate that, and to round out this exploration of Perl 6 patterns, here 
     rule mantissa { <digit>+ [\. <digit>*] | \. <digit>+ }
     rule exponent { [ <sign> <digit>+ ]? }
 
-    ($sign, $mantissa, $exponent) = 
+    ($sign, $mantissa, $exponent) =
             $str =~ m/ (<sign>) (<mantissa>) [e (<exponent>)]? /;
 
-**<span id="item_Match_nested_parentheses%3A">Match nested parentheses:</span>**
-  
+**Match nested parentheses:**
+
     # Perl 5
     our $parens = qr/ \(  (?: (?>[^()]+) | (??{$parens}) )*  \) /x;
     $str =~ m/$parens/;
@@ -1523,8 +1505,8 @@ To demonstrate that, and to round out this exploration of Perl 6 patterns, here 
     # Perl 6
     $str =~ m/ \(  [ <-[()]> + : | <self> ]*  \) /;
 
-**<span id="item_Match_nested_parentheses_maintainably%3A">Match nested parentheses *maintainably*:</span>**
-  
+**Match nested parentheses *maintainably*:**
+
     # Perl 5
     our $parens = qr/
                \(                   # Match a literal '('
