@@ -23,10 +23,8 @@
         links = [];
         for (i=0; i < 10; i++){
           linkDomain = extractDomain(response[i].url);
-          console.log( "linkDomain is " + linkDomain );
           // skip links to articles on the host's own website
           if (ignore_hosts.includes(linkDomain)) {
-          console.log( "linkDomain is in the ignore list" );
             continue;
           }
           links.push('<li><a href="' + response[i].url + '">' + response[i].title + '</a><br/>' + linkDomain + '</li>');
