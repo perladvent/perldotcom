@@ -24,29 +24,11 @@
 
 ### New MacPerl CD-ROM Available
 
-*Rich Morin (<rdm@cfcl.com>) of Prime Time Freeware has produced the [MacPerl CD-ROM](http://www.ptf.com/macperl/ptf_book/cdrom.html), a distribution of the Perl for the Macintosh along with other Mac tools and documentation. I asked him about the MacPerl community and we were soon joined in email by Matthias Ulrich Neeracher (<neeri@iis.ee.ethz.ch>), who is the person primarily responsible for porting Perl to the Macintosh.*
+*Rich Morin (<rdm@cfcl.com>) of Prime Time Freeware has produced the MacPerl CD-ROM, a distribution of the Perl for the Macintosh along with other Mac tools and documentation. I asked him about the MacPerl community and we were soon joined in email by Matthias Ulrich Neeracher (<neeri@iis.ee.ethz.ch>), who is the person primarily responsible for porting Perl to the Macintosh.*
 
 ### What's the size of the MacPerl user community and its percentage of the whole Perl community?
 
 *Rich:* Small, but we're hoping to change that a little! The MacPerl email list numbers under 2000, so the total user population is unlikely to be more than 5000, at present. This is far smaller than the size one might predict, based on the 25 million or so Macintosh users that are out there. Consequently, it is also a small percetage of the total Perl community.
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td><strong>MacPerl Resources</strong>
-<hr />
-<p><em>Prime Time Freeware</em><br />
- <a href="http://www.ptf.com/macperl/">MacPerl Page</a><br />
- <a href="http://www.ptf.com/MacPerl/ptf_book/cdrom.html/">MacPerl CD-ROM</a></p>
-<p><em>Matthias Neeracher</em><br />
- <a href="http://www.iis.ee.ethz.ch/~neeri/macintosh/perl.html">MacPerl Page</a></p>
-<p><em>Perl Reference</em><br />
- <a href="http://reference.perl.com/query.cgi?mac">Macintosh Links</a></p></td>
-</tr>
-</tbody>
-</table>
 
 *Matthias:* In fact, it's approximately 1000 and remains fairly stable. However, there seems to be a self-limiting effect at work here in that with more then 8-900 users, the list grows too noisy for some and they unsubscribe.
 
