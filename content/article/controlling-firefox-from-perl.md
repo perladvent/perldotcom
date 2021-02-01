@@ -25,11 +25,11 @@ Sometimes [WWW::Mechanize]({{<mcpan "WWW::Mechanize" >}}), [LWP::UserAgent]({{<m
 
 Before you start, you need the [Firefox](https://www.mozilla.org) browser (or one of its forks) with the [MozRepl](https://addons.mozilla.org/en-us/firefox/addon/mozrepl/) add-on, which provides an interactive JavaScript console that you can telnet into. Once activated, you can connect to the console and can control the browser.
 
-[![activate\_mozrepl](https://farm8.staticflickr.com/7503/15324164413_0a43aeb932.jpg)](https://farm8.staticflickr.com/7503/15324164413_0a43aeb932.jpg "activate_mozrepl by brian d foy, on Flickr")
+![activate\_mozrepl](/images/controlling-firefox-from-perl/activate.jpg)
 
 I have to know JavaScript to control Firefox directly. I can telnet into the MozRepl server and issue commands. It's a bit more work than I'd like to do.
 
-[![mozrepl\_telnet](https://farm9.staticflickr.com/8680/15941835341_f064e9e2a3.jpg)](https://farm9.staticflickr.com/8680/15941835341_f064e9e2a3.jpg "mozrepl_telnet by brian d foy, on Flickr")
+![mozrepl\_telnet](/images/controlling-firefox-from-perl/mozrepl-telnet.jpg)
 
 I'm not going to control Firefox directly, though, because I'm going to let some Perl modules do that for me. The basic interface of [WWW::Mechanize::Firefox]({{<mcpan "WWW::Mechanize::Firefox" >}}) is the same as [WWW::Mechanize]({{<mcpan "WWW::Mechanize" >}}):
 
@@ -97,7 +97,7 @@ $mech->eval_in_page( 'StackExchange.switchMobile("on")' );
 
 When I run this, the screen changes from the full site to the mobile site.
 
-[![screenshots](http://web.archive.org/web/20170812162748/https://farm9.staticflickr.com/8640/15943126852_07692bfc09.jpg)](http://web.archive.org/web/20170812162748/https://farm9.staticflickr.com/8640/15943126852_07692bfc09.jpg "screenshots by brian d foy, on Flickr")
+![screenshots](/images/controlling-firefox-from-perl/change-to-mobile.jpg)
 
 ### Some problems
 
