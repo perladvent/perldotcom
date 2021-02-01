@@ -343,7 +343,7 @@ Here's a simple example: You want to make sure the HTTP log analyzer will never 
 
 [Download the source code for the HTTP analyzer with security enhancements](/media/_pub_2000_12_begperl4/httpsecured.pl).
 
-We saw that you can modify HTML forms when we pasted the pizza-topping sample code into our backatcha page. You can also use the URL to pass form items to a script - try going to `http://www.perl.com/2000/12/backatcha.cgi?itemsource=URL&typedby=you` in your browser. Obviously, if someone can do this with the backatcha script, they can also do it with your log analyzer and stick any value for `number` in that they want: "ALL" or "25000", or "four score and seven years ago."
+We saw that you can modify HTML forms when we pasted the pizza-topping sample code into our backatcha page. You can also use the URL to pass form items to a script - try going to `http://www.perl.com/2000/12/backatcha.cgi?itemsource=URL&typedby=you` in your browser (*Editor's note: or don't, because this no longer works*). Obviously, if someone can do this with the backatcha script, they can also do it with your log analyzer and stick any value for `number` in that they want: "ALL" or "25000", or "four score and seven years ago."
 
 Your form doesn't allow this, you say. Who cares? People will write custom HTML forms to exploit weaknesses in your programs, or will just pass bad form items to your script directly. You cannot trust anything users or their browsers tell you.
 
