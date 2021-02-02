@@ -49,7 +49,3 @@ Not only books were auctioned this time, but also a few London.pm specific items
 
 That particular item was sold for $200, and the whole auction raised more than 9000 Dutch guilders, some $4000, which will firstly be used to pay all left over costs of the conference. The remainder will be spent on a Perl advocacy project in the Netherlands and on startup costs of next years' YAPC, which will either be in Munich or Paris. Both cities have Perl Monger groups who want to organize it, and YAS will have to make a decision based on the proposals they submit.
 The second edition of Yet Another Perl Conference in Europe was a great success. No complaints were heard and everyone was enthusiastic. That's not due to the merit of the organizing committee, but merely the merit of the attendees and speakers. May the next conference be just as successful!
-
-------------------------------------------------------------------------
-
-Return to [Perl.com](http://perl.com)
