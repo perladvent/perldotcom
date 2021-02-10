@@ -23,7 +23,7 @@ Check out our first time author [tutorial](https://perldotcom.perl.org/article/h
 
 ## Fix a problem
 
-Since we've moved to GitHub, it's easy for you to fix problem you find, whether that's a simple typo to adjusting code for new interfaces.
+Since we've moved to GitHub, it's easy for you to fix problems you find, whether that's a simple typo to adjusting code for new interfaces.
 
 You can edit files directly in GitHub, which will automatically fork our repo and send a pull request.
 
