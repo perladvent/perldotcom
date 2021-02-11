@@ -99,7 +99,7 @@ post '/find-by-address' => sub {
 };
 ```
 
-The backend side of the webapp was done in an hour, and then I set to the presentation. It took a while but I came up with a design that seemed functional and aesthetically acceptable. After testing locally I was ready to deploy, and after creating a new TLS cert and updating the `Apache` config, the site was up and running. I sent the link to a couple of friends to see what they thought and get some live testing, and was pleased when other people started using the site.
+The backend side of the webapp was done in an hour, and then I set to the presentation. It took a while but I came up with a design that seemed functional and aesthetically acceptable. After testing locally I was ready to deploy, and after creating a new TLS cert and updating the `Apache` config, the site was up and running. I sent the link to a couple of friends to see what they thought, and posted to [blogs.perl.org](http://blogs.perl.org/users/1nickt/2021/02/who-you-gonna-call-perl-client-and-website-for-google-civic-information-api.html) to get some live testing, and was pleased when other people started using the site.
 
 ## Wrapping up
 
