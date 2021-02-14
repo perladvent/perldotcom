@@ -112,7 +112,7 @@ Ok that's cool, but I only played with ftp server and preinstalled `ftp` client 
 
 ![](/images/a-tour-with-net-ftp/whatif.jpg)
 
-[Net::FTP](h{{</* mcpan "Net::FTP" */>}}) is a superb [CPAN](https://metacpan.org/) module dedicated to FTP protocol and I'll use that.
+[Net::FTP]({{< mcpan "Net::FTP" >}}) is a superb [CPAN](https://metacpan.org/) module dedicated to FTP protocol and I'll use that.
 
 ### Simple listing
 
@@ -244,5 +244,5 @@ if($options{'action'} eq 'list') {
 
 ## More about design and security
 
-This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real guarantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP](https://metacpan.org/pod/Net::FTP)!
+This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real guarantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP]({{< mcpan "Net::FTP" >}})!
 
