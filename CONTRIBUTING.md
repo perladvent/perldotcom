@@ -17,9 +17,9 @@ You can then check your article by starting a local server (using [Hugo 0.59](ht
 
 Once you submit your article, an editor will help guide it to its final form.
 
-Don't know what to write about? See our [article](https://perldotcom.perl.org/article/how-to-find-a-programming-topic-to-write-about/) on how to find a topic.
+Don't know what to write about? See our [article](https://perl.com/article/how-to-find-a-programming-topic-to-write-about/) on how to find a topic.
 
-Check out our first time author [tutorial](https://perldotcom.perl.org/article/how-to-write-your-first-article-for-perl-com/) to understand our contributor process.  Our [Style Guide](STYLE-GUIDE.md) describes our standards and has tips to make your articles better. For the most part, your article should look and read like other Perl.com articles.
+Check out our first time author [tutorial](https://perl.com/article/how-to-write-your-first-article-for-perl-com/) to understand our contributor process.  Our [Style Guide](STYLE-GUIDE.md) describes our standards and has tips to make your articles better. For the most part, your article should look and read like other Perl.com articles.
 
 ## Fix a problem
 
