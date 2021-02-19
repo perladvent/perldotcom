@@ -93,7 +93,7 @@ That means press `Control` and `b` together, release, then press `?`. Tmux shoul
 You can also change the prefix combination (see the Config options section). If you do that, remember to use your prefix combination instead of `Ctrl-b` in the examples below.
 
 ### Window control
-Let's look at a key Tmux feature: windows. They're similar to tabs in browsers. Each one is a different terminal from where you can run different commands at the same time. To create a new window press`Ctrl-b c`. You can cycle between windows: `Ctrl-b n` for the next window and `Ctrl-b p` takes you to the prior window. `Ctrl-b w` list all windows in a session and let's you select which one to active (using the arrow keys and enter).
+Let's look at a key Tmux feature: windows. They're similar to tabs in browsers. Each one is a different terminal from where you can run different commands at the same time. To create a new window press`Ctrl-b c`. You can cycle between windows: `Ctrl-b n` for the next window and `Ctrl-b p` takes you to the prior window. `Ctrl-b w` lists all windows in a session and lets you select which one to make active (using the arrow keys and enter).
 
 If you know the window number you can also jump straight to it with `Ctrl-b #` replacing "\#" with the window number. By default they begin at 0, not 1!
 
