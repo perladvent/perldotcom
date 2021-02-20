@@ -11,20 +11,20 @@
     "categories"  : "community"
   }
 
-For a week, we lost control of the domain Perl.com. Now that the incident
+For a week we lost control of the Perl.com domain. Now that the incident
 has died down, we can explain some of what happened and how we handled it.
 This incident only affected the domain ownership of Perl.com and there was
-not other compromise of community resources. This website was still there,
-but DNS wouldn't hand out that IP number.
+no other compromise of community resources. This website was still there,
+but DNS wouldn't hand out its IP number.
 
 First, this wasn't an issue of not renewing the domain. That would have
 been a better situation for us because there's a grace period.
 
 Second, to be very clear, I'm just an editor for the website that uses
 the Perl.com domain. This means that I'm not actually the "injured party"
-in legal terms. Tom Christiansen is the domain registrant, and, should
+in legal terms. Tom Christiansen is the domain registrant, and should
 legal matters progress, there's no reason for me, nor anyone else, to
-know some of the details. However, I talked to many of the people involved
+know all of the details. However, I talked to many of the people involved
 in the process.
 
 ## The incident response
@@ -55,10 +55,10 @@ green, amber, or red. Green was high confidence information, such as
 direct communication with a registrar, amber has likely good but
 unverified, and red was just flat out wrong. All information was
 tagged with a time and source. The first rule of rumor control is
-stating who you heard it from when. Once this is in the document,
+stating who you heard it from and when. Once this is in the document,
 other people know if what they think they know is better or more
 recent. And, sometimes the information that we thought was good turns
-out to be wrong. In that case, we update the document.
+out to be wrong. In those cases we update the document.
 
 We also listed things that needed to happen, and various people picked
 up what they could address. For example, we started to check other
@@ -66,10 +66,10 @@ community resources, so Elaine Ashton looked at the registration for
 cpan.org, which had an oddity in its contact info but later turned out
 to be fine after she dealt with the registrar on the phone. Robert Spier, part
 of the Perl NOC, was able to verify various network aspects,
-timelines, and so on. Rik SIGNES stepped up to set up a private
+timelines, and so on. Rik Signes stepped up to set up a private
 mailing list on TopicBox. The trick here is to not do work that
 someone else can do for you (and often better than you can). Likewise,
-if someone is already doing something, you're wasting your time (and other's time)
+if someone is already doing something, you're wasting your time (and others' time)
 by redoing or reinventing it. Decentralization is fine, but someone needs
 to be the coordinator. In this case that turned out to be me because I
 had a lot invested in the Perl.com website, and I could easily work with
@@ -85,9 +85,9 @@ guidance. Other victims were not so fortunate. And, at some point,
 Perl was probably running these organizations, so there's some
 fondness for the good ol' days.
 
-Mostly, I helped both sides get in touch with Tom Christiansen and helping him manage
-all the players. He needed to work with the registrars, so if I could take
-any work off his plate he could focus on that bit. In many incidents, people
+Mostly, I helped both sides get in touch with Tom Christiansen and helped him manage
+all the players. He needed to work with the registrars, so I took what work 
+I could off his plate so he could focus on that bit. In many incidents, people
 become overwhelmed by everything that needs to happen and end up not doing
 anything. I took on the stuff that could let Tom focus.
 
@@ -119,7 +119,7 @@ blog](https://log.perl.org/2021/01/perlcom-hijacked.html). Sometimes
 we knew things several hours before we published the information
 because we did the extra work to directly verify things. People didn't
 have to track social media, etc to find out what was going on because
-they could remember this one place. We still announced anything new
+they could remember this one place. We still broadcast updates
 all over the place, but always pointed back to the NOC blog. A single
 point of reference is very helpful.
 
@@ -131,7 +131,7 @@ We also tracked people and stories. Who's who at various companies,
 which reporters are writing about the incident, and what discussion
 threads are out there. Some people in various discussion threads were
 obviously just there for the lulz, while others had good or actionable
-details (which often means they are on the inside of the sitution).
+details (which often means they are on the inside of the situation).
 Again, we used the green / amber / red categories.
 
 This isn't my first rodeo, and I stepped into
@@ -147,8 +147,7 @@ stories didn't do basic research, and some of those reporters don't
 even have contact info (really, a reporter you can't contact?). A few were able to correct their stories after
 talking to me. Unfortunately, even [The Perl Foundation put out bad
 information](https://news.perlfoundation.org/post/perl.com-registry-attack)
-despite me asking them not to, and the bad information gets repeated in
-other discussions. That's why it's important to have current summaries
+despite me asking them not to. That's why it's important to have current summaries
 and talking points. What you knew in the morning might not apply in
 the afternoon.
 
@@ -161,10 +160,10 @@ About a week after the nameservers changed, I had settled into the
 idea that it could take several weeks to unravel the hijacking. With
 multiple countries involved along various sets of laws and rules in
 effect, things might have a much slower pace than we'd like. In the
-internet age, tomorrow is bascially infinitely far away. David Farrell
+internet age, tomorrow is basically infinitely far away. David Farrell
 floated the idea of renaming the site, and we started using
 *perldotcom.perl.org* as a temporary domain. Robert was able to set
-that up quickly, and we even got some good work out of it as very pull
+that up quickly, and we even got some good work out of it as pull
 requests from the community found spots where we had hard-coded
 various things. The Github process that David had set up was key to
 making all of this work; it's a pleasure to get even the tiniest pull
@@ -175,7 +174,7 @@ we'd get the domain back in a couple of days. I was dubious but it actually
 happened! Again, I think we were very fortunate here and that many people
 with a soft spot in their hearts for Perl did a lot of good work for
 us. All sides understood that Perl.com belonged to Tom and it was a
-simple matter of work to resolve it. A relatively unknown short domain
+simple matter of work to resolve it. A relatively unknown domain
 name might not fare as well in proving they own it.
 
 Recovering the domain wasn't the end of the response though. While the domain was
@@ -194,7 +193,7 @@ to other domain owners involved and this is the basic scheme they reported.
 
 John Berryhill provided [some forensic work in Twitter](https://twitter.com/briandfoy_perl/status/1354535622069919748) that showed the
 compromised actually happened in September. The domain was transferred
-to BizCN in December, but the nameservers were stable. The domain was
+to BizCN in December, but the nameservers were not changed. The domain was
 transferred again in January to Key Systems, GmbH. This latency period
 avoids immediate detection, and bouncing the domain through a couple
 registrars makes the recovery much harder.
@@ -213,15 +212,11 @@ This was quickly de-listed after the [The Register made inquiries](https://www.t
 
 ## Some lessons
 
-Obviously, this is an embarrassing situation, but it's not an uncommon
+Obviously this is an embarrassing situation, but it's not an uncommon
 story. This domain was registered in the early 90s, Tom Christiansen
 took control of it shortly after that, and basically kept paying the
 registration fees. Since it wasn't a nagging problem, the domain was
-left as it was.
-
-But, the web and web security have made a lot of progress in a couple of decades,
-especially in light of how cybercrime responded to incentives. The Perl.com domain
-wasn't using any of that. Features such as two-factor authentication probably
+left as it was. Features such as two-factor authentication probably
 would have saved us much of this trouble (although social engineering
 attacks tend to route around safeguards).
 
@@ -237,4 +232,4 @@ website is back to how it was and slightly shinier for the help we received.
 
 As part of the incident response, The Perl Foundation Infrastructure Working
 Group surveyed other important community domains and will work to secure those.
-If you are interested in helpin with that, get in touch with them.
+If you are interested in helping with that, get in touch with them.
