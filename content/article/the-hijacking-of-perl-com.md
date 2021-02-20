@@ -144,12 +144,7 @@ even need the first source.
 It's important to have one face (mouth?) to
 represent the diligent work everyone was doing.  Half the "news"
 stories didn't do basic research, and some of those reporters don't
-even have contact info (really, a reporter you can't contact?). A few were able to correct their stories after
-talking to me. Unfortunately, even [The Perl Foundation put out bad
-information](https://news.perlfoundation.org/post/perl.com-registry-attack)
-despite me asking them not to. That's why it's important to have current summaries
-and talking points. What you knew in the morning might not apply in
-the afternoon.
+even have contact info (really, a reporter you can't contact?). A few were able to correct their stories after talking to me.
 
 [The
 Register](https://www.theregister.com/2021/01/28/perl_hijacking/) had
@@ -223,6 +218,15 @@ attacks tend to route around safeguards).
 I've already mentioned the problem with using the domain in the contacts
 for the domain. When there's a problem, the communication channels are
 also borked. Have at least one of the contacts go somewhere else.
+
+It's essential to communicate with "one voice" else you risk sowing confusion
+with different messages, even if they're saying the same thing. You also want
+to project confidence, and competence so that the information you do release
+is treated credibly; if different channels are releasing different updates,
+the risk of error increases. The Perl Foundation insisted on releasing their
+own [update](https://news.perlfoundation.org/post/perl.com-registry-attack)
+instead of using our prepared statement. And even though it was brief, the link
+to the Perl NOC blog was broken for several days. Don't take unnecessary risks.
 
 ## Where we are now
 
