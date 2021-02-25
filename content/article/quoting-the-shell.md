@@ -216,6 +216,43 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
+Punting to the shell completely
+-------------------------------
+
+[A now-deleted Github user suggested a way](https://github.com/tpf/perldotcom/issues/202) that hands off everything to the shell to let it figure it out. I've lifted this section almost verbatim from them.
+
+I think that it might be worthwhile mentioning that, by controlling the environment, it is trivial to side-step shell quoting issues. Here is an example:
+
+```perl
+#!/usr/bin/env perl
+
+sub test {
+	local $ENV{MY_VAR} = 'No "problem here", sir!';
+	system 'touch -- "$MY_VAR" && ls -l -- "$MY_VAR"';
+}
+
+test();
+```
+
+This will result in something like the following, proving its efficacy.
+
+```
+-rw-r--r-- 1 kerframil kerframil 0 2019-08-18 03:13 No "problem here", sir!
+```
+
+Indeed, this method is highly reliable and is also resilient to shell code injection. The only limitation is that the exported variable should not contain a null byte, otherwise it will result in a truncated expansion. This is an intrinsic limitation of sh, and has to do with C using \0 as a string terminator. Note also that, in Unix-like operating systems, a path may not contain the null byte anyway.
+
+But hang on, you may ask! Why bother, when we can just bypass the shell by conveying an argument vector to a specific executable via the system function in the first place? Well, granted, the example shown is only an academic one. However, this method can - at times - be genuinely useful in practice. Here are some reasons why.
+
+Sometimes, a developer may wish to deliberately exploit shell features but without having to jump through hoops making strings safe for injection into the shell code.
+
+This technique accomplishes such without having to second-guess what the shell considers to be a meta-character and having to escape/quote accordingly. By delegating (environment) variable expansion directly to the shell, it simply no longer matters. EDIT: It works just as well in zsh, for instance.
+
+This technique eliminates the possibility of code injection, unless doing 'interesting' things with eval in the shell.
+
+This technique is applicable outside of Perl, and is exceptionally useful for evil languages—such as PHP—that make it comparatively difficult to avoid invoking */bin/sh* when creating a sub-process. It can even be leveraged to good effect in applications such as Puppet, for example.
+
+
 Capturing output with modules
 -----------------------------
 
