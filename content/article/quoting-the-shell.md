@@ -211,7 +211,7 @@ He also suggested [IPC::ReadpipeX]({{< mcpan "IPC::ReadpipeX" >}}). Look under t
 ```perl
 use IPC::ReadpipeX;
 foreach my $file ( @ARGV ) {
-	my $result =  readpipex 'tag', $quoted_file`;
+	my $result =  readpipex 'tag', $file;
 	print $result;
 	}
 ```
