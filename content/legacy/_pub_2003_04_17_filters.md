@@ -282,3 +282,4 @@ How did I know that my code here actually worked and did what I expected it to? 
 ### Thanks
 
 Many thanks to Stas Bekman, who reviewed this article, even though it meant having to deal with both my questions, suggestions and API gripes.
+
