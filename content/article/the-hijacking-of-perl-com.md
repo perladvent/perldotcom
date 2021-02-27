@@ -15,7 +15,7 @@ For a week we lost control of the Perl.com domain. Now that the incident
 has died down, we can explain some of what happened and how we handled it.
 This incident only affected the domain ownership of Perl.com and there was
 no other compromise of community resources. This website was still there,
-but DNS wouldn't hand out its IP number.
+but DNS was handing out different IP numbers.
 
 First, this wasn't an issue of not renewing the domain. That would have
 been a better situation for us because there's a grace period.
@@ -39,7 +39,7 @@ Early on the morning of January 27, the Perl NOC noticed through normal
 monitoring that something was wrong with the domain. Along with that,
 people started to report that the website had gone missing. As DNS updated
 across the globe, more and more people reported problems.
-
+—
 Behind the scenes I started to collect incident information, and I put
 out [a tweet asking for help](https://twitter.com/briandfoy_perl/status/1354535622069919748).
 At this point we didn't know what was going on; we just knew the effect. It's
@@ -52,7 +52,7 @@ speculation—find out what you actually know and what's just a guess.
 I started a Google doc and invited the relevant people. We started to
 fill in the details, classifying everything according with either
 green, amber, or red. Green was high confidence information, such as
-direct communication with a registrar, amber has likely good but
+direct communication with a registrar, amber was likely good but
 unverified, and red was just flat out wrong. All information was
 tagged with a time and source. The first rule of rumor control is
 stating who you heard it from and when. Once this is in the document,
@@ -86,7 +86,7 @@ Perl was probably running these organizations, so there's some
 fondness for the good ol' days.
 
 Mostly, I helped both sides get in touch with Tom Christiansen and helped him manage
-all the players. He needed to work with the registrars, so I took what work 
+all the players. He needed to work with the registrars, so I took what work
 I could off his plate so he could focus on that bit. In many incidents, people
 become overwhelmed by everything that needs to happen and end up not doing
 anything. I took on the stuff that could let Tom focus.
@@ -108,7 +108,7 @@ confident that it would. Our confidence, however, isn't reportable
 information. You don't report what you think will happen or what is
 promised to happen because often there are delays or hiccups.
 
-We transitioned to public information and sharing what we could. Our
+We transitioned to managing public information and sharing what we could. Our
 goal was to give people the confidence that they had the right info.
 As a techy audience, we often like to have all the information, but
 there's very little that anyone actually needs to know.
@@ -160,7 +160,7 @@ floated the idea of renaming the site, and we started using
 *perldotcom.perl.org* as a temporary domain. Robert was able to set
 that up quickly, and we even got some good work out of it as pull
 requests from the community found spots where we had hard-coded
-various things. The Github process that David had set up was key to
+various things. The GitHub process that David had set up was key to
 making all of this work; it's a pleasure to get even the tiniest pull
 requests from the community.
 
@@ -187,9 +187,9 @@ to reveal anything to me (again, I'm not the injured party), but I did talk
 to other domain owners involved and this is the basic scheme they reported.
 
 John Berryhill provided [some forensic work in Twitter](https://twitter.com/briandfoy_perl/status/1354535622069919748) that showed the
-compromised actually happened in September. The domain was transferred
-to BizCN in December, but the nameservers were not changed. The domain was
-transferred again in January to Key Systems, GmbH. This latency period
+compromise actually happened in September. The domain was transferred
+to the BizCN registrar in December, but the nameservers were not changed. The domain was
+transferred again in January to another registrar, Key Systems, GmbH. This latency period
 avoids immediate detection, and bouncing the domain through a couple
 registrars makes the recovery much harder.
 
@@ -202,14 +202,14 @@ time as the attackers renewed the domain for a couple more years past its origin
 expiration in 2029.
 
 Once transferred to Key Systems in late January, the new, fraudulent registrant listed the domain (along with
-others), on Afternic. If you had $190,000, you could have bought Perl.com.
+others), on Afternic (a domain marketplace). If you had $190,000, you could have bought Perl.com.
 This was quickly de-listed after the [The Register made inquiries](https://www.theregister.com/2021/01/28/perl_hijacking/).
 
 ## Some lessons
 
 Obviously this is an embarrassing situation, but it's not an uncommon
 story. This domain was registered in the early 90s, Tom Christiansen
-took control of it shortly after that, and basically kept paying the
+was given control of it shortly after that, and basically kept paying the
 registration fees. Since it wasn't a nagging problem, the domain was
 left as it was. Features such as two-factor authentication probably
 would have saved us much of this trouble (although social engineering
@@ -227,6 +227,12 @@ the risk of error increases. The Perl Foundation insisted on releasing their
 own [update](https://news.perlfoundation.org/post/perl.com-registry-attack)
 instead of using our prepared statement. And even though it was brief, the link
 to the Perl NOC blog was broken for several days. Don't take unnecessary risks.
+
+And, it always helps to have friends and good relationships with the people
+who are able to help. The people at Network Solutions and Key Systems were
+very helpful in the recovery, as were several other people who help keep
+the internet working. I wish I could give them direct credit, but I'm sure
+they'd rather do their work quietly.
 
 ## Where we are now
 
