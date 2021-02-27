@@ -2,7 +2,7 @@
   {
     "title"       : "Why I wrote Net::Google::CivicInformation",
     "authors"     : ["nick-tonkin"],
-    "date"        : "2021-02-09T19:35:09",
+    "date"        : "2021-03-09T19:35:09",
     "tags"        : ["community"],
     "draft"       : true,
     "image"       : "/images/why_i_wrote_net_google_civicinformation/polling_place.jpg",
