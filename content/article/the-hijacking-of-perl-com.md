@@ -3,7 +3,7 @@
     "title"       : "The Hijacking of Perl.com",
     "authors"     : ["brian-d-foy"],
     "date"        : "2021-02-28T08:59:13",
-    "tags"        : ["community"],
+    "tags"        : [],
     "draft"       : false,
     "image"       : "/images/the_hijack_of_perldotcom/crime.jpg",
     "thumbnail"   : "",
