@@ -24,7 +24,7 @@ Second, to be very clear, I'm just an editor for the website that uses
 the Perl.com domain. This means that I'm not actually the "injured party"
 in legal terms. Tom Christiansen is the domain registrant, and should
 legal matters progress, there's no reason for me, nor anyone else, to
-know all of the details. However, I talked to many of the people involved
+know all of the details. However, I've talked to many of the people involved
 in the process.
 
 ## The incident response
