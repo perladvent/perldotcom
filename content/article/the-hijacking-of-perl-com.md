@@ -205,7 +205,7 @@ transferred again in January to another registrar, Key Systems, GmbH. This laten
 avoids immediate detection, and bouncing the domain through a couple
 registrars makes the recovery much harder.
 
-![](/images/the_hijack_of_perldotcom/step2)
+![](/images/the_hijack_of_perldotcom/step2.png)
 
 Notice the long lag time of the first transfer, though. The domain is
 compromised in September but transferred in December. There's a reason for
