@@ -127,7 +127,7 @@ sub _extract_metadata_from_md ( $class, $filename ) {
 =item * is_published
 
 Returns true if the article is not a draft (which means it is handled
-by Hugo and visibile on the site)
+by Hugo and visible on the site)
 
 =item * is_draft
 
@@ -334,7 +334,7 @@ sub augment( $self, @args ) {
 
 =head1 SOURCE AVAILABILITY
 
-This module is on Github:
+This module is on GitHub:
 
 	https://github.com/tpf/perldotcom
 
