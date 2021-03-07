@@ -334,7 +334,7 @@ sub augment( $self, @args ) {
 
 =head1 SOURCE AVAILABILITY
 
-This module is on Github:
+This module is on GitHub:
 
 	https://github.com/tpf/perldotcom
 
