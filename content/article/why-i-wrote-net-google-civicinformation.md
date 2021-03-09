@@ -4,7 +4,7 @@
     "authors"     : ["nick-tonkin"],
     "date"        : "2021-03-09T19:35:09",
     "tags"        : ["community"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "/images/why_i_wrote_net_google_civicinformation/polling_place.jpg",
     "thumbnail"   : "",
     "description" : "",
