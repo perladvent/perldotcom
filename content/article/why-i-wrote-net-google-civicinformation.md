@@ -28,7 +28,7 @@ Like many of you, I suppose, I am still somewhat shell-shocked at the sustained 
 With all that in mind I set to creating a Perl client for the API. The first step was to obtain an auth token, which Google provides to developers for free (with a limit on daily queries). Authentication is extremely simple, so using [HTTP::Tiny]({{<mcpan "HTTP::Tiny" >}}) I quickly had a client in my module that could connect to the API and make queries. Because elected officials' contact information is only one thing the API provides, I made a parent class [Net::Google::CivicInformation]({{<mcpan "Net::Google::CivicInformation" >}}) and subclass [Net::Google::CivicInformation::Representatives]({{<mcpan "Net::Google::CivicInformation::Representatives" >}}) handling the representatives-related code. This will allow me or other authors to write sibling subclasses for other endpoints in future.
 
 Here's a portion of the subclass for fetching Representatives data:
-```
+```perl
 package Net::Google::CivicInformation::Representatives;
 
 our $VERSION = '1.02';
@@ -74,7 +74,7 @@ After a few attempts I had it working in a simple way that was pleasing to me as
 The next step was to put the new client to use, and a public-facing web app seemed the obvious choice. I've learned over the years that the majority of people still think of a .com domain as most inviting, and that a readable name is key. I settled on **ContactMyReps** for the name, registered the [contactmyreps.com](https://contactmyreps.com) domain, and pointed it at my server. At work I use [Mojolicious]({{<mcpan "Mojolicious" >}}) but I far prefer [Dancer2]({{<mcpan "Dancer2" >}})—it feels much more light weight and flexible and Perlish to me.
 
 The POST route handler for the lookup query:
-```
+```perl
 post '/find-by-address' => sub {
     my $params = params;
 
