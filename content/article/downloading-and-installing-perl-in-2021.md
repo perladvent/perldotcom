@@ -1,6 +1,6 @@
 
   {
-    "title"       : "Downloading and Installing Perl in 2021",
+    "title"       : "Downloading and Installing Perl in Early 2021",
     "authors"     : ["mark-gardner"],
     "date"        : "2021-03-17T13:05:40",
     "tags"        : [
@@ -25,7 +25,8 @@
 
 If you're reading this article, you're likely looking for a simple way to
 download and install the Perl programming language. Or you already have
-Perl installed as part of your operating system, but it's an older version and
+Perl installed as part of your operating system, but it's older than the
+currently-supported versions (5.32.1 or 5.30.3) and
 you'd like to use the latest and greatest features.
 [The options](https://www.perl.org/get.html) may seem daunting, especially if
 you're new to computers or programming. We'll take things step by step here,
@@ -78,6 +79,15 @@ depending on what computer operating system you're using:
   [ActiveState Platform](https://www.activestate.com/products/platform/) for
   managing different language runtimes, you may want to give them a try.
 
+  Windows also has two Linux-like environments in the form of
+  [Cygwin](https://www.cygwin.com/) and
+  [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/).
+  Follow the Linux directions below to install Perl in one of these.
+
+  There is also the [Chocolatey](https://chocolatey.org/) package manager for
+  Windows, which provides an option for installing either ActiveState or
+  Strawberry Perl.
+
 * **Apple macOS**: macOS comes with Perl pre-installed: version
   5.18 (2013) on macOS Catalina 10.15 and 5.28 (2018) on Big Sur 11. But,
   [Apple has said that scripting language runtimes are deprecated](https://developer.apple.com/documentation/macos-release-notes/macos-catalina-10_15-release-notes#Scripting-Language-Runtimes),
@@ -114,15 +124,16 @@ depending on what computer operating system you're using:
   For other Unix systems with an older version of Perl, I'm afraid you're going
   to have to build from source as detailed below.
 
-Next steps: Building your own
------------------------------
+Next steps: Building your own with perlbrew or plenv
+----------------------------------------------------
 
 Perl's source code (the instructions that build a program) is
 freely available and compiles on
 [over 100 platforms](https://perldoc.pl/perlport#PLATFORMS). You can
 [download it directly](https://www.perl.org/get.html) and build a version
 yourself, after installing any prerequisite packages used to build software on
-your operating system. However, most Perl developers choose to use a tool to
+your operating system (see below). However, most Perl developers choose to use
+a tool to
 automate that process and manage different versions of Perl side-by-side.
 Enter [perlbrew](https://perlbrew.pl/).
 
@@ -131,7 +142,13 @@ as old as 5.8 (2002), which should cover most Linux and Unix systems in use
 today. Once you've installed your operating system's build tools and followed
 the directions on [the perlbrew home page](https://perlbrew.pl/), typing
 `perlbrew install 5.32.1` followed by `perlbrew switch 5.32.1` will install
-and switch to the latest version of Perl as of this writing.
+and switch to the latest version of Perl as of this writing. Installing older
+versions of Perl and switching between them use the same steps, e.g.:
+
+```bash
+perlbrew install 5.30.3 --as older-perl
+perlbrew switch older-perl
+```
 
 I use an alternative, [plenv](https://github.com/tokuhirom/plenv),
 which uses a different mechanism to manage versions of Perl using the `bash`
@@ -140,17 +157,52 @@ on which file system directory you're working in. It's
 [set up](https://github.com/tokuhirom/plenv/blob/master/README.md#installation)
 using either Homebrew or `git`.
 
+Windows users have the option of
+[berrybrew](https://github.com/stevieb9/berrybrew), which acts much like
+perlbrew for Strawberry Perl with slightly different
+[options](https://github.com/stevieb9/berrybrew#commands).
+
+Building from the source directly
+---------------------------------
+
+If you feel you don't need to manage multiple installations of Perl or you
+want to do things old-school, you can always download and build directly from
+the source code. Select "Download Latest Stable Source" from the
+[Perl Download](https://www.perl.org/get.html) web page, then
+[unarchive it](https://opensource.com/article/17/7/how-unzip-targz-file)
+into a directory.
+
+You should always check the included `README` files for information on how to
+build on your system; there's a generic one as well as specific `README`s for
+various platforms (`README.linux`, `README.macosx`, `README.win32`, etc.).
+Note that the `README.macosx` document applies to current versions of macOS,
+which was previously called Mac OS X; `README.macos` is for the "Classic"
+Macintosh operating system, unsupported since 2004.
+
+On most Unix-like systems (including macOS), you can then configure, build,
+test, and install Perl by issuing the following commands:
+
+```bash
+./Configure -des -Dprefix=/usr/local/
+make
+make test
+sudo make install
+```
+
+This will build Perl with all default options for your system and install it
+in the `/usr/local` directory.
+
 Up and running
 --------------
 
 Regardless of whether you've chosen to install a pre-built package or roll
 your own, you should now be able to issue the following at your command line:
 
-```
+```bash
 perl -v
 ```
 
-...and receive a reply that looks something like:
+...and receive a reply that looks something like this:
 
 ```
 This is perl 5, version 32, subversion 1 (v5.32.1) built for darwin-2level
