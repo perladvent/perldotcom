@@ -33,7 +33,7 @@ in Perl 5.32 and the `try`/`catch` syntax in an upcoming version.
 
 ## Tell me a little about yourself and your background; whatever you feel comfortable sharing.
 
-Lets see -- I'm going to do this in reverse chronological order.
+Lets see—I'm going to do this in reverse chronological order.
 
 Currently I'm a self-employed contractor, splitting my time between
 Perl and other computery things, and electronics. Most of the jobs I've
@@ -59,7 +59,7 @@ for some of those modules. The deeper you dive into that area the more
 you find you have to understand how the internals of the interpreter
 work. The largest amount of time I spent on that was probably while
 making the [Future::AsyncAwait]({{< mcpan "Future::AsyncAwait" >}})
-module -- that has to have quite a tight
+module—that has to have quite a tight
 in-depth integration with the interpreter core, in order to
 successfully suspend and resume running functions, which is the basis
 of how the `async`/`await` syntax all works.
@@ -74,7 +74,7 @@ learning exercise to see if I could understand and use this new-fangled
 "[custom keyword]({{< perldoc "perlapi#wrap_keyword_plugin" >}})" mechanism
 that was recently added to Perl. Once I had
 a proof-of-concept working, it didn't take me long to work out how to
-write it "correctly" -- in the sense that the body of the `try` and
+write it "correctly"—in the sense that the body of the `try` and
 `catch` blocks were true blocks, and not closures-in-disguise like all
 of the pure Perl and even all of the custom syntax modules at the time
 were all doing. This meant it had a much ligher calling overhead,
@@ -107,7 +107,7 @@ continue to hold - merely saying
 use v7;
 ```
 
-would be sufficient to get that -- along with all the other fancy fun
+would be sufficient to get that—along with all the other fancy fun
 things I hope to see by that time.
 
 \
@@ -118,7 +118,7 @@ things I hope to see by that time.
 It already is just that. There are more features in
 Syntax::Keyword::Try than the "minimal viable product" part that I
 ported to core in [5.33](https://github.com/Perl/perl5/releases/tag/v5.33.7).
-Two main things come to mind -- the typed
+Two main things come to mind—the typed
 exception dispatch, and the `finally` blocks. I've lately been looking
 at some `defer` syntax for a more general-purpose version of `finally`.
 
@@ -130,9 +130,9 @@ slot type assertions, and so on...
 \
 \
 
-## What's next for you aside from exceptions in Perl? I've been reading about the work you've been doing with [Curtis "Ovid" Poe](/article/the-perl-ambassador-curtis-poe/) on [Corinna](https://github.com/Ovid/Cor/wiki) and your [Object::Pad]({{< mcpan "Object::Pad" >}}) module -- would you like to speak on that?
+## What's next for you aside from exceptions in Perl? I've been reading about the work you've been doing with [Curtis "Ovid" Poe](/article/the-perl-ambassador-curtis-poe/) on [Corinna](https://github.com/Ovid/Cor/wiki) and your [Object::Pad]({{< mcpan "Object::Pad" >}}) module—would you like to speak on that?
 
-Yes, object systems seem to be of interest currently -- so part of my
+Yes, object systems seem to be of interest currently—so part of my
 thoughts are about Corinna and Object::Pad. But I'm also working on a
 number of other things. `defer` I already mentioned above. Additionally
 I have some thoughts in the direction of `match`/`case`, and a few other
