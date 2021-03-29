@@ -1,28 +1,29 @@
-
-  {
-    "title"       : "Interview: Trying to Catch Paul \"LeoNerd\" Evans",
-    "authors"     : ["mark-gardner"],
-    "date"        : "2021-03-18T16:24:37",
-    "tags"        : [
-                      "perl",
-                      "interview",
-                      "cpan",
-                      "syntax",
-                      "core",
-                      "object-oriented",
-                      "future",
-                      "async-await",
-                      "promises",
-                      "asynchronous-programming",
-                      "perl-7",
-                      "corinna"
-                    ],
-    "draft"       : true,
-    "image"       : "",
-    "thumbnail"   : "",
-    "description" : "The prolific CPAN and Perl core developer talks about exceptions and other Perl topics.",
-    "categories"  : "community"
-  }
+{
+   "categories" : "community",
+   "date" : "2021-03-18T16:24:37",
+   "image" : "/images/interview-trying-to-catch-paul-leonerd-evans/pevans-2021-03-29_18-50-22.jpg",
+   "description" : "The prolific CPAN and Perl core developer talks about exceptions and other Perl topics.",
+   "draft" : true,
+   "thumbnail" : "/images/interview-trying-to-catch-paul-leonerd-evans/thumb_pevans-2021-03-29_18-50-22.jpg",
+   "title" : "Interview: Trying to Catch Paul \"LeoNerd\" Evans",
+   "tags" : [
+      "perl",
+      "interview",
+      "cpan",
+      "syntax",
+      "core",
+      "object-oriented",
+      "future",
+      "async-await",
+      "promises",
+      "asynchronous-programming",
+      "perl-7",
+      "corinna"
+   ],
+   "authors" : [
+      "mark-gardner"
+   ]
+}
 
 **[Paul "LeoNerd" Evans](http://www.leonerd.org.uk/)** is a
 [CPAN author](https://metacpan.org/author/PEVANS),
