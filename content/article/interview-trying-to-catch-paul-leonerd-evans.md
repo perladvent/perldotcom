@@ -1,6 +1,6 @@
 {
    "categories" : "community",
-   "date" : "2021-03-30T16:24:37",
+   "date" : "2021-03-30T01:24:37",
    "image" : "/images/interview-trying-to-catch-paul-leonerd-evans/pevans-2021-03-29_18-50-22.jpg",
    "description" : "The prolific CPAN and Perl core developer talks about exceptions and other Perl topics.",
    "draft" : false,
