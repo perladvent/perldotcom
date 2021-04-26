@@ -1,6 +1,6 @@
 
   {
-    "title"       : "Downloading and Installing Perl in Early 2021",
+    "title"       : "Downloading and Installing Perl in 2021",
     "authors"     : ["mark-gardner"],
     "date"        : "2021-04-27T04:05:40",
     "tags"        : [
