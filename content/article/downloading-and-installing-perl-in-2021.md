@@ -59,7 +59,7 @@ The two main "flavors" of Perl for Windows are
 [Strawberry Perl](https://strawberryperl.com/). Which one you choose depends
 on what you plan to use it for.
 
-*ActiveState* provides a
+**ActiveState** provides a
 [free community edition of ActivePerl](https://www.activestate.com/products/perl/downloads/)
 licensed only for development purposes. If you intend to do
 commercial work or want technical support beyond community forums, you'll
@@ -72,7 +72,7 @@ experimental 5.32 (2020) release licensed for any purpose. The latter is
 also currently only installable via the Windows command line; earlier
 versions use a standard Windows setup wizard.
 
-*[Strawberry Perl](https://strawberryperl.com/)* is a Perl environment for
+**[Strawberry Perl](https://strawberryperl.com/)** is a Perl environment for
 Windows that strives to be as close as possible to Perl on Unix and Linux
 systems, where the language got its start. Besides the Perl binaries, it
 also includes a compiler, related tools, external libraries, and database
