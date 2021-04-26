@@ -174,7 +174,7 @@ You only have to take care to work directly on `@_` (or aliases made with care) 
 
 ## Implicit conversion to reference with prototype
 Then there is another thing to know around subs and references: the usage of prototype.
-It allows for instance a sub to receive an array and to implicitely convert it to a reference.
+Prototypes change the way perl behaves and it allows for instance a sub to receive an array and to implicitely convert it to a reference.
 
 The following example forces the array to its reference instead of flattening it:
 ```perl
