@@ -16,7 +16,7 @@
 }
 
 ## Assignments by copy or reference
-When assigning, `perl` often copies the value, see by yourself this assignment:
+When assigning, `perl` often copies the value, see the following code:
 ```perl
 my $var1 = "not modified";
 
@@ -163,7 +163,7 @@ sub bydefaultarray {
 my $variable = "not modified";
 bydefaultarray($variable);
 
-print "$variable\n"
+print "$variable\n";
 ```
 And it is well modified:
 ```
@@ -187,7 +187,7 @@ sub proto(\@) {
 
 my @array = ("foo", "bar", "baz");
 proto(@array);
-print "@array\n"
+print "@array\n";
 ```
 With the output:
 ```
@@ -230,7 +230,7 @@ And printing the reference values to check if they are well the same:
 ```perl
 print \$alias . " equals " . \$variable . "\n";
 ```
-There are well the same variables:
+And there are well the same:
 ```
 SCALAR(0x5637ffc833a0) equals SCALAR(0x5637ffc833a0)
 ```
