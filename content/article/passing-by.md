@@ -71,7 +71,19 @@ Both of them will print:
 foo
 ```
 
-You can even obtain a **reference of a reference** and later **dereference multiple times**. It enables the possibility to produce weird/dumb things like this:
+You can also build a reference by its name with [symbolic references](https://perldoc.perl.org/perlref#Symbolic-references):
+```perl
+my $name = "var";
+$$name = "bazinga";
+
+print "$var\n";
+```
+That will print:
+```
+bazinga
+```
+
+Or you can even obtain a **reference of a reference** and later **dereference multiple times**. It enables the possibility to produce weird/dumb things like this:
 ```perl
 my $str = "bazinga";
 
@@ -85,9 +97,8 @@ print "$$$$$$$$$$$rrrrrrrrrref\n";
 But I repeat, don't do this.
 ![](/images/passing-by/weird.png)
 
-
-
-To better understand, you can check by printing the [reference](https://perldoc.perl.org/perlref) of the variable:
+## Inspect references
+Back to our variables, you can check by printing their [reference](https://perldoc.perl.org/perlref):
 ```perl
 # Compare storage location
 print \$var1 . " vs " . \$var2 . "\n";
@@ -109,7 +120,7 @@ foreach my $var (@array) {
 
 print "@array\n";
 ```
-And the array is well modified:
+And the array is then well modified:
 ```
 modified modified modified
 ```
@@ -238,3 +249,8 @@ And there are well the same:
 SCALAR(0x5637ffc833a0) equals SCALAR(0x5637ffc833a0)
 ```
 
+Aliasing is also a matter of performances, and these tricks were used for this purpose.
+
+Recent Perl comes with [Copy-On-Write](https://en.wikipedia.org/wiki/Copy-on-write) feature, see [perl 5.20.0 performance enhancements](https://perldoc.perl.org/5.20.0/perldelta#Performance-Enhancements) and [perlguts COW](https://perldoc.perl.org/5.20.0/perlguts#Copy-on-Write)
+
+Thanks to COW, when assigning, we get 2 different variables but the value is actually copied only if needed and it could produce significant performance gain.
