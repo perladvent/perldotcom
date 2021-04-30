@@ -35,7 +35,7 @@ It is because the assignment copies the content of the variable and does not *al
 To inspect the variables, we should inspect their **references**.
 
 ## A word about references
-A [reference](https://perldoc.perl.org/perlref) represents a single scalar value that holds *where-the-value-is-stored* informations.
+A [reference](https://perldoc.perl.org/perlref) represents a scalar value that holds *where-the-value-is-tored* informations.
 Having the same locations means it is the same variable (or an alias).
 The string representation of a reference even gives details about what kind of value (scalar, array, hash...) is pointed. Like the `SCALAR(...)` just seen above:
 ```
@@ -46,14 +46,19 @@ If you're only interested by the type pointed, you can get this information (e.g
 my @array = ();
 print ref(\@array) . "\n";
 ```
+That will give you:
+```
+ARRAY
+```
 
-You can get a reference by using the [backslash operator](https://perldoc.perl.org/perlref#Backslash-Operator) and then dereference with sigils (e.g. `$`) or with `->`
+You can get (create) a reference by using the [backslash operator](https://perldoc.perl.org/perlref#Backslash-Operator) and dereference with sigils (e.g. `$`) or with `->`
 ```perl
 my $str = "foo";
 
 # Get reference
 my $ref = \$str;
 
+# Derefrence with $
 print "$$ref\n";
 ```
 Or 
@@ -74,6 +79,8 @@ foo
 You can also build a reference by its name with [symbolic references](https://perldoc.perl.org/perlref#Symbolic-references):
 ```perl
 my $name = "var";
+
+# Also store in $var
 $$name = "bazinga";
 
 print "$var\n";
@@ -94,7 +101,7 @@ my $rrrrrrrrrref = \\\\\\\\\\$str;
 print "$$$$$$$$$$$rrrrrrrrrref\n";
 ```
 
-But I repeat, don't do this.
+But don't do this.
 ![](/images/passing-by/weird.png)
 
 ## Inspect references
@@ -142,7 +149,7 @@ That prints:
 ```
 not modified
 ```
-The modification is not visible outside the sub because in order to propagate the change, it should be returned to caller with a `return $cp;` and assigned like `$var = bycopy($var)` (actually even the return is optional because of "default variable magic").
+The modification is not visible outside the sub because in order to propagate the change, it should be returned to caller with a `return $cp;` and assigned with `$var = bycopy($var)` (actually even the return is optional because of "default variable magic").
 
 Obviously, this limitation is usually a good idea (side effect...), but here I was actually trying on purpose to modify the variable even for the caller...
 
@@ -199,6 +206,8 @@ sub proto(\@) {
 }
 
 my @array = ("foo", "bar", "baz");
+
+# Array flattening won't occur but instead a reference will be passed
 proto(@array);
 
 print "@array\n";
@@ -215,6 +224,8 @@ For instance, you can use the module [Data::Alias](https://metacpan.org/pod/Data
 use Data::Alias;
 
 my $variable = "not modified";
+
+# Alias!
 alias $alias = $variable;
 $variable = "modified";
 
@@ -231,7 +242,7 @@ use feature qw/refaliasing declared_refs/;
 no warnings qw/experimental::refaliasing experimental::declared_refs/;
 
 my $variable = "not modified";
-my \$alias = \$variable;
+my \$alias = \$variable; # Assigning to reference
 $variable = "modified";
 
 print "$alias\n";
@@ -240,16 +251,16 @@ That will print:
 ```
 modified
 ```
-And printing the reference values to check if they are well the same: 
+And printing the reference values to compare: 
 ```perl
 print \$alias . " equals " . \$variable . "\n";
 ```
-And there are well the same:
+And there are well pointing to the same thing:
 ```
 SCALAR(0x5637ffc833a0) equals SCALAR(0x5637ffc833a0)
 ```
 
-Aliasing is also a matter of performances, and these tricks were used for this purpose.
+Aliasing is also a matter of performances, and these tricks were heavily used for this purpose.
 
 Recent Perl comes with [Copy-On-Write](https://en.wikipedia.org/wiki/Copy-on-write) feature, see [perl 5.20.0 performance enhancements](https://perldoc.perl.org/5.20.0/perldelta#Performance-Enhancements) and [perlguts COW](https://perldoc.perl.org/5.20.0/perlguts#Copy-on-Write)
 
