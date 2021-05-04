@@ -4,7 +4,7 @@
     "date"        : "2021-05-25T02:54:23",
     "tags"        : ["one-liners"],
     "draft"       : true,
-    "image"       : "",
+    "image"       : "/images/perl-one-liners/on_the_mat.jpg",
     "thumbnail"   : "",
     "description" : "",
     "categories"  : "tutorials"
@@ -268,3 +268,7 @@ real    0m0.536s
 * [Awesome Perl](https://github.com/hachiojipm/awesome-perl) has a curated list of awesome Perl5 frameworks, libraries and software
 
 * [Perl XML::LibXML by example](https://grantm.github.io/perl-libxml-by-example/) for a detailed book on `XML::LibXML` module
+
+<hr/>
+
+*[image from <a href="https://www.flickr.com/photos/ljsilver71/14139619905/in/photolist-nxtfo6-xDEB2-2hdZdFv-XPjLeQ-6nGeoM-29v1fwo-puR1K-2kNaM6P-nxtgeK-a2nLuc-qvDmkw-nfYDTu-6R6FQB-2i1Psj2-74Nwsu-2kNam6c-c2EsqS-2i1PsgB-nvqjK1-2i1RTpS-2i1T2RR-2i1S2Wr-2i1Psik-2gcee9c-2i1PHci-23p4pKV-2i4eukR-urRBFS-nzf35k-6R6Fmp-nvqicm-pvqAaK-6RaKuU-2i1S8S9-2i1Tbr1-2i1Psd5-2i1S9WP-2i1T2LL-nfYwEo-2i1RTnx-2i1RTbW-2i1PsbB-2i1S2VE-2i1S8Tg-2tFtHH-2i1Psku-2i1TbFV-614Rh8-2i1S8Va-27YK5Fj">Riccardo Maria Mantero</a> on Flickr, (CC BY-NC-ND 2.0)]*
