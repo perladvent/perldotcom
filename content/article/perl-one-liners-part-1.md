@@ -65,6 +65,15 @@ $ echo 'a | a | a | a | a | a | a | a' | perl -pe 's/ *\| */$i++/ge'
 a0a1a2a3a4a5a6a
 ```
 
+### Reverse a substring
+
+I also used the `/e` trick [to reverse matched pattern](https://stackoverflow.com/questions/63681983/sed-reverse-matched-pattern):
+
+```
+$ echo 'romarana:qwerty12543' | perl -pe 's/\d+$/reverse $&/e'
+romarana:qwerty34521
+```
+
 ### Do some arithmetic
 
 Add another `/e` to get `/ee` means there are two rounds of Perl code. I evaluate the replacement side to get the string that I'll evaluate as Perl code. In [Arithmetic replacement in a text file](https://stackoverflow.com/questions/62241101/arithmetic-replacement-in-a-text-file), I need to find simple arithmetic, like `25100+10`, and replace that with its arithmetic result:
