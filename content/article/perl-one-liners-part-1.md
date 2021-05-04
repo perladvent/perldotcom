@@ -4,11 +4,13 @@
     "date"        : "2021-05-11T02:54:23",
     "tags"        : ["one-liners"],
     "draft"       : true,
-    "image"       : "",
+    "image"       : "/images/perl-one-liners/cage_match.jpg",
     "thumbnail"   : "",
     "description" : "",
     "categories"  : "tutorials"
   }
+
+<br/>
 
 A shell (like Bash) provides built-in commands and scripting features to easily solve and automate various tasks. External commands like grep, sed, Awk, sort, find, or parallel can be combined to work with each other. Sometimes you can use Perl either as a single replacement or a complement to them for specific use cases.
 
@@ -236,3 +238,6 @@ I'll have more in Part 2, where I'll delve into XML, JSON, and CSV.
 
 * [Differences between sed on Mac OSX and other standard sed](https://unix.stackexchange.com/questions/13711/differences-between-sed-on-mac-osx-and-other-standard-sed)
 
+<hr/>
+
+*[image from <a href="https://www.flickr.com/photos/ppetrovic72/3981925030/in/photolist-74SpzQ-bU41RP-2kNaLcQ-nxdaVA-bKtznV-bwyLmq-beJniM-58jr5R-2kNakh3-6fxhGR-nxtfo6-xDEB2-2hdZdFv-XPjLeQ-6nGeoM-29v1fwo-puR1K-2kNaM6P-nxtgeK-a2nLuc-qvDmkw-nfYDTu-6R6FQB-2i1Psj2-74Nwsu-2kNam6c-c2EsqS-2i1PsgB-nvqjK1-2i1RTpS-2i1T2RR-2i1S2Wr-2i1Psik-2gcee9c-2i1PHci-23p4pKV-2i4eukR-urRBFS-nzf35k-6R6Fmp-nvqicm-pvqAaK-6RaKuU-2i1S8S9-2i1Tbr1-2i1Psd5-2i1S9WP-2i1T2LL-nfYwEo-2i1RTnx">Dim Sum!</a> on Flickr, (CC BY-NC-ND 2.0)]*
