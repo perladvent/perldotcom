@@ -1,8 +1,7 @@
-
   {
-    "title"       : "Perl One-Liners",
+    "title"       : "Perl / Unix One-liner Cage Match, Part 1",
     "authors"     : ["sundeep-agarwal"],
-    "date"        : "2020-11-30T20:54:23",
+    "date"        : "2021-5-11T02:54:23",
     "tags"        : [one-liners],
     "draft"       : true,
     "image"       : "",
@@ -17,12 +16,11 @@ Perl is the most robust portable option for text processing needs. Perl has a fe
 
 ## One-liners or scripts?
 
-For assembly level testing of a DSP chip, I had to replicate the same scenario for multiple address ranges. My working knowledge of Linux command line was limited at that time and I didn't know how to use sed or Awk. I used Vim and Perl for all sorts of text processing needs.
+For assembly-level testing of a digital signal processing (DSP) chip, I had to replicate the same scenario for multiple address ranges. My working knowledge of Linux command line was limited at that time and I didn't know how to use sed or Awk. I used Vim and Perl for all sorts of text processing needs.
 
-I didn't know about Perl's options for one-liners, so I used to modify a script whenever I had to do search and replace for multiple files. Once, I even opened the files as Vim buffers and used `bufdo` to apply a command to all buffers to see if that would make my workflow simpler. If I had known about Perl one-liners, I could have easily combined find and Bash globs to make my life easier.
+I didn't know about Perl's options for one-liners, so I used to modify a script whenever I had to do search-and-replace for multiple files. Once, I even opened the files as Vim buffers and used `bufdo` to apply a command to all buffers to see if that would make my workflow simpler. If I had known about Perl one-liners, I could have easily combined find and Bash globs to make my life easier.
 
-I can pass an argument to `-i` to create a backup of the original file
-For example, `-i.bkp` will create *ip.txt.bkp* as the backup:
+I can pass an argument to `-i` to create a backup of the original file. For example, `-i.bkp` will create *ip.txt.bkp* as the backup:
 
 ```bash
 $ perl -i -pe 's/0xABCD;/0x1234;/; s/0xDEAD;/0xBEEF;/;' *.tests
@@ -49,7 +47,7 @@ ABC r1,";" ; comment
   ;;;
 ```
 
-I need to change `;` to `@`, but don't change `;` within single or double quotes. I match those in the first branch of the alternation and use `(*SKIP)(*F)` to not replace those (I wish it had a shorter syntax, like `(*SF)`):
+I need to change `;` to `@`, but not change `;` within single or double quotes. I match those in the first branch of the alternation and use `(*SKIP)(*F)` to not replace those (I wish it had a shorter syntax, like `(*SF)`):
 
 ```
 $ perl -pe 's/(?:\x27;\x27|";")(*SKIP)(*F)|;/@/' ip.txt
@@ -60,7 +58,7 @@ ABC r1,";" @ comment
 
 ### Replace a string with an incrementing value
 
-I can [replace string with incrementing value](https://stackoverflow.com/questions/42554684/shell-replace-string-with-incrementing-value). The `/e` on a substitution allows me to make the replacement side Perl code. Whatever the code evaluates to is the replacement. The can be a variable that I increment:
+I can [replace string with incrementing value](https://stackoverflow.com/questions/42554684/shell-replace-string-with-incrementing-value). The `/e` on a substitution allows me to treat the replacement side as Perl code. Whatever that code evaluates to is the replacement. That can be a variable that I increment:
 
 ```bash
 $ echo 'a | a | a | a | a | a | a | a' | perl -pe 's/ *\| */$i++/ge'
@@ -69,8 +67,7 @@ a0a1a2a3a4a5a6a
 
 ### Do some arithmetic
 
-Add another `/e` to get `/ee` means there are two rounds of Perl code.
-In [Arithmetic replacement in a text file](https://stackoverflow.com/questions/62241101/arithmetic-replacement-in-a-text-file), I need to find simple arithmetic, like `25100+10`, and replace that with its arithmetic result:
+Add another `/e` to get `/ee` means there are two rounds of Perl code. I evaluate the replacement side to get the string that I'll evaluate as Perl code. In [Arithmetic replacement in a text file](https://stackoverflow.com/questions/62241101/arithmetic-replacement-in-a-text-file), I need to find simple arithmetic, like `25100+10`, and replace that with its arithmetic result:
 
 ```
 id=25100+10
@@ -97,7 +94,7 @@ $ perl -pe 's/\d+\+\d+/$&/gee' ip.txt
 
 ## Handling the newline
 
-Here's how you can perform multiline fixed string substitution with `perl`. Don't save contents of *search.txt* and *replace.txt* in shell variables—trailing newlines and ASCII NUL characters will cause issues. I want to un-hypenate this text:
+Here's how you can perform multi-line fixed string substitution with `perl`. Don't save contents of *search.txt* and *replace.txt* in shell variables—trailing newlines and ASCII NUL characters will cause issues. I want to un-hypenate this text:
 
 ```bash
 Hello there.
@@ -107,7 +104,7 @@ and pleasant jou-
 rney.
 ```
 
-In Awk this is easy. Set the record separator `RS` to nothing, then make all the substitutions:
+In Awk this is easy. Set the record separator `RS` to nothing, then make all the substitutions on one big string:
 
 ```bash
 $ awk 'BEGIN {RS=""}{gsub(/-\n/,"",$0); print $0}' test.txt
@@ -124,8 +121,6 @@ Hello there.
 It will rain today. Have a safe
 and pleasant journey.
 ```
-
-
 
 #######################
 
@@ -147,7 +142,7 @@ Some other regex libraries have problems tied to whatever they use to implement 
 There's a [problem with backreferences in glibc](https://sourceware.org/bugzilla/show_bug.cgi?id=25322) that I found and [reported for grep](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=26864). This bug is seen in at least GNU implementations of grep and sed. As far as I know, no implementation of Awk supports backreferences within regexp definition.
 
 I wanted to get words having two occurrences of repeated characters.
-This example takes some time and results in no output
+This example takes some time and results in no output:
 
 ```bash
 $ grep -m2 -xiE '([a-z]*([a-z])\2[a-z]*){2}' /usr/share/dict/words
@@ -219,252 +214,9 @@ $ echo 'it line with it here sit too' | perl -pe 's/with(.*\bit\b){2}/XYZ/'
 it line with it here sit too
 ```
 
-## Bigger library
+## Stay tuned
 
-Perl has a much bigger collection of built-in functions compared to Awk. For command-line usage, I often need `tr`, `join`, `map` and `grep`. Also, `sort` is much simpler to use in Perl compared to Awk, along with array/hash distinction. Here are some examples.
-
-### Append items to a list
-
-This problem wants to append columns to rows that have too few, like this where the `c` and `d` rows don't have as many columns:
-
-```bash
-a,10,12,13
-b,20,22
-c,30
-d,33
-```
-
-[This appends zeros to list](https://stackoverflow.com/questions/49765879/append-zeros-to-list) by using the `/e` again. This time, the Perl in the replacement counts the number of commas, and subtracts that from 3 to find out how many more columns it needs. The `x` is the string replication operator:
-
-```
-$ perl -pe 's|$|",0" x (3 - tr/,//)|e' ip.txt
-a,10,12,13
-b,20,22,0
-c,30,0,0
-d,33,0,0
-```
-
-### Reversing things
-
-In [reverse complement DNA sequence for a specific field](https://stackoverflow.com/questions/45571828/execute-bash-command-inside-awk-and-print-command-output), I need to select part of the string, complement it, and turn it around:
-
-```bash
-ABC DEF GATTAG GHK
-ABC DEF GGCGTC GHK
-ABC DEF AATTCC GHK
-```
-
-Use the `tr` and `reverse` in the replacement side (with `/e` again):
-
-```bash
-$ perl -pe 's/^(\H+\h+){2}\K\H+/reverse $&=~tr|ATGC|TACG|r/e' test.txt
-ABC DEF CTAATC GHK
-ABC DEF GACGCC GHK
-ABC DEF GGAATT GHK
-```
-
-With `-a`, it automatically splits on whitespace and puts the result in `@F`. Do the work on the right element then output `@F` again:
-
-```bash
-$ perl -lane '$F[2]=reverse $F[2]=~tr/ATGC/TACG/r; print "@F"'
-ABC DEF CTAATC GHK
-ABC DEF GACGCC GHK
-ABC DEF GGAATT GHK
-```
-
-### Sort a CSV row
-
-How about [sorting rows in csv file without header & first column](https://stackoverflow.com/questions/48920626/sort-rows-in-csv-file-without-header-first-column)? Assuming this is simple CSV like this:
-
-```bash
-id,h1,h2,h3,h4,h5,h6,h7
-101,zebra,1,papa,4,dog,3,apple
-102,2,yahoo,5,kangaroo,7,ape
-```
-
-This uses `-a` again, but also `-F` to make the record separator the comma:
-
-```
-$ perl -F, -lane 'print join ",", $.==1 ? @F : (shift @F, sort @F)' ip.txt
-id,h1,h2,h3,h4,h5,h6,h7
-101,1,3,4,apple,dog,papa,zebra
-102,2,5,7,ape,kangaroo,yahoo
-```
-
-I use the `$.`, the input line number, to skip the first line (the header). In all other lines, I make a list of the first element of `@F` and the sorted list of the rest of the elements.
-
-## Using Perl modules
-
-Apart from built-in functions, Standard or CPAN modules come in handy too. Load those with `-M` and put the import list after a `=`:
-
-```bash
-$ s='floor bat to dubious four'
-$ echo "$s" | perl -MList::Util=shuffle -lanE 'say join ":", shuffle @F'
-bat:four:dubious:floor:to
-
-$ s='3,b,a,3,c,d,1,d,c,2,2,2,3,1,b'
-$ echo "$s" | perl -MList::Util=uniq -F, -lanE 'say join ",", uniq @F'
-3,b,a,c,d,1,2
-
-$ s='123 aGVsbG8gd29ybGQK'
-$ echo "$s" | perl -MMIME::Base64 -ane 'print decode_base64 $F[1]'
-hello world
-```
-
-## CPAN
-
-The Comprehensive Perl Archive Network ([CPAN](https://www.cpan.org)) has a huge collection of modules for various use cases.  Here are some examples.
-
-### Extract IPv4 addresses
-
-The [Regexp::Common](https://metacpan.org/pod/Regexp::Common) has shortcuts for common things you want to match. Here's some text with dotted-decimal IP addresses:
-
-```bash
-3.5.52.243 5.4.3 34242534.23.42.42
-foo 234.233.54.123 baz 4.4.4.3
-```
-
-It's easy to extract the IPv4 addresses:
-
-```
-$ perl -MRegexp::Common=net -nE 'say $& while /$RE{net}{IPv4}/g' ipv4.txt
-3.5.52.243
-34.23.42.42
-234.233.54.123
-4.4.4.3
-```
-
-### Real CSV processing
-
-Earlier I did some simple CSV procesing, but if I want to do it for real I can use [Text::CSV_XS](https://metacpan.org/pod/Text::CSV_XS) to make sure everything happens correctly. This one handles the quoted field `fox,42`:
-
-```bash
-$ s='eagle,"fox,42",bee,frog\n1,2,3,4'
-
-# note that neither -n nor -p are used here
-$ printf '%b' "$s" | perl -MText::CSV_XS -E 'say $row->[1]
-                     while $row = Text::CSV_XS->new->getline(*ARGV)'
-fox,42
-2
-```
-
-### Processing XML
-
-Processing XML files is another format that's easy to mess up. Many people try to do this with regex, but that can easily go wrong. Here's an example file:
-
-```bash
-<doc>
-    <greeting type="ask">Hi there. How are you?</greeting>
-    <greeting type="reply">I am good.</greeting>
-    <color>
-        <blue>flower</blue>
-        <blue>sand stone</blue>
-        <light-blue>sky</light-blue>
-        <light-blue>water</light-blue>
-    </color>
-</doc>
-```
-
-The `xpath` (a Perl program) and `xmllint` but their output is annoying and hard to change:
-
-```bash
-$ xmllint --xpath '//blue/text()' test.xml
-flowersand stone
-brian@otter Desktop [3570]
-$ xpath test.xml '//blue/text()'
-Found 2 nodes:
--- NODE --
-flower-- NODE --
-sand stone
-```
-
-The [XML::LibXML](https://metacpan.org/pod/XML::LibXML) module can handle this easily because I'm in control:
-
-```bash
-$ perl -MXML::LibXML -E '
-	$ip = XML::LibXML->load_xml(location => $ARGV[0]);
-    say $_->to_literal() for $ip->findnodes("//blue")' sample.xml
-flower
-sand stone
-```
-
-
-### Processing JSON
-
-JSON files have the same issue. You don't want to do regexes on this:
-
-```bash
-$ s='{"greeting":"hi","marks":[78,62,93],"fruit":"apple"}'
-```
-
-Various JSON modules, such as [Cpanel::JSON::XS](http://metacpan.org/pod/Cpanel::JSON::XS) can handle this:
-
-```
-$ echo "$s" | perl -MCpanel::JSON::XS -0777 -E '$ip=decode_json <>;
-              say join ":", @{$ip->{marks}}'
-78:62:93
-```
-
-Sometimes it's easier to put that in a script (although that's not really a one-liner anymore):
-
-```
-$ echo "$s" | cpanel_json_xs
-{
-   "fruit" : "apple",
-   "greeting" : "hi",
-   "marks" : [
-      78,
-      62,
-      93
-   ]
-}
-```
-
-A non-Perl example of the same thing is [jq](https://stedolan.github.io/jq/), but that's something you have to install separately and might not be available:
-
-```bash
-$ echo $s | jq '.marks | join(":")'
-"78:62:93"
-```
-
-## Speed
-
-Perl is usually slower, but performs better for certain cases of backreferences and quantifiers.
-
-```bash
-$ time LC_ALL=C grep -xE '([a-z]..)\1' /usr/share/dict/words > f1
-real    0m0.135s
-
-$ time perl -ne 'print if /^([a-z]..)\1$/' /usr/share/dict/words > f2
-real    0m0.039s
-
-$ time LC_ALL=C grep -xP '([a-z]..)\1' /usr/share/dict/words > f3
-real    0m0.012s
-```
-
-Perl's hash implementation performs better compared to Awk's associative arrays. The `SCOWL-wl.txt` file used below was created using [app.aspell.net](http://app.aspell.net/create). `words.txt` is from `/usr/share/dict/words`.
-
-```bash
-$ wc -l words.txt SCOWL-wl.txt
-  99171 words.txt
- 662349 SCOWL-wl.txt
- 761520 total
-
-# finding common lines between two files
-# shorter file passed as first argument here
-$ time awk 'NR==FNR{a[$0]; next} $0 in a' words.txt SCOWL-wl.txt > t1
-real    0m0.376s
-$ time perl -ne 'if(!$#ARGV){$h{$_}=1; next}
-                 print if exists $h{$_}' words.txt SCOWL-wl.txt > t2
-real    0m0.284s
-
-# longer file passed as first argument here
-$ time awk 'NR==FNR{a[$0]; next} $0 in a' SCOWL-wl.txt words.txt > f1
-real    0m0.603s
-$ time perl -ne 'if(!$#ARGV){$h{$_}=1; next}
-                 print if exists $h{$_}' SCOWL-wl.txt words.txt > f2
-real    0m0.536s
-```
+I'll have more in Part 2, where I'll delve into XML, JSON, and CSV.
 
 ## Other things to read
 
@@ -477,8 +229,6 @@ real    0m0.536s
 * Known bugs in the [GNU grep manual](https://www.gnu.org/software/grep/manual/grep.html#Known-Bugs)
 
 * [Awesome Perl](https://github.com/hachiojipm/awesome-perl) has a curated list of awesome Perl5 frameworks, libraries and software
-
-* [Perl XML::LibXML by example](https://grantm.github.io/perl-libxml-by-example/) for a detailed book on `XML::LibXML` module
 
 * [BSD/macOS sed vs GNU sed vs the POSIX sed specification](https://stackoverflow.com/questions/24275070/sed-not-giving-me-correct-substitute-operation-for-newline-with-mac-difference/24276470#24276470)
 
