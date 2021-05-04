@@ -140,7 +140,7 @@ Unlike grep, sed, or Awk, Perl doesn't remove the input record by default, so th
 
 ## Better regex support
 
-Some other regex libraries have problems tied to whatever they use to implement them. GNU verions, for example, may have some bugs that other implementations may have. Which version you use can give different results. Perl, however, has the same bugs everywhere.
+Some other regex libraries have problems tied to whatever they use to implement them. GNU verions, for example, may have some bugs that other implementations may not have. Which version you use can give different results. Perl, however, has the same bugs everywhere.
 
 ### Back references
 
@@ -195,7 +195,7 @@ $ echo 'cocoa' | sed -nE '/\bco\bco/p'
 $ echo 'cocoa' | perl -ne 'print if /(\bco){2}/'
 ```
 
-On the sed on macOS (which doesn't have a `--version`), there's no output, which is correct and differen:
+On the sed on macOS (which doesn't have a `--version`), there's no output, which is correct and different:
 
 ```bash
 $ echo 'cocoa' | sed -nE '/(\bco){2}/p'
@@ -225,7 +225,7 @@ Perl has a much bigger collection of built-in functions compared to Awk. For com
 
 ### Append items to a list
 
-This problem wants to append columns to rows that have too few, like this where the `c` and `d` rows:
+This problem wants to append columns to rows that have too few, like this where the `c` and `d` rows don't have as many columns:
 
 ```bash
 a,10,12,13
@@ -341,7 +341,7 @@ Earlier I did some simple CSV procesing, but if I want to do it for real I can u
 ```bash
 $ s='eagle,"fox,42",bee,frog\n1,2,3,4'
 
-# note that -n or -p option isn't used here
+# note that neither -n nor -p are used here
 $ printf '%b' "$s" | perl -MText::CSV_XS -E 'say $row->[1]
                      while $row = Text::CSV_XS->new->getline(*ARGV)'
 fox,42
