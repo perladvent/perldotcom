@@ -99,6 +99,10 @@ But instead of matching the number, I can match the whole expression. The match 
 
 ```
 $ perl -pe 's/\d+\+\d+/$&/gee' ip.txt
+id=25110
+xyz=1+
+abc=123456
+conf_string=LMN,J,IP,25101,0,3,1
 ```
 
 ## Handling the newline
