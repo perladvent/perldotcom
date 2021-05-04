@@ -107,7 +107,7 @@ conf_string=LMN,J,IP,25101,0,3,1
 
 ## Handling the newline
 
-Here's how you can perform multi-line fixed string substitution with `perl`. Don't save contents of *search.txt* and *replace.txt* in shell variables—trailing newlines and ASCII NUL characters will cause issues. I want to un-hypenate this text:
+Here's how you can perform multi-line fixed string substitution with `perl`. I want to un-hypenate this text:
 
 ```bash
 Hello there.
@@ -134,17 +134,6 @@ Hello there.
 It will rain today. Have a safe
 and pleasant journey.
 ```
-
-#######################
-
-```bash
-perl -0777 -ne '$#ARGV==1 ? $s=$_ : $#ARGV==0 ? $r=$_ :
-                print s/\Q$s/$r/gr' search.txt replace.txt ip.txt
-```
-
-Unlike grep, sed, or Awk, Perl doesn't remove the input record by default, so the last item has the newline. I have this
-#######################
-
 
 ## Better regex support
 
