@@ -1,7 +1,7 @@
   {
-    "title"       : "Perl One-Liners, Part 2",
+    "title"       : "Perl / Unix One-liner Cage Match, Part 2",
     "authors"     : ["sundeep-agarwal"],
-    "date"        : "2020-11-30T20:54:23",
+    "date"        : "2021-5-25T02:54:23",
     "tags"        : [one-liners],
     "draft"       : true,
     "image"       : "",
