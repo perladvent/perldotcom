@@ -35,7 +35,7 @@ $ perl -i'backups/*' -pe 's/SEARCH/REPLACE/g' *.txt
 
 ## Powerful regexp features
 
-Perl regexps are much more powerful than either basic or extended regular expressions used by utilities. The common features I often use are non-greedy and possessive quantifiers, lookarounds, the `e` flag, subexpression calls, and `(*SKIP)(*FAIL)`. Here are some examples from StackOverflow threads that I have answered over the years.
+Perl regexps are much more powerful than either basic or extended regular expressions used by utilities. The common features I often use are non-greedy and possessive quantifiers, lookarounds, the `/e` flag, subexpression calls, and `(*SKIP)(*FAIL)`. Here are some examples from StackOverflow threads that I have answered over the years.
 
 ### Skip some matches
 
