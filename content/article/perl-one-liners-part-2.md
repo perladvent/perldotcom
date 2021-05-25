@@ -3,20 +3,22 @@
     "authors"     : ["sundeep-agarwal"],
     "date"        : "2021-05-25T02:54:23",
     "tags"        : ["one-liners"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "/images/perl-one-liners/on_the_mat.jpg",
     "thumbnail"   : "",
     "description" : "",
     "categories"  : "tutorials"
   }
 
+In [Part 1](https://www.perl.com/article/perl-one-liners-part-1/), I compared Perl's regexp features with sed and Awk. In this concluding part, I'll cover examples that make use of Perl's extensive built-in features and third-party modules.
+
 ## Bigger library
 
-Perl has a much bigger collection of built-in functions compared to Awk. For command-line usage, I often need `tr`, `join`, `map` and `grep`. Also, `sort` is much simpler to use in Perl compared to Awk, along with array/hash distinction. Here are some examples.
+Perl has a much bigger collection of built-in functions compared to Awk. For command-line usage, I often need `tr`, `join`, `map` and `grep`. I like that arrays and hashes are distinct in Perl and applying `sort` on these data types is much simpler compared to Awk.
 
 ### Append items to a list
 
-This problem wants to append columns to rows that have too few, like this where the `c` and `d` rows don't have as many columns:
+[This problem](https://stackoverflow.com/q/49765879/4082052) wants to append columns to rows that have too few, like the `b`, `c` and `d` rows:
 
 ```bash
 a,10,12,13
@@ -25,9 +27,9 @@ c,30
 d,33
 ```
 
-[This appends zeros to list](https://stackoverflow.com/questions/49765879/append-zeros-to-list) by using the `/e` again. This time, the Perl in the replacement counts the number of commas, and subtracts that from 3 to find out how many more columns it needs. The `x` is the string replication operator:
+This appends zeros to list by using the `/e` again. This time, the Perl in the replacement counts the number of commas, and subtracts that from 3 to find out how many more columns it needs. The `x` is the string replication operator:
 
-```
+```bash
 $ perl -pe 's|$|",0" x (3 - tr/,//)|e' ip.txt
 a,10,12,13
 b,20,22,0
@@ -37,7 +39,7 @@ d,33,0,0
 
 ### Reversing things
 
-In [reverse complement DNA sequence for a specific field](https://stackoverflow.com/questions/45571828/execute-bash-command-inside-awk-and-print-command-output), I need to select part of the string, complement it, and turn it around:
+In [reverse complement DNA sequence for a specific field](https://stackoverflow.com/q/45571828/4082052), I need to select part of the string, complement it, and turn it around. I want to work on the third column:
 
 ```bash
 ABC DEF GATTAG GHK
@@ -45,7 +47,7 @@ ABC DEF GGCGTC GHK
 ABC DEF AATTCC GHK
 ```
 
-Use the `tr` and `reverse` in the replacement side (with `/e` again):
+I use the `tr` and `reverse` in the replacement side (with `/e` again):
 
 ```bash
 $ perl -pe 's/^(\H+\h+){2}\K\H+/reverse $&=~tr|ATGC|TACG|r/e' test.txt
@@ -54,10 +56,10 @@ ABC DEF GACGCC GHK
 ABC DEF GGAATT GHK
 ```
 
-With `-a`, it automatically splits on whitespace and puts the result in `@F`. Do the work on the right element then output `@F` again:
+Alternatively, I can use `-a`, which automatically splits on whitespace and puts the result in `@F`. I work on the third element then output `@F` again:
 
 ```bash
-$ perl -lane '$F[2]=reverse $F[2]=~tr/ATGC/TACG/r; print "@F"'
+$ perl -lane '$F[2]=reverse $F[2]=~tr/ATGC/TACG/r; print "@F"' test.txt
 ABC DEF CTAATC GHK
 ABC DEF GACGCC GHK
 ABC DEF GGAATT GHK
@@ -65,7 +67,7 @@ ABC DEF GGAATT GHK
 
 ### Sort a CSV row
 
-How about [sorting rows in csv file without header & first column](https://stackoverflow.com/questions/48920626/sort-rows-in-csv-file-without-header-first-column)? Assuming this is simple CSV like this:
+How about [sorting rows in csv file without header & first column](https://stackoverflow.com/q/48920626/4082052)? Here's some simple comma-separated values:
 
 ```bash
 id,h1,h2,h3,h4,h5,h6,h7
@@ -73,30 +75,67 @@ id,h1,h2,h3,h4,h5,h6,h7
 102,2,yahoo,5,kangaroo,7,ape
 ```
 
-This uses `-a` again, but also `-F` to make the record separator the comma:
+I use `-a` again, but also `-F,` to make comma as the field separator:
 
-```
+```bash
 $ perl -F, -lane 'print join ",", $.==1 ? @F : (shift @F, sort @F)' ip.txt
 id,h1,h2,h3,h4,h5,h6,h7
 101,1,3,4,apple,dog,papa,zebra
 102,2,5,7,ape,kangaroo,yahoo
 ```
 
-I use the `$.`, the input line number, to skip the first line (the header). In all other lines, I make a list of the first element of `@F` and the sorted list of the rest of the elements.
+The `$.` variable keeps track of the input line number. I use this to skip the first line (the header). In all other lines, I make a list of the first element of `@F` and the sorted list of the rest of the elements. Note that the numbers to be sorted in this example have the same number of digits, otherwise it wouldn't work.
+
+### Insert incremental row and column labels
+
+[Insert a row and a column in a matrix](https://stackoverflow.com/q/48985854/4082052) needs to add numerical labels with a fixed interval:
+
+```bash
+2 3 4 1 2 3
+3 4 5 2 4 6
+2 4 0 5 0 7
+0 0 5 6 3 8
+```
+
+Here, I use `map` to generate the header:
+
+```bash
+$ perl -lane 'print join "\t", "", map {20.00+$_*0.33} 0..$#F if $.==1;
+              print join "\t", 100+(0.33*$i++), @F' matrix.txt
+        20      20.33   20.66   20.99   21.32   21.65
+100     2       3       4       1       2       3
+100.33  3       4       5       2       4       6
+100.66  2       4       0       5       0       7
+100.99  0       0       5       6       3       8
+
+# with formatting and alternate way to join print arguments
+$ perl -lane 'BEGIN{$,="\t"; $st=0.33}
+              print "", map {sprintf "%.2f", 20+$_*$st} 0..$#F if $.==1;
+              print sprintf("%.2f", 100+($st*$i++)), @F' matrix.txt
+        20.00   20.33   20.66   20.99   21.32   21.65
+100.00  2       3       4       1       2       3
+100.33  3       4       5       2       4       6
+100.66  2       4       0       5       0       7
+100.99  0       0       5       6       3       8
+```
 
 ## Using Perl modules
 
 Apart from built-in functions, Standard or CPAN modules come in handy too. Load those with `-M` and put the import list after a `=`:
 
 ```bash
-$ s='floor bat to dubious four'
-$ echo "$s" | perl -MList::Util=shuffle -lanE 'say join ":", shuffle @F'
-bat:four:dubious:floor:to
+# randomize word list after filtering
+$ s='floor bat to dubious four pact feed'
+$ echo "$s" | perl -MList::Util=shuffle -lanE '
+                    say join ":", shuffle grep {/[au]/} @F'
+bat:four:pact:dubious
 
+# remove duplicate elements while retaining input order
 $ s='3,b,a,3,c,d,1,d,c,2,2,2,3,1,b'
 $ echo "$s" | perl -MList::Util=uniq -F, -lanE 'say join ",", uniq @F'
 3,b,a,c,d,1,2
 
+# apply base64 decoding only for a portion of the string
 $ s='123 aGVsbG8gd29ybGQK'
 $ echo "$s" | perl -MMIME::Base64 -ane 'print decode_base64 $F[1]'
 hello world
@@ -108,26 +147,36 @@ The Comprehensive Perl Archive Network ([CPAN](https://www.cpan.org)) has a huge
 
 ### Extract IPv4 addresses
 
-The [Regexp::Common](https://metacpan.org/pod/Regexp::Common) has shortcuts for common things you want to match. Here's some text with dotted-decimal IP addresses:
+The [Regexp::Common](https://metacpan.org/pod/Regexp::Common) has recipes for common things you want to match. Here's some text with dotted-decimal IP addresses:
 
 ```bash
-3.5.52.243 5.4.3 34242534.23.42.42
-foo 234.233.54.123 baz 4.4.4.3
+3.5.52.243 555.4.3.1 34242534.23.42.42
+foo 234.233.54.123 baz 4.4.4.3123
 ```
 
 It's easy to extract the IPv4 addresses:
 
-```
+```bash
 $ perl -MRegexp::Common=net -nE 'say $& while /$RE{net}{IPv4}/g' ipv4.txt
 3.5.52.243
+55.4.3.1
 34.23.42.42
 234.233.54.123
-4.4.4.3
+4.4.4.31
+```
+
+I can match only if the IPv4 address isn't surrounded by digit characters, so I don't match in the middle of `34242534.23.42.42`:
+
+```bash
+$ perl -MRegexp::Common=net -nE '
+        say $& while /(?<!\d)$RE{net}{IPv4}(?!\d)/g' ipv4.txt
+3.5.52.243
+234.233.54.123
 ```
 
 ### Real CSV processing
 
-Earlier I did some simple CSV procesing, but if I want to do it for real I can use [Text::CSV_XS](https://metacpan.org/pod/Text::CSV_XS) to make sure everything happens correctly. This one handles the quoted field `fox,42`:
+Earlier I did some simple CSV processing, but if I want to do it for real I can use [Text::CSV_XS](https://metacpan.org/pod/Text::CSV_XS) to make sure everything happens correctly. This one handles the quoted field `fox,42`:
 
 ```bash
 $ s='eagle,"fox,42",bee,frog\n1,2,3,4'
@@ -141,7 +190,7 @@ fox,42
 
 ### Processing XML
 
-Processing XML files is another format that's easy to mess up. Many people try to do this with regex, but that can easily go wrong. Here's an example file:
+Processing XML files is another format that's easy to mess up. Many people try to do this with regexp, but that can easily go wrong. Here's an example file:
 
 ```bash
 <doc>
@@ -156,29 +205,39 @@ Processing XML files is another format that's easy to mess up. Many people try t
 </doc>
 ```
 
-The `xpath` (a Perl program) and `xmllint` but their output is annoying and hard to change:
+The `xpath` (a Perl program) and `xmllint` can be used for processing XML files:
 
 ```bash
-$ xmllint --xpath '//blue/text()' test.xml
-flowersand stone
-brian@otter Desktop [3570]
-$ xpath test.xml '//blue/text()'
-Found 2 nodes:
+$ xpath -e '//blue/text()' sample.xml
+Found 2 nodes in sample.xml:
 -- NODE --
-flower-- NODE --
+flower
+-- NODE --
 sand stone
-```
+$ xpath -q -e '//blue/text()' sample.xml
+flower
+sand stone
 
-The [XML::LibXML](https://metacpan.org/pod/XML::LibXML) module can handle this easily because I'm in control:
-
-```bash
-$ perl -MXML::LibXML -E '
-	$ip = XML::LibXML->load_xml(location => $ARGV[0]);
-    say $_->to_literal() for $ip->findnodes("//blue")' sample.xml
+$ xmllint --xpath '//blue/text()' sample.xml
 flower
 sand stone
 ```
 
+Using the [XML::LibXML](https://metacpan.org/pod/XML::LibXML) module will help if you need Perl's power:
+
+```bash
+$ perl -MXML::LibXML -E '
+    $ip = XML::LibXML->load_xml(location => $ARGV[0]);
+    say $_->to_literal() for $ip->findnodes("//blue")' sample.xml
+flower
+sand stone
+
+$ perl -MXML::LibXML -E '
+    $ip = XML::LibXML->load_xml(location => $ARGV[0]);
+    say uc $_->to_literal() for $ip->findnodes("//blue")' sample.xml
+FLOWER
+SAND STONE
+```
 
 ### Processing JSON
 
@@ -188,17 +247,9 @@ JSON files have the same issue. You don't want to do regexes on this:
 $ s='{"greeting":"hi","marks":[78,62,93],"fruit":"apple"}'
 ```
 
-Various JSON modules, such as [Cpanel::JSON::XS](http://metacpan.org/pod/Cpanel::JSON::XS) can handle this:
+Various JSON modules, such as [Cpanel::JSON::XS](http://metacpan.org/pod/Cpanel::JSON::XS) can handle this. For example, pretty printing:
 
-```
-$ echo "$s" | perl -MCpanel::JSON::XS -0777 -E '$ip=decode_json <>;
-              say join ":", @{$ip->{marks}}'
-78:62:93
-```
-
-Sometimes it's easier to put that in a script (although that's not really a one-liner anymore):
-
-```
+```bash
 $ echo "$s" | cpanel_json_xs
 {
    "fruit" : "apple",
@@ -211,29 +262,50 @@ $ echo "$s" | cpanel_json_xs
 }
 ```
 
+And here's a particular selection:
+
+```bash
+$ echo "$s" | perl -MCpanel::JSON::XS -0777 -E '$ip=decode_json <>;
+              say join ":", @{$ip->{marks}}'
+78:62:93
+```
+
+Sometimes it's easier to put that in a script (although that's not really a one-liner anymore). I use a Bash function as a shortcut:
+
+```bash
+$ pj() { perl -MCpanel::JSON::XS -0777 -E '$ip=decode_json <>;'"$@" ; }
+
+$ echo "$s" | pj 'say $ip->{fruit}'
+apple
+$ echo "$s" | pj 'say join ":", @{$ip->{marks}}'
+78:62:93
+```
+
 A non-Perl example of the same thing is [jq](https://stedolan.github.io/jq/), but that's something you have to install separately and might not be available:
 
 ```bash
-$ echo $s | jq '.marks | join(":")'
+$ echo "$s" | jq '.fruit'
+"apple"
+$ echo "$s" | jq '.marks | join(":")'
 "78:62:93"
 ```
 
 ## Speed
 
-Perl is usually slower, but performs better for certain cases of backreferences and quantifiers.
+Perl is usually slower compared to specialized tools, but the regexp engine performs better for certain cases of backreferences and quantifiers.
 
 ```bash
 $ time LC_ALL=C grep -xE '([a-z]..)\1' /usr/share/dict/words > f1
-real    0m0.135s
+real    0m0.074s
 
 $ time perl -ne 'print if /^([a-z]..)\1$/' /usr/share/dict/words > f2
-real    0m0.039s
+real    0m0.024s
 
 $ time LC_ALL=C grep -xP '([a-z]..)\1' /usr/share/dict/words > f3
-real    0m0.012s
+real    0m0.010s
 ```
 
-Perl's hash implementation performs better compared to Awk's associative arrays. The `SCOWL-wl.txt` file used below was created using [app.aspell.net](http://app.aspell.net/create). `words.txt` is from `/usr/share/dict/words`.
+Perl's hash implementation performs better compared to Awk's associative arrays for large number of keys. The `SCOWL-wl.txt` file used below was created using [app.aspell.net](http://app.aspell.net/create). `words.txt` is from `/usr/share/dict/words`. Mawk is usually faster, but GNU Awk does better in this particular case.
 
 ```bash
 $ wc -l words.txt SCOWL-wl.txt
@@ -242,28 +314,28 @@ $ wc -l words.txt SCOWL-wl.txt
  761520 total
 
 # finding common lines between two files
-# shorter file passed as first argument here
-$ time awk 'NR==FNR{a[$0]; next} $0 in a' words.txt SCOWL-wl.txt > t1
-real    0m0.376s
+# Case 1: shorter file passed as the first argument
+$ time mawk 'NR==FNR{a[$0]; next} $0 in a' words.txt SCOWL-wl.txt > t1
+real    0m0.296s
+$ time gawk 'NR==FNR{a[$0]; next} $0 in a' words.txt SCOWL-wl.txt > t2
+real    0m0.210s
 $ time perl -ne 'if(!$#ARGV){$h{$_}=1; next}
-                 print if exists $h{$_}' words.txt SCOWL-wl.txt > t2
-real    0m0.284s
+                 print if exists $h{$_}' words.txt SCOWL-wl.txt > t3
+real    0m0.189s
 
-# longer file passed as first argument here
-$ time awk 'NR==FNR{a[$0]; next} $0 in a' SCOWL-wl.txt words.txt > f1
-real    0m0.603s
+# Case 2: longer file passed as the first argument
+$ time mawk 'NR==FNR{a[$0]; next} $0 in a' SCOWL-wl.txt words.txt > f1
+real    0m0.539s
+$ time gawk 'NR==FNR{a[$0]; next} $0 in a' SCOWL-wl.txt words.txt > f2
+real    0m0.380s
 $ time perl -ne 'if(!$#ARGV){$h{$_}=1; next}
-                 print if exists $h{$_}' SCOWL-wl.txt words.txt > f2
-real    0m0.536s
+                 print if exists $h{$_}' SCOWL-wl.txt words.txt > f3
+real    0m0.351s
 ```
 
 ## Other things to read
 
-* [Pitfalls of reading file into shell variable](https://stackoverflow.com/questions/7427262/how-to-read-a-file-into-a-variable-in-shell/22607352#22607352)
-
-* Dave Cross's [Perl Command-Line Options](https://www.perl.com/pub/2004/08/09/commandline.html/)
-
-* Known bugs in the [GNU grep manual](https://www.gnu.org/software/grep/manual/grep.html#Known-Bugs)
+* My ebook on [Perl one-liners](https://learnbyexample.github.io/learn_perl_oneliners/)
 
 * [Awesome Perl](https://github.com/hachiojipm/awesome-perl) has a curated list of awesome Perl5 frameworks, libraries and software
 
