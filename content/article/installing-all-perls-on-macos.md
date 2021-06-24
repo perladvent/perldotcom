@@ -467,7 +467,7 @@ ivsize='8';
 ivsize='8';
 ```
 
-Or run a one-liner. This one outputs the value of `$^V` and I can quickly see that *perl5.8.9* is the one that doesn't have it since it was added in v5.10.
+Or run a one-liner. This one outputs the value of `$^V` and I can quickly see that *perl5.8.9* is the one that doesn't have it since it was changed in v5.10 from being a packed string to being a version object.
 
 ```
 $ allperl -le 'print $^V'
