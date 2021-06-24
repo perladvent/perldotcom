@@ -28,7 +28,7 @@ start: json contributors ## start the local server
 	hugo server --buildDrafts --buildFuture --disableFastRender -d built
 
 .PHONY: deploy
-deploy: json contributors ## deploy the website to the static repo
+deploy: on_master json contributors ## deploy the website to the static repo
 	bin/deploy
 	git tag -d $(DEPLOYED_TAG_NAME)
 	- git push origin --delete $(DEPLOYED_TAG_NAME)
@@ -46,6 +46,10 @@ show_live_build: ## show the build data for the live site
 .PHONY: refresh_tags
 refresh_tags: ## sync the tags with the repo
 	git fetch --tags --force
+
+.PHONY: on_master
+on_master:
+	@ perl -le 'die "Must be on master to run this target" if `git rev-parse --abbrev-ref HEAD` !~ /\Amaster\Z/'
 
 ######################################################################
 # https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
