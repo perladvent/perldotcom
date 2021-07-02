@@ -1,27 +1,30 @@
-
   {
     "title"       : "Installing all perls on macOS",
     "authors"     : ["brian-d-foy"],
-    "date"        : "2021-06-23T19:32:00",
-    "tags"        : [],
+    "date"        : "2021-07-06T19:32:00",
+    "tags"        : [ "install" ],
     "draft"       : true,
-    "image"       : "",
+    "image"       : "/images/installing-all-perls-on-macos/these_old_rusty_booths.jpg",
     "thumbnail"   : "",
-    "description" : "",
+    "description" : "I want to install all the Perls on my latest computer. How hard can it be to install 20 year old versions of my favorite language? It turns out that it's not that hard at all.",
     "categories"  : "mac"
   }
 
 -----
 
-While my MacBook is in the shop, I using the lowest-end Mac Mini as a replacement until my "just as I like it" machine comes back. This gives me a chance to play with macOS 11, which I have resisted so far because there's always some big project that doesn't need a new OS screwing up everything.
+*image credit: [Rick Harris](https://www.flickr.com/photos/rickharris/), ["These Rusty old Booths"](https://www.flickr.com/photos/rickharris/315275622/in/photolist-tRSsA-5LRgvj-6YgtBA-2jjgBYW-wLhu5c-2jjgCXu-DPWnp-2jMFsPn-RJbtSE-2ky9VXU-6Nvitj-2hZLTyX-bb7fmi-2kHJaaC-bQusZc-2gbRb9m-2h87Cpy-MjocK3-SiLF3s-4h1oE5-wHoUM9-WBLoiT-dCpPBM-bQutsv-2kkF6tF-2ky9VUn-6nJcUK-2gfkyRg-bwUU9-QsCyF-7Zxk5W-RaYAHE-2kydwKr-4GuPf5-2jjjBaU-2kkWBjL-946McM-pbB4Yd-92QiHv-6PQjEQ-bo8nDK-2kydwLZ-2kyea2R-2k2nW4K-QUbbRv-2iGMANL-YRufMm-5m8hG5-V8fXah-oW9wQS), on Flickr.*
 
-[perlbrew](https://perlbrew.pl) tool does most of what I'm about to do, and that's probably good enough for most people. But, if you wonder what's happening when you use that tool, you'll see some of the hints here.
+I want to install as many different versions of Perl as I can, back to v5.8. With a new computer, I have a chance to do that on a new system.
+
+While my MacBook is in the shop, I using the lowest-end Mac Mini as a replacement until my "just as I like it" machine comes back. This gives me a chance to play with macOS 11, which I have resisted so far because there's always some big project that doesn't need a new OS screwing up everything. I'm a slow upgrader for just about anything for the same reason.
+
+The [perlbrew](https://perlbrew.pl) tool does most of what I'm about to do, and that's probably good enough for most people. But, if you wonder what's happening under the hood, you'll see some of the hints here.
 
 By hand, it's not such a hard job if you know what you need to do. And, since these things can run in parallel (lets see this M1 in action!), it doesn't take up that much overall time.
 
 ## Apple has some starter tools
 
-[Apple ships some perls](https://github.com/briandfoy/mac-perl-versions) (macOS 11 comes with v5.18.4, v5.28.2, and v5.30.2), so */usr/bin/perl* is already there (but [Apple has also deprecated scripting runtimes](https://developer.apple.com/documentation/macos-release-notes/macos-catalina-10_15-release-notes)):
+[Apple ships some perls](https://github.com/briandfoy/mac-perl-versions) (macOS 11.4 comes with v5.18.4 and v5.30.2), so */usr/bin/perl* is already there. But Apple has also [deprecated scripting runtimes](https://developer.apple.com/documentation/macos-release-notes/macos-catalina-10_15-release-notes) and [recommends managing your own perl](https://developer.apple.com/library/archive/documentation/Security/Conceptual/System_Integrity_Protection_Guide/FileSystemProtections/FileSystemProtections.html):
 
 ```bash
 $ /usr/bin/perl -v
@@ -30,7 +33,7 @@ This is perl 5, version 30, subversion 2 (v5.30.2) built for darwin-thread-multi
 (with 2 registered patches, see perl -V for more detail)
 ```
 
-I tend to avoid the system versions of things so I don't mess up whatever they are doing. I don't want to install an incompatible module then wonder why I can't boot, for example. With my own version, I can adjust and modify it anyway I like without affecting what the system needs for itself. For those same reasons, [Apple recommends installing your own *perl*](https://www.effectiveperlprogramming.com/2015/11/apple-recommends-installing-your-own-perl/).
+I tend to avoid the system versions of things so I don't mess up whatever they are doing. I don't want to install an incompatible module then wonder why I can't boot, for example. With my own version, I can adjust and modify it anyway I like without affecting what the system needs for itself.
 
 I want to install my own *perl* for as many versions I can get. I need the system *perl* to get at least one other *perl*, then I can use the one I installed.
 
@@ -38,7 +41,7 @@ I want to install my own *perl* for as many versions I can get. I need the syste
 
 First, macOS needs ["Command Line Tools for Xcode"](https://developer.apple.com/download/all/). You'll need an Apple ID to get into that, but you may be able to simply running `xcode-select --install`. Something I installed early on (wish I'd taken notes) already did that for me.
 
-I know I will run into problems with some version of *perl*; I want to install the latest sub-versions of each release back to v5.8. (Perl calls the 5 the "revision" and the number after that, such as "34", the "version". See that `perl -v` above). Since it's been many years since some of these were refreshed, those older versions are sure to not like something about the current setup, but there are some tools to help me with that.
+I know I will run into problems with some version of *perl*; I want to install the latest sub-versions of each release back to v5.8. (Perl calls the 5 the "revision" and the number after that, such as "34", the "version". See that `perl -v` above). Since it's been many years since some of these were refreshed, those older versions are sure to not like something about the current setup. No problem—there are some tools to help me with that.
 
 ## Using local::lib
 
@@ -68,7 +71,7 @@ PERL_MB_OPT="--install_base \"/Users/brian/perl5\""; export PERL_MB_OPT;
 PERL_MM_OPT="INSTALL_BASE=/Users/brian/perl5"; export PERL_MM_OPT;
 ```
 
-Typically this stuff goes in the shell files so the shell sets it for each interactive session, but I only need it for this current session. Eventually I'll install modules into the particular *perl* installations without sharing the modules between them.
+Typically this stuff goes in the shell files so they are set for each interactive session, but I only need it for this current session. I can shell `eval` that text instead:
 
 ```bash
 % env | grep PERL
@@ -80,7 +83,7 @@ PERL_MB_OPT=--install_base "/Users/brian/perl5"
 PERL_MM_OPT=INSTALL_BASE=/Users/brian/perl5
 ```
 
-Along with this, I create my own *bin/* directory, which I'll use later:
+Along with this, I create my own *bin/* directory, which I'll use later. This is where I'll make links to the various tools so I don't need to add every installation directory to my `PATH`:
 
 ```bash
 % mkdir ~/bin
@@ -88,9 +91,11 @@ Along with this, I create my own *bin/* directory, which I'll use later:
 PATH="/Users/brian/bin:${PATH:+:${PATH}}"; export PATH;
 ```
 
+Eventually I'll install modules into the particular *perl* installations without sharing the modules between them.
+
 ## Patching old Perls
 
-I'm ready to do what I really need: install [Devel::PatchPerl](https://metacpan.org/pod/PatchPerl). When I download the older *perl* sources, I need to update the source for what we know about current tools. For example, macOS jumped from major version 10 to 11 and the perl sources weren't ready for that. That failed in the original v5.30 sources but has since been fixed:
+With [local::lib](https://metacpan.org/pod/local::lib) available, I'm ready for the next step: install [Devel::PatchPerl](https://metacpan.org/pod/PatchPerl). When I download the older *perl* sources, I need to update the source for what we know about current tools. For example, macOS jumped from major version 10 to 11 and the *perl* sources weren't ready for that. That failed in the original v5.30 sources but has since been fixed:
 
 ```bash
 % curl -O https://www.cpan.org/src/5.0/perl-5.30.3.tar.gz
@@ -171,7 +176,7 @@ Appending installation info to /usr/local/perls/perl-5.34.0/lib/5.34.0/darwin-2l
   /usr/bin/make install  -- OK
 ```
 
-This is now the `patchperl` that I will use.
+This `patchperl` I've installed into the v5.34 tree is the one that I will use. I don't need to [local::lib](https://metacpan.org/pod/local::lib) version anymore.
 
 For all of the other *perl*s I want to install, I go through the same process using my new *perl*. Many of them had no issues.
 
@@ -179,11 +184,11 @@ For all of the other *perl*s I want to install, I go through the same process us
 
 There were a few problems installing some of the versions and I want to investigate those. Most of these are trivial problems.
 
-It's amazing that I can still compile v5.8.9 and (mostly) pass its tests. That version is from 2008 and the v5.8 line started in 2002. This was the first Perl 5 released after the Perl 6 announcement, and it still works.
+It's amazing that I can still compile v5.8.9 and (mostly) pass its tests. That version is from 2008 (the v5.8 line started in 2002). This was the first Perl 5 released after the [Perl 6 announcement](/pub/2000/07/perl6.html/), and it still works.
 
 These are just the problems that showed up on macOS 11.3. You may find different problems on other systems, but the way you'd investigate those problems are the same.
 
-I was compiling all of these at once, which wasn't as bad as I expected: the M1 did okay. I could wander off for a bit and come back to see the results for all versions.
+I compiled all of these at once, which wasn't as bad as I expected: the M1 did okay. I could wander off for a bit and come back to see the results for all versions.
 
 ## v5.22 and v5.24
 
@@ -200,7 +205,7 @@ Failed 1 test out of 2223, 99.96% okay.
 ### in the 't' directory since most (>=80%) of the tests succeeded.
 ```
 
-Using *harness*, I can re-run just that test. This run is from the v5.24.4 sources:
+Using *harness*, I can re-run just that test with the link to the new *perl* in the *t/* directory. This run is from the v5.24.4 sources:
 
 ```bash
 % cd t
@@ -211,7 +216,7 @@ porting/customized.t .. # Failed test 25 - SHA for cpan/ExtUtils-MakeMaker/lib/E
 porting/customized.t .. Failed 1/181 subtests
 ```
 
-These tests check that the CPAN files the release included have the digests that they should. However, I had just run *patchperl* on source tree and *cpan/ExtUtils-MakeMaker/lib/ExtUtils/Liblist/Kid.pm* is one of the patched files. Of course the digest is different:
+These tests check that the CPAN files the release included have the digests that they had at release time. However, I had just run *patchperl* on source tree and *cpan/ExtUtils-MakeMaker/lib/ExtUtils/Liblist/Kid.pm* is one of the patched files. Of course the digest is different:
 
 ```bash
 % patchperl
@@ -225,7 +230,7 @@ patching ext/DynaLoader/DynaLoader_pm.PL
 patching cpan/ExtUtils-MakeMaker/lib/ExtUtils/Liblist/Kid.pm
 ```
 
-I wonder what the change is. I diff the clean sources with the patched ones. The diff is backporting [ExtUtils::MakeMaker's 8b924f6](https://github.com/Perl-Toolchain-Gang/ExtUtils-MakeMaker/commit/8b924f65a0485266822c904e11698f95019bc467#diff-fa0a1b4a2ab1851b6206587879916ba88504223bbe7c8179d4bc86aa2e6f6618) to the current release:
+I wonder what the change is. I `diff` the clean sources with the patched ones. The diff is backporting [ExtUtils::MakeMaker's 8b924f6](https://github.com/Perl-Toolchain-Gang/ExtUtils-MakeMaker/commit/8b924f65a0485266822c904e11698f95019bc467#diff-fa0a1b4a2ab1851b6206587879916ba88504223bbe7c8179d4bc86aa2e6f6618) to the current release:
 
 ```bash
 % diff perl-5.24.4-clean/cpan/ExtUtils-MakeMaker/lib/ExtUtils/Liblist/Kid.pm perl-5.24.4-patched/cpan/ExtUtils-MakeMaker/lib/ExtUtils/Liblist/Kid.pm
@@ -244,7 +249,7 @@ I'm not worried about these failures so I install each of these versions despite
 
 ### v5.12
 
-Next to fail is v5.12. It complains in *../lib/locale.t*:
+Next to fail is v5.12. It complains about *../lib/locale.t*:
 
 ```bash
 Failed 1 test out of 1695, 99.94% okay.
@@ -272,9 +277,9 @@ But, when I look further back in the output, there's this error:
 # failed in that locale.
 ```
 
-One of the top google hits for be_BY.CP1131 is [a note that Apple has previously shipped a broken version](https://www.solvusoft.com/en/files/error-missing-download/out/windows/apple-computer-inc/mac-os-x-install-disc/be-by-cp1131-out/). And, there's [GitHub #9869](https://github.com/Perl/perl5/issues/9869) for v5.10.1.
+One of the top google hits for "be_BY.CP1131" is [a note that Apple has previously shipped a broken version](https://www.solvusoft.com/en/files/error-missing-download/out/windows/apple-computer-inc/mac-os-x-install-disc/be-by-cp1131-out/). And, there's [GitHub #9869](https://github.com/Perl/perl5/issues/9869) for v5.10.1.
 
-What's the fix? Look inside *lib/locale.t*: the tests just skip locales with problems, and one of those is be_BY.CP1131. Removing that locale is guarded by the version check `($v >= 8 and $v < 10)`, so maybe that needs to be added to the work of [Devel::PatchPerl](https://metacpan.org/pod/PatchPerl):
+What's the fix? Look inside *lib/locale.t*: the tests just skip locales with problems, and one of those is be_BY.CP1131. Removing that locale is guarded by the version check `($v >= 8 and $v < 10)`, so maybe that range needs to be updated to the work of [Devel::PatchPerl](https://metacpan.org/pod/PatchPerl):
 
 ```perl
 if ($^O eq 'darwin') {
@@ -298,7 +303,7 @@ For a moment I contemplate fixing the beylorussian locale, but Apple is apparent
 
 ## v5.8.9 and v5.10
 
-v5.8.9 and v5.10.1 each complain about the same things. It's the locale issue again, which I ignore, but with an additional problem:
+v5.8.9 and v5.10.1 each complain about the same things. There's the locale issue again, which I ignore, but also an additional problem:
 
 ```bash
 Failed 2 tests out of 1612, 99.88% okay.
@@ -417,9 +422,29 @@ gccvers.c:10:2: note: include the header <stdlib.h> or explicitly provide a decl
 
 ## Next steps
 
-I do some extra work to [create links to per-version tools](https://www.effectiveperlprogramming.com/2010/03/make-links-to-per-version-tools/), but that's something particular to my workflow.
+I do some extra work to [create links to per-version tools](https://www.effectiveperlprogramming.com/2010/03/make-links-to-per-version-tools/), but that's something particular to my workflow. I have a bunch of links that let me quickly use the *perl* I want to target:
 
-For example, I have a program that runs *perl* command lines in every version I have installed:
+```bash
+% ls ~/bin/perls/perl5.*
+/Users/brian/bin/perls/perl5.16.3
+/Users/brian/bin/perls/perl5.16-latest
+/Users/brian/bin/perls/perl5.18.4
+/Users/brian/bin/perls/perl5.18-latest
+/Users/brian/bin/perls/perl5.20.3
+/Users/brian/bin/perls/perl5.20-latest
+/Users/brian/bin/perls/perl5.26.3
+/Users/brian/bin/perls/perl5.26-latest
+/Users/brian/bin/perls/perl5.28.3
+/Users/brian/bin/perls/perl5.28-latest
+/Users/brian/bin/perls/perl5.30.3
+/Users/brian/bin/perls/perl5.30-latest
+/Users/brian/bin/perls/perl5.32.1
+/Users/brian/bin/perls/perl5.32-latest
+/Users/brian/bin/perls/perl5.34.0
+/Users/brian/bin/perls/perl5.34-latest
+```
+
+I even have a program that runs *perl* command lines in every version I have installed:
 
 ```perl
 #!/usr/bin/perl
@@ -467,10 +492,10 @@ ivsize='8';
 ivsize='8';
 ```
 
-Or run a one-liner. This one outputs the value of `$^V` and I can quickly see that *perl5.8.9* is the one that doesn't have it since it was changed in v5.10 from being a packed string to being a version object.
+Or run a one-liner. This one outputs the value of `$^V` and I can quickly see that *perl5.8.9* is the one that doesn't have the human-readable string—it changed in v5.10 from being a packed string to being a version object:
 
-```
-$ allperl -le 'print $^V'
+```bash
+% allperl -le 'print $^V'
 ======================================================================
 /Users/brian/bin/perls/perl5.8.9
 ----------------------------------------------------------------------
@@ -484,6 +509,6 @@ v5.10.1
 
 ## Conclusion
 
-I installed several versions of *perl* by patching their source trees with [Devel::PatchPerl](https://metacpan.org/pod/Devel::PatchPerl), then investigating any test failures to decide if those failures mattered. In my case, the failures were not interesting.
+I installed several versions of *perl* by patching their source trees with [Devel::PatchPerl](https://metacpan.org/pod/Devel::PatchPerl), then investigating any test failures to decide if they mattered to me. In my case, the failures were not interesting. I got down to v5.6 before I encountered any real problems, which is impressive considering how long ago these were released.
 
 Most people won't want to go through this small amount of effort, but [perlbrew](https://perlbrew.pl) can automate it for them. Mark Gardner covered that in [Downloading and Installing Perl in 2021](/article/downloading-and-installing-perl-in-2021/), but if you want to write a more focused article on it, [let us know](https://www.perl.com/article/how-to-write-your-first-article-for-perl-com/).
