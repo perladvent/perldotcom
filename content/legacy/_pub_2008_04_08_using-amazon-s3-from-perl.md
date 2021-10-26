@@ -221,4 +221,3 @@ When combined with other Amazon Web Services such as SimpleDB (for structured da
 -   [Amazon Webservices Developer Connection](http://developer.amazonwebservices.com/)
 -   [Amazon S3 Library for REST in Perl](http://developer.amazonwebservices.com/connect/entry.jspa?externalID=133&categoryID=47)
 -   [Amazon Web Services Blog](http://aws.typepad.com/)
-

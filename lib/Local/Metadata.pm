@@ -329,7 +329,6 @@ sub augment( $self, @args ) {
 	return $self;
 	}
 
-
 =back
 
 =head1 SOURCE AVAILABILITY

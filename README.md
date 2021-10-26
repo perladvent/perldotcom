@@ -11,5 +11,5 @@ If you're interested in writing for Perl.com, check out our contributing [guide]
 Thanks for stopping by,
 
 David Farrell
-\
+
 *Managing Editor*
