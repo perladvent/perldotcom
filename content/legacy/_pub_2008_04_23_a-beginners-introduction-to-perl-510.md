@@ -46,7 +46,7 @@ Save this program as a file called *first.pl*:
     use feature ':5.10';
     say "Hi there!";
 
-(The traditional first program says `Hello world!`, but I'm an iconoclast.)
+(The traditional first program says `Hello world!`, but I'm an iconoclast).
 
 Run the program. From a command line, go to the directory with this file and type `perl first.pl`. You should see:
 
@@ -141,7 +141,7 @@ You can also use special operators like `++`, `--`, `+=`, `-=`, `/=` and `*=`. T
 
 Strings in Perl don't have quite as much flexibility. About the only basic operator that you can use on strings is *concatenation*, which is a ten dollar way of saying "put together." The concatenation operator is the period. Concatenation and addition are two different things:
 
-    my $a = "8";    # Note the quotes.  $a is a string.
+    my $a = "8";    # Note the quotes. $a is a string.
     my $b = $a + "1";   # "1" is a string too.
     my $c = $a . "1";   # But $b and $c have different values!
 
@@ -259,4 +259,3 @@ At this point you have some basic knowledge of Perl syntax and a few simple toys
 
 -   A word frequency counter. How often does each word show up in an array of words? Print out a report. (Hint: Use a hash to count of the number of appearances of each word.)
 -   Given a month and the day of the week that's the first of that month, print a calendar for the month.
-
