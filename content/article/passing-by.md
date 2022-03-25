@@ -15,8 +15,8 @@
    ]
 }
 
-## Assignments by copy or reference
-When assigning, `perl` copies by value, see the following code:
+## Assignments by copy or reference?
+When *assigning*, `perl` copies by value, see the following code:
 ```perl
 my $var1 = "not modified";
 
@@ -90,6 +90,17 @@ That will print:
 bazinga
 ```
 
+You can also use "anonymous" operators `[]` or `{}` like this:
+```perl
+my @characters1 = ( "sheldon", "leonard", "penny" );
+my @characters2 = ( "howard", "rajesh", "bernadette", "amy" );
+my @big_bang_theory =  ();
+
+push @big_bang_theory, [@characters1];
+push @big_bang_theory, [@characters2];
+```
+This way, reference were pushed but references to a *new* arrays.
+
 Or you can even obtain a **reference of a reference** and later **dereference multiple times**. It enables the possibility to produce weird/dumb things like this:
 ```perl
 my $str = "bazinga";
@@ -105,7 +116,7 @@ But don't do this.
 ![](/images/passing-by/weird.png)
 
 ## Inspect references
-Back to our variables, you can check by printing their [reference](https://perldoc.perl.org/perlref):
+Back to our variables, you can check their "identity" by printing their [reference](https://perldoc.perl.org/perlref):
 ```perl
 # Compare storage location
 print \$var1 . " vs " . \$var2 . "\n";
@@ -132,11 +143,19 @@ And the array is then well modified:
 modified modified modified
 ```
 
+## Call by reference or by value?
+We discussed **assignments** but how are passed arguments to subs? 
+
+Answer: they are [always](https://stackoverflow.com/a/5746000)  passed "by reference" but it would be better to say "aliased" to avoid any confusion with the concept of [references](https://perldoc.perl.org/perlref) discussed earlier.
+
+This fact is far from obvious, since as you will see in following example, retrieving arguments into new variables (hence assigning by copy) will often make you believe that Perl is "calling by value".
+
+
 ## Modifications of variables into subs
-Inside subs, editing the variables won't usually ([\*](https://stackoverflow.com/a/5746000)) affect the arguments.
+Inside subs, depending the way you get/use arguments, editing the variables won't usually affect the arguments. 
 ```perl
-sub bycopy {
-    my $cp = shift;
+sub bycopy {        
+    my $cp = shift; # /!\ copy is done here (not during call) from aliased argument(s)
     $cp = "modified";
 }
 
@@ -172,9 +191,9 @@ That prints:
 ```
 modified
 ```
-This way, I pass the variable itself, whatever it is (scalar, array, hash...), I can edit it and it will persist.
+This way, with a little gymnastic, I pass the variable itself, whatever it is (scalar, array, hash...), I can edit it and it will persist.
 
-But there is an easier and obvious  way that I do not talked until now, the default array `@_` is actually passed by reference!
+But there is an easier and obvious way, the default array `@_` is actually passed by reference! (aliased)
 ```perl
 sub bydefaultarray {
     $_[0] = "modified";
@@ -199,7 +218,7 @@ Prototypes change the way perl behaves and it allows for instance a sub to recei
 The following example forces the array to its reference instead of flattening it:
 ```perl
 sub proto(\@) {
-    my $ref = shift; # It is the array ref, not the first item
+    my $ref = shift; # It is the array ref, not the first item of @array
     $ref->[0] = "dog";
     $ref->[1] = "cat";
     $ref->[2] = "pig";
@@ -208,7 +227,7 @@ sub proto(\@) {
 my @array = ("foo", "bar", "baz");
 
 # Array flattening won't occur but instead a reference will be passed
-proto(@array);
+proto(@array); # proto(\@array);
 
 print "@array\n";
 ```
