@@ -32,7 +32,7 @@ not modified
 
 It is because the assignment copies the content of the variable and does not *alias* the variable. 
 
-To inspect the variables, we should inspect their **references**.
+To inspect the *identity* of variables, we should inspect their **references**.
 
 ## A word about references
 A [reference](https://perldoc.perl.org/perlref) represents a scalar value that holds *where-the-value-is-stored* informations.
@@ -94,12 +94,12 @@ You can also use "anonymous" operators `[]` or `{}` like this:
 ```perl
 my @characters1 = ( "sheldon", "leonard", "penny" );
 my @characters2 = ( "howard", "rajesh", "bernadette", "amy" );
-my @big_bang_theory =  ();
+my @big_bang_theory = ();
 
 push @big_bang_theory, [@characters1];
 push @big_bang_theory, [@characters2];
 ```
-This way, reference were pushed but references to a *new* arrays.
+This way, array references were pushed but references to *new* arrays.
 
 Or you can even obtain a **reference of a reference** and later **dereference multiple times**. It enables the possibility to produce weird/dumb things like this:
 ```perl
@@ -148,7 +148,7 @@ We discussed **assignments** but how are passed arguments to subs?
 
 Answer: they are [always](https://stackoverflow.com/a/5746000)  passed "by reference" but it would be better to say "aliased" to avoid any confusion with the concept of [references](https://perldoc.perl.org/perlref) discussed earlier.
 
-This fact is far from obvious, since as you will see in following example, retrieving arguments into new variables (hence assigning by copy) will often make you believe that Perl is "calling by value".
+This fact is far from obvious, since as you will see in the next example, retrieving arguments into new variables (hence assigning by copy) will often make you believe that Perl is "calling by value".
 
 
 ## Modifications of variables into subs
@@ -170,7 +170,7 @@ not modified
 ```
 The modification is not visible outside the sub because in order to propagate the change, it should be returned to caller with a `return $cp;` and assigned with `$var = bycopy($var)` (actually even the return is optional because of "default variable magic").
 
-Obviously, this limitation is usually a good idea (side effect...), but here I was actually trying on purpose to modify the variable even for the caller...
+Obviously, this limitation is usually a good idea (side effect...) but not if you wanted on purpose to modify the variable in the caller scope.
 
 ![](/images/passing-by/students.jpg)
 
