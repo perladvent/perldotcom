@@ -186,7 +186,7 @@ Obviously, this limitation is usually a good idea (think side effect) but not if
 ![](/images/passing-by/students.jpg)
 
 
-To be able to modify the variable inside the sub so that it will be propagated to caller, I can use a reference:
+To be able to modify the variable inside the sub so that it will be propagated to the caller, I can use a reference:
 ```perl
 sub byref {
     my $ref = shift;
