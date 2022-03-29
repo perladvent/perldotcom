@@ -35,7 +35,7 @@ It is because the assignment copies the content of the variable and does not *al
 To inspect the *identity* of variables, we should inspect their **references**.
 
 ## A word about references
-A [reference](https://perldoc.perl.org/perlref) represents a scalar value that holds *where-the-value-is-stored* informations (sort of).
+A [reference](https://perldoc.perl.org/perlref) represents a scalar value that holds *where-the-value-is-stored* information (sort of).
 Having the same locations means it is the same variable (or an alias).
 The string representation of a reference even gives details about what kind of value (scalar, array, hash...) is pointed. Like the `SCALAR(...)` just seen below:
 ```
