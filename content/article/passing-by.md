@@ -99,7 +99,7 @@ my @big_bang_theory = ();
 push @big_bang_theory, [@characters1];
 push @big_bang_theory, [@characters2];
 ```
-This way, array references are pushed but it's references to *new* arrays (hence it breaks the link between `@characters1`/`@characters2` and `@bing_bang_theory` content).
+This way, array references are pushed but it's references to *new* arrays (hence it breaks the link between `@characters1`/`@characters2` and `@big_bang_theory` content).
 
 Or you can even obtain a **reference of a reference** and later **dereference multiple times**. It enables the possibility to produce weird/dumb things like this:
 ```perl
