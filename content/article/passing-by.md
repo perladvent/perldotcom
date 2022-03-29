@@ -220,7 +220,7 @@ And it is well modified:
 modified
 ```
 
-You only have to take care to work directly on `@_` (or aliases made with care) and do not use a function like `shift` or any assignmen that will give you *only* a copy.
+You only have to take care to work directly on `@_` (or aliases made with care) and do not use a function like `shift` or any assignment that will give you *only* a copy.
 
 ## Implicit conversion to reference with prototype
 Then there is another thing to know around subs and references: the usage of prototype.
