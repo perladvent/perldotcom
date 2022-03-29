@@ -162,7 +162,7 @@ This fact is far from obvious, since as you will see in the next example, retrie
 
 
 ## Modifications of variables into subs
-Inside subs, depending the way you get/use arguments, editing the variables won't usually affect the arguments. 
+Inside subs, depending on the way you get/use arguments, editing the variables won't usually affect the arguments. 
 ```perl
 sub bycopy {        
     my $cp = shift; # /!\ copy is done here (not during call) from aliased argument(s)
