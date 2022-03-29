@@ -202,7 +202,7 @@ That prints:
 ```
 modified
 ```
-This way, with a little gymnastic, I pass the variable itself via its reference, whatever it is (scalar, array, hash...), I can edit it and it will persist.
+This way, with some gymnastics, I pass the variable itself via its reference, whatever it is (scalar, array, hash...), I can edit it and it will persist.
 
 But there is an easier and obvious way, the default array `@_` is actually aliased!
 ```perl
