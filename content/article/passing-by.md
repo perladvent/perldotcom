@@ -154,7 +154,7 @@ modified modified modified
 While we are in the topic of "inspecting references", you can use a module like [Devel::Peek](https://metacpan.org/pod/Devel::Peek) or similar to get internal details on references (or any variable). You will get more details than what you ever wanted!
 
 ## Call by reference or by value?
-We discussed **assignments** but how are passed arguments to subs? 
+We discussed **assignments** but how are arguments passed to subs? 
 
 Answer: they are [always](https://stackoverflow.com/a/5746000)  passed "by reference" but it would be better to say "aliased" to avoid any confusion with the concept of [references](https://perldoc.perl.org/perlref) discussed earlier.
 
