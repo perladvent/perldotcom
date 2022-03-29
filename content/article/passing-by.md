@@ -1,7 +1,7 @@
 {
    "image" : "/images/passing-by/relay.jpg",
    "thumbnail" : "/images/passing-by/relay.jpg",
-   "date" : "2021-07-13T11:48:52",
+   "date" : "2022-03-29T11:48:52",
    "categories" : "development",
    "title" : "Passing by",
    "tags" : [
@@ -35,9 +35,9 @@ It is because the assignment copies the content of the variable and does not *al
 To inspect the *identity* of variables, we should inspect their **references**.
 
 ## A word about references
-A [reference](https://perldoc.perl.org/perlref) represents a scalar value that holds *where-the-value-is-stored* informations.
+A [reference](https://perldoc.perl.org/perlref) represents a scalar value that holds *where-the-value-is-stored* informations (sort of).
 Having the same locations means it is the same variable (or an alias).
-The string representation of a reference even gives details about what kind of value (scalar, array, hash...) is pointed. Like the `SCALAR(...)` just seen above:
+The string representation of a reference even gives details about what kind of value (scalar, array, hash...) is pointed. Like the `SCALAR(...)` just seen below:
 ```
 SCALAR(0x...)
 ```
@@ -58,7 +58,7 @@ my $str = "foo";
 # Get reference
 my $ref = \$str;
 
-# Derefrence with $
+# Dereference with $
 print "$$ref\n";
 ```
 Or 
@@ -80,7 +80,7 @@ You can also build a reference by its name with [symbolic references](https://pe
 ```perl
 my $name = "var";
 
-# Also store in $var
+# Store in $var
 $$name = "bazinga";
 
 print "$var\n";
@@ -90,16 +90,16 @@ That will print:
 bazinga
 ```
 
-You can also use "anonymous" operators `[]` or `{}` like this:
+Or you can use "anonymous" operators `[]` or `{}` like this:
 ```perl
-my @characters1 = ( "sheldon", "leonard", "penny" );
-my @characters2 = ( "howard", "rajesh", "bernadette", "amy" );
+my @characters1 = ( "Sheldon", "Leonard", "Penny" );
+my @characters2 = ( "Howard", "Rajesh", "Bernadette", "Amy" );
 my @big_bang_theory = ();
 
 push @big_bang_theory, [@characters1];
 push @big_bang_theory, [@characters2];
 ```
-This way, array references were pushed but references to *new* arrays.
+This way, array references are pushed but it's references to *new* arrays (hence it breaks the link between `@characters1`/`@characters2` and `@bing_bang_theory` content).
 
 Or you can even obtain a **reference of a reference** and later **dereference multiple times**. It enables the possibility to produce weird/dumb things like this:
 ```perl
@@ -110,6 +110,14 @@ my $rrrrrrrrrref = \\\\\\\\\\$str;
 
 # De-de-de-...-de-dereference
 print "$$$$$$$$$$$rrrrrrrrrref\n";
+```
+
+Or
+```perl
+my $str = "bazinga";
+
+# De-de-de-...-de-dereference a re-re-re-re-...-ref
+print $$$$$$$$$${\\\\\\\\\\$str} . "\n";
 ```
 
 But don't do this.
@@ -143,6 +151,8 @@ And the array is then well modified:
 modified modified modified
 ```
 
+While we are in the topic of "inspecting references", you can use a module like [Devel::Peek](https://metacpan.org/pod/Devel::Peek) or similar to get internal details on references (or any variable). You will get more details than what you ever wanted!
+
 ## Call by reference or by value?
 We discussed **assignments** but how are passed arguments to subs? 
 
@@ -156,6 +166,7 @@ Inside subs, depending the way you get/use arguments, editing the variables won'
 ```perl
 sub bycopy {        
     my $cp = shift; # /!\ copy is done here (not during call) from aliased argument(s)
+    # my $cp = (@_); # Same with this
     $cp = "modified";
 }
 
@@ -170,7 +181,7 @@ not modified
 ```
 The modification is not visible outside the sub because in order to propagate the change, it should be returned to caller with a `return $cp;` and assigned with `$var = bycopy($var)` (actually even the return is optional because of "default variable magic").
 
-Obviously, this limitation is usually a good idea (side effect...) but not if you wanted on purpose to modify the variable in the caller scope.
+Obviously, this limitation is usually a good idea (think side effect...) but not if you wanted on purpose to modify the variable in the caller scope.
 
 ![](/images/passing-by/students.jpg)
 
@@ -191,9 +202,9 @@ That prints:
 ```
 modified
 ```
-This way, with a little gymnastic, I pass the variable itself, whatever it is (scalar, array, hash...), I can edit it and it will persist.
+This way, with a little gymnastic, I pass the variable itself via its reference, whatever it is (scalar, array, hash...), I can edit it and it will persist.
 
-But there is an easier and obvious way, the default array `@_` is actually passed by reference! (aliased)
+But there is an easier and obvious way, the default array `@_` is actually aliased!
 ```perl
 sub bydefaultarray {
     $_[0] = "modified";
@@ -209,7 +220,7 @@ And it is well modified:
 modified
 ```
 
-You only have to take care to work directly on `@_` (or aliases made with care) and do not use a function like `shift` that will give you *only* a copy.
+You only have to take care to work directly on `@_` (or aliases made with care) and do not use a function like `shift` or any assignmen that will give you *only* a copy.
 
 ## Implicit conversion to reference with prototype
 Then there is another thing to know around subs and references: the usage of prototype.
@@ -219,6 +230,7 @@ The following example forces the array to its reference instead of flattening it
 ```perl
 sub proto(\@) {
     my $ref = shift; # It is the array ref, not the first item of @array
+    print "$ref\n";
     $ref->[0] = "dog";
     $ref->[1] = "cat";
     $ref->[2] = "pig";
@@ -233,6 +245,7 @@ print "@array\n";
 ```
 With the output:
 ```
+ARRAY(0x55ac34f261c0)
 dog cat pig
 ```
 
@@ -255,7 +268,7 @@ And it prints well:
 modified
 ```
 
-Recent Perl also comes with some [aliasing abilities](https://perldoc.perl.org/perlref#Assigning-to-References) (without having to deal with symbol table):
+Recent Perl also comes with some [aliasing abilities](https://perldoc.perl.org/perlref#Assigning-to-References) (without having to [deal with symbol table](https://perldoc.perl.org/perlmod#Symbol-Tables)):
 ```perl
 use feature qw/refaliasing declared_refs/;
 no warnings qw/experimental::refaliasing experimental::declared_refs/;
@@ -278,6 +291,7 @@ And there are well pointing to the same thing:
 ```
 SCALAR(0x5637ffc833a0) equals SCALAR(0x5637ffc833a0)
 ```
+
 
 Aliasing is also a matter of performances, and these tricks were heavily used for this purpose.
 
