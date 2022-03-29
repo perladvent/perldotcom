@@ -181,7 +181,7 @@ not modified
 ```
 The modification is not visible outside the sub because in order to propagate the change, it should be returned to caller with a `return $cp;` and assigned with `$var = bycopy($var)` (actually even the return is optional because of "default variable magic").
 
-Obviously, this limitation is usually a good idea (think side effect...) but not if you wanted on purpose to modify the variable in the caller scope.
+Obviously, this limitation is usually a good idea (think side effect) but not if you wanted to modify the variable in the caller scope intentionally.
 
 ![](/images/passing-by/students.jpg)
 
