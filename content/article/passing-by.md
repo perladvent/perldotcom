@@ -136,7 +136,7 @@ SCALAR(0x55589c6378e0) vs SCALAR(0x55589c6378f8)
 ```
 So it clearly states that these are 2 different variables.
 
-But wait, there is also some cases where the assignment is actually *aliasing*, it is what happen in `foreach` loops:
+But wait, there are also some cases where the assignment is actually *aliasing*, it is what happen in `foreach` loops:
 ```perl
 my @array = ( "foo", "bar", "baz" );
 
