@@ -23,14 +23,12 @@ Let's convert a standard Perl if-else into its conditional operator equivalent, 
 ```perl
 sub calculate_salary {
     my $hours = shift;
-    my $salary;
     if ($hours > 40) {
-        $salary = get_overtime_wage($hours);
+        return get_overtime_wage($hours);
     }
     else {
-        $salary = get_normal_wage($hours);
+        return get_normal_wage($hours);
     }
-    return $salary;
 }
 ```
 
