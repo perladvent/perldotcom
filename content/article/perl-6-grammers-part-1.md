@@ -19,7 +19,7 @@ In this article, I will go through a few examples to illustrate the basics of gr
 
 ### Parsing numbers
 
-Parsing numbers seems to be a simple task until you start thinking about different formats that the user can use, including negative numbers, floating-point numbers, numbers in scientific notation, special forms of numbers such as C‘s long long integers.
+Parsing numbers seems to be a simple task until you start thinking about different formats that the user can use, including negative numbers, floating-point numbers, numbers in scientific notation, and special forms of numbers such as C‘s long long integers.
 
 Let us start with the simplest form: a number as a sequence of digits. For example, 1, 42, 123, or 1000. A grammar in Perl 6 is a special kind of classes with its own keywords. The first rule of the grammar must (by default) be called `TOP`, and here is the complete program that parses our first set of numbers:
 
@@ -30,7 +30,7 @@ grammar N {
     }
 }
 
-for <1 42 123 1000> -> $n {
+for <1 42 123 1000 -3> -> $n {
     say N.parse($n) ?? "OK $n" !! "NOT OK $n";
 }
 ```
@@ -60,9 +60,9 @@ grammar N {
 }
 ```
 
-Here, the square brackets group together the two alternatives: `'+' | '-'` . The `?` quantifier requires that there is only one such character, or there are none. In Perl 6, square brackets only create a group but do not capture its content. Also notice, that both `+` and `-` are quoted, because Perl 6 treats any non-alphanumeric character as a special character unless it is quoted or escaped with `\`.
+Here, the square brackets group together the two alternatives: `'+' | '-'` . The `?` quantifier requires that there is only one such character, or there are none. In Perl 6, square brackets only create a group but do not capture its content. Also notice that both `+` and `-` are quoted, because Perl 6 treats any non-alphanumeric character as a special character unless it is quoted or escaped with `\`.
 
-The next step is to add support for the floating point. An ad hoc solution can be creating a character class that includes both numbers and the `'.'`  character, but that would be completely wrong, as, for example, strings with two dots such as `3..14` pass this filter. So, do it differently:
+The next step is to add support for the floating point numbers. An ad hoc solution can be creating a character class that includes both numbers and the `'.'`  character, but that would be completely wrong. For example, strings with two dots such as `3..14` pass this filter. So, do it differently:
 
 ```perl
 grammar N {
@@ -74,7 +74,7 @@ grammar N {
 }
 ```
 
-This grammar now allows an optional part consisting of the period and another sequence of digits and works well when the number is either an integer or contains an explicit fractional part, for example, `3.14`. It fails for those numbers where one of the parts is missing: `3.` or `.14`.
+This grammar now allows an optional part consisting of the period and another sequence of digits, and works well when the number is either an integer or contains an explicit fractional part, for example, `3.14`. It fails for those numbers where one of the parts is missing: `3.` or `.14`.
 
 An attempt to make the parts optional by using quantifiers makes the grammar difficult to read and error-prone. For instance, the following token matches all the above numbers but also a single `.`:
 
@@ -187,5 +187,5 @@ NOT OK 1__0
 
 ### Conclusion
 
-With a few simple steps, we made a grammar that understands numbers in different formats. As an exercise, you can add support for prefixes `0x`, `0b`, `0o` (hex, binary and octal) and suffixes (as in `1000L` in C). Grammars were only used to check the validity of the number format, and their power does not end there. In Perl 6, you can add _actions_ to the grammar; these are code blocks that are executed if the corresponding rule or token has successfully matched. But that's a story for another day.
+With a few simple steps, we made a grammar that understands numbers in different formats. As an exercise, you can add support for prefixes `0x`, `0b`, `0o` (hex, binary, and octal) and suffixes (as in `1000L` in C). Grammars were only used to check the validity of the number format, and their power does not end there. In Perl 6, you can add _actions_ to the grammar; these are code blocks that are executed if the corresponding rule or token has successfully matched. But that's a story for another day.
 
