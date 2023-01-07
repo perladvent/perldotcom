@@ -66,12 +66,13 @@ perl -pe "binmode(STDOUT);s/\R/\012/" /path/to/file > /path/to/new/file
 On PowerShell a few more changes are required. To convert to Unix-style line endings use:
 
 ```perl
-perl -ne "open(OUT, q(>>), q(/path/to/new/file));binmode(OUT);print OUT s/\R/\012/r" /path/to/file
+perl -ne "open(OUT, q(>), q(/path/to/new/file));binmode(OUT);print OUT s/\R/\012/r" /path/to/file
 ```
 
 So what just happened there? First of all we changed the command line switch "p" to "n". This stops Perl from printing every line it processes to standard output. Instead we opened an appending filehandle "OUT" to our output file and printed the result ourselves. The reason we had to do this was that PowerShell automatically interprets standard output as Unicode and replaces Unix-style endings with Windows CRLF endings. Hence using the re-direct method ("\>") does not work. And before you try, piping the output like this generates an error:
 
 ```perl
+# Don't do this!
 perl -pe "binmode(STDOUT);s/\R/\012/r" /path/to/file | set-content /path/to/new/file -Encoding Byte
 ```
 
