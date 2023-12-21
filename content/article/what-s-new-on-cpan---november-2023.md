@@ -17,7 +17,7 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 
 APIs & Apps
 -----------
-* Perform bitwise search of data in a hexadecimal stream with [App::Bin::Search](https://metacpan.org/pod/App::Bin::Search)
+* Perform bit-wise search of data in a hexadecimal stream with [App::Bin::Search](https://metacpan.org/pod/App::Bin::Search)
 * [App::CPANStreaks](https://metacpan.org/pod/App::CPANStreaks) displays various metrics of CPAN author's module release streaks
 * [App::FileFindUtils](https://metacpan.org/pod/App::FileFindUtils) bundles command-line utilities related to finding files
 * [App::MARC::Leader](https://metacpan.org/pod/App::MARC::Leader) decodes the first field of a MARC record (Leader) from a file or string
@@ -39,7 +39,7 @@ Config & Devops
 Data
 ----
 * Manage database handles safely for long running processes with [Database::ManagedHandle](https://metacpan.org/pod/Database::ManagedHandle)
-* Create an ad-hoc database which drops itself automatically with [Database::Temp](https://metacpan.org/pod/Database::Temp)
+* Create an ad hoc database which drops itself automatically with [Database::Temp](https://metacpan.org/pod/Database::Temp)
 * [File::Util::DirList](https://metacpan.org/pod/File::Util::DirList) consists of some file-related routines that involve lists of directories
 * [File::Util::Sort](https://metacpan.org/pod/File::Util::Sort) has routines related to sorting files in one or more directories
 * [File::Util::Symlink](https://metacpan.org/pod/File::Util::Symlink) bundles some utilities related to symbolic links
@@ -56,9 +56,9 @@ Data
 
 Development & Version Control
 -----------------------------
-* [AnyEvent::KVStore::Etcd](https://metacpan.org/pod/AnyEvent::KVStore::Etcd) gives the [AnyEvent::KVStore](https://metacpan.org/pod/AnyEvent::KVStore) framework an Etcd distributed key-value store backend
-* [Bencher::Scenarios::Log::ger](https://metacpan.org/pod/Bencher::Scenarios::Log::ger) provides some scenarios for benchmarking Log::ger
-* Link to a [Dist::Zilla](https://metacpan.org/pod/Dist::Zilla) distribution's shared files in the HTML documentation (in POD there's currently no mechanism to do this) with the [Dist::Zilla::Plugin::InsertDistFileLink](https://metacpan.org/pod/Dist::Zilla::Plugin::InsertDistFileLink) plugin
+* [AnyEvent::KVStore::Etcd](https://metacpan.org/pod/AnyEvent::KVStore::Etcd) gives the [AnyEvent::KVStore](https://metacpan.org/pod/AnyEvent::KVStore) framework an Etcd distributed key-value store back-end
+* [Bencher::Scenarios::Log::ger](https://metacpan.org/pod/Bencher::Scenarios::Log::ger) provides some scenarios for bench-marking Log::ger
+* Link to a [Dist::Zola](https://metacpan.org/pod/Dist::Zola) distribution's shared files in the HTML documentation (in POD there's currently no mechanism to do this) with the [Dist::Zola::Plugin::InsertDistFileLink](https://metacpan.org/pod/Dist::Zola::Plugin::InsertDistFileLink) plugin
 * [Object::PadX::Role::AutoJSON](https://metacpan.org/pod/Object::PadX::Role::AutoJSON) is an [Object::Pad](https://metacpan.org/pod/Object::Pad) role that dynamically handles TO_JSON serialization
 * Automatically create nested [Object::Pad](https://metacpan.org/pod/Object::Pad) objects with [Object::PadX::Role::AutoMarshal](https://metacpan.org/pod/Object::PadX::Role::AutoMarshal)
 * Check for known vulnerabilities before releasing to CPAN with [Test::CVE](https://metacpan.org/pod/Test::CVE)
@@ -77,7 +77,7 @@ Hardware
 
 Language & International
 ------------------------
-* [TextDoc::Examples](https://metacpan.org/pod/TextDoc::Examples) provides a collection of dummy word processor files useful for testing or benchmarking purposes
+* [TextDoc::Examples](https://metacpan.org/pod/TextDoc::Examples) provides a collection of dummy word processor files useful for testing or bench-marking purposes
 * [Acme::CPANModules::Locale::ID](https://metacpan.org/pod/Acme::CPANModules::Locale::ID) provides a list of modules related to the Indonesian locale
 * Find out Indonesian color names and corresponding RGB values with [Graphics::ColorNamesLite::ID](https://metacpan.org/pod/Graphics::ColorNamesLite::ID)
 * [Locale::MaybeMaketext](https://metacpan.org/pod/Locale::MaybeMaketext) automatically figures out which Maketext library is available on the end-users platform
