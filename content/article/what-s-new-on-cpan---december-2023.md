@@ -5,7 +5,7 @@
    "date" : "2024-01-09T04:44:56",
    "image" : null,
    "tags" : [],
-   "draft" : true,
+   "draft" : false,
    "description" : "A curated look at December's new CPAN uploads",
    "categories" : "cpan",
    "title" : "What's new on CPAN - December 2023",

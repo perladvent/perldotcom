@@ -1,6 +1,6 @@
 {
    "thumbnail" : null,
-   "draft" : true,
+   "draft" : false,
    "title" : "What's new on CPAN - November 2023",
    "categories" : "cpan",
    "date" : "2023-12-20T20:02:25",
