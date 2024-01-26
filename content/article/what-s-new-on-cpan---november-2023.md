@@ -29,7 +29,11 @@ APIs & Apps
 
 Config & Devops
 ---------------
-* A few non-Perl dependencies you can now find and build with [Alien](https://metacpan.org/pod/Alien): [Serd](https://drobilla.net/software/serd.html) RDF processor ([Alien::Serd](https://metacpan.org/pod/Alien::Serd)), [Sord](https://drobilla.net/software/sord.html) in-memory RDF store ([Alien::Sord](https://metacpan.org/pod/Alien::Sord)), hdt-cpp RDF binary format library ([Alien::hdt_cpp](https://metacpan.org/pod/Alien::hdt_cpp)), Zix C99 data structure library ([Alien::zix](https://metacpan.org/pod/Alien::zix))
+* A few non-Perl dependencies you can now find and build with [Alien](https://metacpan.org/pod/Alien):
+	* [Serd](https://drobilla.net/software/serd.html) RDF processor ([Alien::Serd](https://metacpan.org/pod/Alien::Serd))
+	* [Sord](https://drobilla.net/software/sord.html) in-memory RDF store ([Alien::Sord](https://metacpan.org/pod/Alien::Sord))
+	* hdt-cpp RDF binary format library ([Alien::hdt_cpp](https://metacpan.org/pod/Alien::hdt_cpp))
+	* Zix C99 data structure library ([Alien::zix](https://metacpan.org/pod/Alien::zix))
 * [CPAN::API::BuildPL](https://metacpan.org/pod/CPAN::API::BuildPL) documents the Build.PL API
 * A description of static CPAN installation, along with a reference implementation is provided in [CPAN::Static](https://metacpan.org/pod/CPAN::Static)
 * Automate various system administration tasks with [Ixchel](https://metacpan.org/pod/Ixchel)
@@ -43,7 +47,7 @@ Data
 * [File::Util::DirList](https://metacpan.org/pod/File::Util::DirList) consists of some file-related routines that involve lists of directories
 * [File::Util::Sort](https://metacpan.org/pod/File::Util::Sort) has routines related to sorting files in one or more directories
 * [File::Util::Symlink](https://metacpan.org/pod/File::Util::Symlink) bundles some utilities related to symbolic links
-* A trio of releases for dealing with MARC Leader data: [MARC::Leader](https://metacpan.org/pod/MARC::Leader), [MARC::Leader::Print](https://metacpan.org/pod/MARC::Leader::Print), [Data::MARC::Leader](https://metacpan.org/pod/Data::MARC::Leader)
+* A trio of releases for dealing with MARC Leader data: [MARC::Leader](https://metacpan.org/pod/MARC::Leader), [MARC::Leader::Print](https://metacpan.org/pod/MARC::Leader::Print) and [Data::MARC::Leader](https://metacpan.org/pod/Data::MARC::Leader)
 * Export telemetry data using the OpenTelemetry Protocol (OTLP) with [OpenTelemetry::Exporter::OTLP](https://metacpan.org/pod/OpenTelemetry::Exporter::OTLP)
 * Build an ontology on CPAN infrastructure! [Acme::Thing](https://metacpan.org/pod/Acme::Thing) provides your base type
 * Lots of CPAN release data bundled this month into CPAN modules:
@@ -51,15 +55,15 @@ Data
     * [Acme::CPANAuthorsBundle::CPAN::Streaks](https://metacpan.org/pod/Acme::CPANAuthorsBundle::CPAN::Streaks) lists prolific authors in the midst of various kinds of release streaks
     * [Acme::CPANModules::CPANAuthors](https://metacpan.org/pod/Acme::CPANModules::CPANAuthors) lists Acme::CPANAUthors::* modules
     * [Acme::CPANModules::SmartMatch](https://metacpan.org/pod/Acme::CPANModules::SmartMatch) lists modules that do smart matching
-    * Finally, a year's worth of CPAN release data is aggregated in [TableData::Perl::CPAN::Release::Static::2023](https://metacpan.org/pod/TableData::Perl::CPAN::Release::Static::2023), [TableData::Perl::CPAN::Release::Static::2024](https://metacpan.org/pod/TableData::Perl::CPAN::Release::Static::2024)
+    * Finally, a year's worth of CPAN release data is aggregated in [TableData::Perl::CPAN::Release::Static::2023](https://metacpan.org/pod/TableData::Perl::CPAN::Release::Static::2023)
 
 
 Development & Version Control
 -----------------------------
 * [AnyEvent::KVStore::Etcd](https://metacpan.org/pod/AnyEvent::KVStore::Etcd) gives the [AnyEvent::KVStore](https://metacpan.org/pod/AnyEvent::KVStore) framework an Etcd distributed key-value store back-end
-* [Bencher::Scenarios::Log::ger](https://metacpan.org/pod/Bencher::Scenarios::Log::ger) provides some scenarios for bench-marking Log::ger
-* Link to a [Dist::Zola](https://metacpan.org/pod/Dist::Zola) distribution's shared files in the HTML documentation (in POD there's currently no mechanism to do this) with the [Dist::Zola::Plugin::InsertDistFileLink](https://metacpan.org/pod/Dist::Zola::Plugin::InsertDistFileLink) plugin
-* [Object::PadX::Role::AutoJSON](https://metacpan.org/pod/Object::PadX::Role::AutoJSON) is an [Object::Pad](https://metacpan.org/pod/Object::Pad) role that dynamically handles TO_JSON serialization
+* [Bencher::Scenarios::Log::ger](https://metacpan.org/pod/Bencher::Scenarios::Log::ger) provides some scenarios for benchmarking [Log::ger](https://metacpan.org/pod/Log::ger)
+* The [Dist::Zola::Plugin::InsertDistFileLink](https://metacpan.org/pod/Dist::Zola::Plugin::InsertDistFileLink) plugin lets [Dist::Zila](https://metacpan.org/pod/Dist::Zola) users link to a distribution's shared files in their HTML documentation
+* [Object::PadX::Role::AutoJSON](https://metacpan.org/pod/Object::PadX::Role::AutoJSON) is an [Object::Pad](https://metacpan.org/pod/Object::Pad) role that furnishes a method to serializes properly with [JSON::XS](https://metacpan.org/pod/JSON::XS) or [Cpanel::JSON::XS](https://metacpan.org/pod/Cpanel::JSON::XS)
 * Automatically create nested [Object::Pad](https://metacpan.org/pod/Object::Pad) objects with [Object::PadX::Role::AutoMarshal](https://metacpan.org/pod/Object::PadX::Role::AutoMarshal)
 * Check for known vulnerabilities before releasing to CPAN with [Test::CVE](https://metacpan.org/pod/Test::CVE)
 * [Test::Database::Temp](https://metacpan.org/pod/Test::Database::Temp) provides a way to easily test several different databases with the same set of test data.
@@ -67,7 +71,10 @@ Development & Version Control
 * [At](https://metacpan.org/pod/At) implements Bluesky's new [AT](https://atproto.com/) social networking protocol
 * [Mo::utils::Date](https://metacpan.org/pod/Mo::utils::Date) provides date utilities for the [Mo](https://metacpan.org/pod/Mo) object system
 * [Seq::Iter](https://metacpan.org/pod/Seq::Iter) generates a coderef iterator from a sequence of items, the last of which can be a coderef to produce more items
-* New features for the [SPVM](https://metacpan.org/pod/SPVM) language: [SPVM::Go](https://metacpan.org/pod/SPVM::Go) implements Go's goroutines; [SPVM::Thread](https://metacpan.org/pod/SPVM::Thread) implements native threads; [SPVM::Time::HiRes](https://metacpan.org/pod/SPVM::Time::HiRes) implements High Resolution Time
+* New features for the [SPVM](https://metacpan.org/pod/SPVM) language:
+	* [SPVM::Go](https://metacpan.org/pod/SPVM::Go) implements Go's goroutines
+	* [SPVM::Thread](https://metacpan.org/pod/SPVM::Thread) implements native threads
+	* [SPVM::Time::HiRes](https://metacpan.org/pod/SPVM::Time::HiRes) implements High Resolution Time
 
 
 Hardware
@@ -91,4 +98,4 @@ Science & Mathematics
 Web
 ---
 * [Dancer2::Plugin::JsonApi](https://metacpan.org/pod/Dancer2::Plugin::JsonApi) provides [JSON:API](https://jsonapi.org/) helpers to [Dancer2](https://metacpan.org/pod/Dancer2) apps
-* Create OpenAPI documentation of your [Dancer2](https://metacpan.org/pod/Dancer2) application with [Dancer2::Plugin::OpenAPI](https://metacpan.org/pod/Dancer2::Plugin::OpenAPI)
+* Create [OpenAPI](https://www.openapis.org/) documentation of your [Dancer2](https://metacpan.org/pod/Dancer2) application with [Dancer2::Plugin::OpenAPI](https://metacpan.org/pod/Dancer2::Plugin::OpenAPI)

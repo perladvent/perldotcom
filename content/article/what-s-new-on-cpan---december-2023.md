@@ -61,7 +61,7 @@ Data
 	* [Acme::CPANModules::WorkingWithPDF](https://metacpan.org/pod/Acme::CPANModules::WorkingWithPDF) lists modules to work with Excel formats (XLS, XLSX) or other spreadsheet formats like LibreOffice Calc (ODS) 
 	* [Acme::PERLANCAR::Test::Require](https://metacpan.org/pod/Acme::PERLANCAR::Test::Require) lists modules to test require()
 * [TableData::Business::ID::KAN::Client::Lab::Testing](https://metacpan.org/pod/TableData::Business::ID::KAN::Client::Lab::Testing) uses the [TableData](https://metacpan.org/pod/TableData) specification to house some data about "accredited testing laboratories"
-* List words from a WordList module using [TableData::WordList](https://metacpan.org/pod/TableData::WordList)
+* List words from a [WordList](https://metacpan.org/pod/WordList) module using [TableData::WordList](https://metacpan.org/pod/TableData::WordList)
 * Parse a [Transparency and Consent String](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/TCFv2/IAB%20Tech%20Lab%20-%20Consent%20string%20and%20vendor%20list%20formats%20v2.md) with [GDPR::IAB::TCFv2](https://metacpan.org/pod/GDPR::IAB::TCFv2)
 * Rewrite [Graph](https://metacpan.org/pod/Graph)-based graphs with [Graph::Grammar](https://metacpan.org/pod/Graph::Grammar)
 * [Music::Dataset::ChordProgressions](https://metacpan.org/pod/Music::Dataset::ChordProgressions) provides access to hundreds of chord progressions
@@ -106,7 +106,7 @@ Language & International
 	* [SPVM::Resource::Utf8proc](https://metacpan.org/pod/SPVM::Resource::Utf8proc) bundles the [utf8proc](https://juliastrings.github.io/utf8proc/) library
 	* [SPVM::Time::Piece](https://metacpan.org/pod/SPVM::Time::Piece) handles dates and times
 	* [SPVM::Unicode::Normalize](https://metacpan.org/pod/SPVM::Unicode::Normalize) normalizes UTF-8
-* Program in YAML using [YAMLScript::Lingy](https://metacpan.org/pod/YAMLScript::Lingy)
+* Program in YAML using [YAMLScript](https://metacpan.org/pod/YAMLScript)
 * [Regexp::CharClasses::Thai](https://metacpan.org/pod/Regexp::CharClasses::Thai) supplements the UTF-8 character-class definitions 
 available to regular expressions w​ith special groups relevant to Thai linguistics
 
@@ -119,7 +119,7 @@ Science & Mathematics
 
 Web
 ---
-* Integrate [OpenTelemetry](https://opentelemetry.io/) into a popular web framework with [Dancer2::Plugin::OpenTelemetry](https://metacpan.org/pod/Dancer2::Plugin::OpenTelemetry), [Mojolicious::Plugin::OpenTelemetry](https://metacpan.org/pod/Mojolicious::Plugin::OpenTelemetry), [Plack::Middleware::OpenTelemetry](https://metacpan.org/pod/Plack::Middleware::OpenTelemetry) 
+* Integrate [OpenTelemetry](https://opentelemetry.io/) into a popular web framework with [Dancer2::Plugin::OpenTelemetry](https://metacpan.org/pod/Dancer2::Plugin::OpenTelemetry), [Mojolicious::Plugin::OpenTelemetry](https://metacpan.org/pod/Mojolicious::Plugin::OpenTelemetry) and [Plack::Middleware::OpenTelemetry](https://metacpan.org/pod/Plack::Middleware::OpenTelemetry) 
 * New plugins for the [Dancer2](https://metacpan.org/pod/Dancer2) framework:
 	* [Dancer2::Plugin::JobScheduler](https://metacpan.org/pod/Dancer2::Plugin::JobScheduler) sends and queries jobs in different job schedulers
 	* [Dancer2::Plugin::Syntax::GetPost](https://metacpan.org/pod/Dancer2::Plugin::Syntax::GetPost) adds syntactic sugar for GET+POST handlers
@@ -127,8 +127,8 @@ Web
 	* [WWW::Suffit::AuthDB](https://metacpan.org/pod/WWW::Suffit::AuthDB) provides authorization functionality
 	* [WWW::Suffit::Plugin::BasicAuth](https://metacpan.org/pod/WWW::Suffit::Plugin::BasicAuth) provides HTTP basic authentication and authorization
 	* Common helpers provided in [WWW::Suffit::Plugin::CommonHelpers](https://metacpan.org/pod/WWW::Suffit::Plugin::CommonHelpers)
-	* Show server and Perl environment data [WWW::Suffit::Plugin::ServerInfo](https://metacpan.org/pod/WWW::Suffit::Plugin::ServerInfo)
-	* enable logging to syslog with [WWW::Suffit::Plugin::Syslog](https://metacpan.org/pod/WWW::Suffit::Plugin::Syslog)
+	* Show server and perl environment data [WWW::Suffit::Plugin::ServerInfo](https://metacpan.org/pod/WWW::Suffit::Plugin::ServerInfo)
+	* Enable logging via [Sys::Syslog](https://metacpan.org/pod/Sys::Syslog) with [WWW::Suffit::Plugin::Syslog](https://metacpan.org/pod/WWW::Suffit::Plugin::Syslog)
 
 
 Other
