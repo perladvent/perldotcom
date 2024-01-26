@@ -62,7 +62,7 @@ Development & Version Control
 -----------------------------
 * [AnyEvent::KVStore::Etcd](https://metacpan.org/pod/AnyEvent::KVStore::Etcd) gives the [AnyEvent::KVStore](https://metacpan.org/pod/AnyEvent::KVStore) framework an Etcd distributed key-value store back-end
 * [Bencher::Scenarios::Log::ger](https://metacpan.org/pod/Bencher::Scenarios::Log::ger) provides some scenarios for benchmarking [Log::ger](https://metacpan.org/pod/Log::ger)
-* The [Dist::Zola::Plugin::InsertDistFileLink](https://metacpan.org/pod/Dist::Zola::Plugin::InsertDistFileLink) plugin lets [Dist::Zila](https://metacpan.org/pod/Dist::Zola) users link to a distribution's shared files in their HTML documentation
+* The [Dist::Zilla::Plugin::InsertDistFileLink](https://metacpan.org/pod/Dist::Zilla::Plugin::InsertDistFileLink) plugin lets [Dist::Zilla](https://metacpan.org/pod/Dist::Zilla) users link to a distribution's shared files in their HTML documentation
 * [Object::PadX::Role::AutoJSON](https://metacpan.org/pod/Object::PadX::Role::AutoJSON) is an [Object::Pad](https://metacpan.org/pod/Object::Pad) role that furnishes a method to serializes properly with [JSON::XS](https://metacpan.org/pod/JSON::XS) or [Cpanel::JSON::XS](https://metacpan.org/pod/Cpanel::JSON::XS)
 * Automatically create nested [Object::Pad](https://metacpan.org/pod/Object::Pad) objects with [Object::PadX::Role::AutoMarshal](https://metacpan.org/pod/Object::PadX::Role::AutoMarshal)
 * Check for known vulnerabilities before releasing to CPAN with [Test::CVE](https://metacpan.org/pod/Test::CVE)
