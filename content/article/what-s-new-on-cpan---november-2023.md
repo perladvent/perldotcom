@@ -6,7 +6,7 @@
    "date" : "2023-12-20T20:02:25",
    "image" : null,
    "description" : "A curated look at November's new CPAN uploads",
-   "tags" : [],
+   "tags" : ["new"],
    "authors" : [
       "mathew-korica"
    ]
