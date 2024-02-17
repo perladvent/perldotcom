@@ -72,7 +72,16 @@ my $hugo_generated = do {
 	$last_version
 	};
 
+my @command = ('hugo', '-v', '-d', $dest_dir);
+my $use_docker = 0;
+
 my( $hugo_installed ) = `hugo version` =~ m/Generator v(\d\.\d+\.\d+)-/;
+if (!$hugo_installed) {
+    ($hugo_installed) = `docker run --rm -it klakegg/hugo:0.59.0-ubuntu version` =~ m/Generator v(\d\.\d+\.\d+)-/;
+    my $cwd = getcwd();
+    @command = qq(docker run --rm -it -v $cwd:/src -v $cwd/target:/target -p 1313:1313 klakegg/hugo:0.59.1-ubuntu -v);
+    $use_docker = 1;
+}
 
 say <<~"HERE";
 	====================================
@@ -130,8 +139,10 @@ chomp( my $perldotcom_commit = `git rev-parse HEAD` );
 
 # still in the tpf/perldotcom directory, and make the website in
 # the staging directory
-system('hugo', '-v', '-d', $dest_dir );
-
+system(@command);
+if ($use_docker) {
+    `cp -R target/* $dest_dir`
+}
 
 # now work inside the staging dir
 die "Could not change to <$staging_clone>: $!\n"
