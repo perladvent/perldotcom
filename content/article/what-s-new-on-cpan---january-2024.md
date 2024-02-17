@@ -4,14 +4,14 @@
       "mathew-korica"
    ],
    "description" : "A curated look at January's new CPAN uploads",
-   "draft" : true,
+   "draft" : false,
    "image" : null,
    "categories" : "cpan",
    "thumbnail" : null,
    "tags" : [
       "new"
    ],
-   "date" : "2024-02-09T11:28:52"
+   "date" : "2024-02-17T00:00:00"
 }
 
 
