@@ -4,7 +4,7 @@
    ],
    "date" : "2024-01-09T04:44:56",
    "image" : null,
-   "tags" : [],
+   "tags" : ["new"],
    "draft" : false,
    "description" : "A curated look at December's new CPAN uploads",
    "categories" : "cpan",
@@ -25,7 +25,6 @@ APIs & Apps
 * [App::csvtool](https://metacpan.org/pod/App::csvtool) provides the main commands for the [csvtool](https://github.com/maroofi/csvtool) wrapper script
 * For [Rex](https://metacpan.org/pod/Rex) users, [Rex::CMDB::YAMLwithRoles](https://metacpan.org/pod/Rex::CMDB::YAMLwithRoles) collects and merges data from a set of YAML files to provide a configuration management database
 * [RT::Extension::SwitchUsers](https://metacpan.org/pod/RT::Extension::SwitchUsers) is an [RT](https://bestpractical.com/request-tracker) extension that provides a way to switch the current logged in user to others defined in user custom field "Switch Users Accounts"
-
 
 
 Config & Devops
@@ -87,18 +86,6 @@ Language & International
 ------------------------
 * Convert POD to Github-flavored Markdown with [Pod::Markdown::Githubert](https://metacpan.org/pod/Pod::Markdown::Githubert)
 * [Text::MustacheTemplate](https://metacpan.org/pod/Text::MustacheTemplate) is a [Mustache](https://mustache.github.io/) template engine written in pure Perl
-* New locales for [Locale::CLDR](https://metacpan.org/pod/Locale::CLDR):
-	* [Locale::CLDR::Locales::Ceb](https://metacpan.org/pod/Locale::CLDR::Locales::Ceb) (Cebuano)
-	* [Locale::CLDR::Locales::Doi](https://metacpan.org/pod/Locale::CLDR::Locales::Doi) (Dogri)
-	* [Locale::CLDR::Locales::Kgp](https://metacpan.org/pod/Locale::CLDR::Locales::Kgp) (Kaingang)
-	* [Locale::CLDR::Locales::Mai](https://metacpan.org/pod/Locale::CLDR::Locales::Mai) (Maithili)
-	* [Locale::CLDR::Locales::Mni](https://metacpan.org/pod/Locale::CLDR::Locales::Mni) (Manipuri)
-	* [Locale::CLDR::Locales::Pcm](https://metacpan.org/pod/Locale::CLDR::Locales::Pcm) (Nigerian Pidgin)
-	* [Locale::CLDR::Locales::No](https://metacpan.org/pod/Locale::CLDR::Locales::No) (Norwegian)
-	* [Locale::CLDR::Locales::Sat](https://metacpan.org/pod/Locale::CLDR::Locales::Sat) (Santali)
-	* [Locale::CLDR::Locales::Sa](https://metacpan.org/pod/Locale::CLDR::Locales::Sa) (Sanskrit)
-	* [Locale::CLDR::Locales::Sc](https://metacpan.org/pod/Locale::CLDR::Locales::Sc) (Sardinian)
-	* [Locale::CLDR::Locales::Su](https://metacpan.org/pod/Locale::CLDR::Locales::Su) (Sundanese)
 * New extensions for the Perl-based [SPVM](https://metacpan.org/pod/SPVM) language:
 	* [SPVM::Eg](https://metacpan.org/pod/SPVM::Eg) generates HTML tags
 	* [SPVM::Encode](https://metacpan.org/pod/SPVM::Encode) encodes/decodes strings
