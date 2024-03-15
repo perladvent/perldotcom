@@ -1,7 +1,7 @@
 {
    "thumbnail" : null,
    "title" : "What's new on CPAN - February 2024",
-   "date" : "2024-03-07T21:19:57",
+   "date" : "2024-03-14T21:19:57",
    "authors" : [
       "mathew-korica"
    ],
