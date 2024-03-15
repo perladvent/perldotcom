@@ -1,5 +1,4 @@
 {
-   "thumbnail" : null,
    "title" : "What's new on CPAN - February 2024",
    "date" : "2024-03-14T21:19:57",
    "authors" : [
@@ -10,8 +9,9 @@
       "new"
    ],
    "draft" : false,
-   "image" : null,
-   "description" : "A curated look at February's new CPAN uploads"
+   "description" : "A curated look at February 2024's new CPAN uploads"
+   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png"
 }
 
 
