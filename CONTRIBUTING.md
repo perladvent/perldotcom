@@ -13,6 +13,7 @@ issue](https://github.com/perladvent/perldotcom/issues), or simply send up a pul
 request. Inside the repo, you can run the `make new` target and you'll be led
 through the questions to set up your initial article template:
 
+    % cpm install -g --cpanfile cpanfile
     % make new
 
 You can then check your article by starting a local server (using [Hugo
