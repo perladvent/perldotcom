@@ -25,7 +25,7 @@ will be there as well, as is the case most years. We get lots of work done. I
 usually blog about it. To get an idea of what goes on, you can check out [my
 2023 Perl Toolchain Summit
 report](https://www.olafalders.com/2023/05/01/how-i-spent-my-perl-toolchain-summit-v2023/)
-and [Salve J. Nilson's
+and [Salve J. Nilsen's
 photos](https://code.foo.no/2023/05/05/perl-toolchain-summit-2023-in-pictures/).
 
 The summit is a great opportunity for your company to get involved and support
