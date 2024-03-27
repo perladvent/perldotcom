@@ -68,7 +68,7 @@ And I didn't see a "Foo.pm did not return a true value" error, yay!
 
 ### Making it a "feature"
 
-I don't think P5P (the group that maintains the Perl source code) would accept my change as-is. For one thing, any code that _does_ rely on the require returning false feature would be broken by the next Perl release. The preferred way to introduce new behavior these days is to use the [feature](https://metacpan.org/pod/feature) pragma. So I removed my previous changes and tried to implement allowing require to return false as a feature.
+I don't think P5P (the group that maintains the Perl source code) would accept my change as-is. For one thing, any code that _does_ rely on the require returning false feature would be broken by the next Perl release. The preferred way to introduce new behavior these days is to use the [feature]({{< mcpan "feature" >}}) pragma. So I removed my previous changes and tried to implement allowing require to return false as a feature.
 
 The Perl source code has a handy utility called [regen/feature.pl](https://github.com/dnmfarrell/perl5/blob/66f43943f438f5bc7970dab0b7940e46c84909f5/regen/feature.pl) which takes care of generating the necessary C and Perl code to implement the feature flag. All you have to do is add the new feature's name to `regen/feature.pl`, and then run the script to add it to the Perl source.
 

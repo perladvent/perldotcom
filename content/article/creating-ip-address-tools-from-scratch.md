@@ -34,7 +34,7 @@ my @bytes = split /\./, $ipv4;
 my $decimal = unpack 'N', pack 'CCCC', @bytes; # 3232235520
 ```
 
-This code splits the IPv4 string `192.168.0.0` into an array of 4 numbers (192,168,0,0). I use [pack]({{< perldoc "pack" >}}) to convert each number from Perl's representation into an unsigned 8-bit integer (the "C" is for char, the C language type). Then I use [unpack]({{< perldoc "unpack" >}}) to read all 32 bits at once (the "N" is for an unsigned long in Network order - i.e. big endian).
+This code splits the IPv4 string `192.168.0.0` into an array of 4 numbers (192,168,0,0). I use [pack]({{< perlfunc "pack" >}}) to convert each number from Perl's representation into an unsigned 8-bit integer (the "C" is for char, the C language type). Then I use [unpack]({{< perlfunc "unpack" >}}) to read all 32 bits at once (the "N" is for an unsigned long in Network order - i.e. big endian).
 
 Using `pack` and `unpack` is convenient, but it's not the fastest way to convert those numbers into a single 32-bit integer. We can accomplish the same feat with multiplication and exponentiation:
 
@@ -153,7 +153,7 @@ while (<<>>) {
 }
 ```
 
-The script reads input one line at a time. It splits the string up into the starting and ending IPv4 addresses, and uses that same pack-unpack routine to convert each to its decimal. It then calculates the prefix length by finding the difference between the start and end addresses, stringifying it to binary with [sprintf]({{< perldoc "sprintf" >}}) and subtracting the number of bits from 32 (because IPv4 addresses are 32-bit integers).
+The script reads input one line at a time. It splits the string up into the starting and ending IPv4 addresses, and uses that same pack-unpack routine to convert each to its decimal. It then calculates the prefix length by finding the difference between the start and end addresses, stringifying it to binary with [sprintf]({{< perlfunc "sprintf" >}}) and subtracting the number of bits from 32 (because IPv4 addresses are 32-bit integers).
 
 The trouble with the prefix length calculation is it uses stringification - sticking with numbers should be faster if there was a way to do it. Let's recap what we know:
 
@@ -170,6 +170,6 @@ Here's the Perl solution:
 my $prefixlen = 32 - int(log(1 + $end_decimal - $start_decimal) / log(2));
 ```
 
-It uses the [log]({{< perldoc "log" >}}) function which uses the natural logarithm base *e* (like the `ln` button on a calculator), so it must be divided by `log(2)` to act like log<sub>2</sub>. Benchmarking this I was surprised to find that the `log` solution is only a few percent faster than using `sprintf`.
+It uses the [log]({{< perlfunc "log" >}}) function which uses the natural logarithm base *e* (like the `ln` button on a calculator), so it must be divided by `log(2)` to act like log<sub>2</sub>. Benchmarking this I was surprised to find that the `log` solution is only a few percent faster than using `sprintf`.
 
 **Edit**: Dan Book posted an IP address to decimal [solution](https://www.reddit.com/r/perl/comments/d6kncb/creating_ip_address_tools_from_scratch/f0u1flu?utm_source=share&utm_medium=web2x) that uses [Socket]({{< mcpan "Socket" >}}).

@@ -74,7 +74,7 @@ Tied variables are special variables that execute custom code when they are inte
 thing is if you're writing code to be used by others, you can't be sure that a caller won't pass a tied variable to one of your XS functions. And unlike
 regular Perl, XS does **not** execute tied code automatically.
 
-XS does provide [functions](https://perldoc.perl.org/perlapi.html#Magical-Functions) for working with tied variables though. One you'll see in a lot of XS code is `SvGETMAGIC`. Imagine your function is passed a tied variable; it's value will be undefined in XS, until you call `mg_get` ("magic get") on it, which calls `FETCH`.
+XS does provide [functions]({{< perldoc "perlapi" "Magical-Functions" >}}) for working with tied variables though. One you'll see in a lot of XS code is `SvGETMAGIC`. Imagine your function is passed a tied variable; it's value will be undefined in XS, until you call `mg_get` ("magic get") on it, which calls `FETCH`.
 
 Unfortunately, `mg_get` can only be called on tied scalars so you don't want to call it on a regular scalar. That's where `SvGETMAGIC` comes in: if the scalar is
 tied, it will call `mg_get`, if not, nothing will happen.
@@ -93,7 +93,7 @@ This code declares an XS function called `get_tied_value`, which accepts a scala
 
 #### Magic?
 
-You might be wondering why functions dealing with tied variables are named "magic" or "mg". The reason is that tied behavior for each variable is implemented via a pointer to a [magic virtual table](https://perldoc.perl.org/perlguts.html#Magic-Virtual-Tables) which is a structure containing function pointers to the tied behavior.
+You might be wondering why functions dealing with tied variables are named "magic" or "mg". The reason is that tied behavior for each variable is implemented via a pointer to a [magic virtual table]({{< perldoc "perlguts" "Magic-Virtual-Tables" >}}) which is a structure containing function pointers to the tied behavior.
 
 Often the Perl C API will provide `mg` ("magic") and `nomg` ("non magic") variants of functions, so you can decide if you want to trigger the tied behavior.
 
@@ -102,7 +102,7 @@ Often the Perl C API will provide `mg` ("magic") and `nomg` ("non magic") varian
 Perl has loads of tools for managing UTF-8 encoded text, but with XS you're working in C, which does not. Start thinking about basic types like `char`
 and common assumptions in C code, and you'll realize that multibyte characters can wreak havoc unless you handle them correctly.
 
-Fortunately, the Perl C API does provide [functions](https://perldoc.perl.org/perlapi.html#Unicode-Support) for managing UTF-8 data that
+Fortunately, the Perl C API does provide [functions]({{< perldoc "perlapi" "Unicode-Support" >}}) for managing UTF-8 data that
 can help. Here are a couple of examples.
 
 Perl scalars have a UTF-8 flag, which is turned on when the scalar contains decoded UTF-8 data. We can detect it with `SvUTF8`:
@@ -145,9 +145,9 @@ This function returns false if the scalar contains data that is not downgrade-ab
 
 - Parts [one]({{< relref "getting-started-with-xs.md" >}}) and [two]({{< relref "writing-your-own-xs-functions.md" >}}) in this series contain the background information necessary to understand this one
 - This series is also on CPAN ([XS::Tutorial]({{<mcpan "XS::Tutorial">}})) complete with all the code
-- The [BOOT](https://perldoc.perl.org/perlxs.html#The-BOOT%3a-Keyword) keyword
-- Tied variable [functions](https://perldoc.perl.org/perlapi.html#Magical-Functions) and the [magic virtual table](https://perldoc.perl.org/perlguts.html#Magic-Virtual-Tables)
-- [Perl UTF-8 functions](https://perldoc.perl.org/perlapi.html#Unicode-Support)
+- The [BOOT]({{< perldoc "perlxs" "The-BOOT%3a-Keyword" >}}) keyword
+- Tied variable [functions]({{< perldoc "perlapi" "Magical-Functions" >}}) and the [magic virtual table]({{< perldoc "perlguts" "Magic-Virtual-Tables" >}})
+- [Perl UTF-8 functions]({{< perldoc "perlapi" "Unicode-Support" >}})
 
 \
 Cover image &copy; [Steve Buissinne](https://pixabay.com/en/plumbing-pipe-wrench-plumber-840835/)

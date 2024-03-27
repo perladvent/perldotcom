@@ -39,7 +39,7 @@ His code isn't that complex. It's a big statement, but when I teach it in Perl c
 1. The middle step sorts of the computed element in the tuple.
 1. The last step extracts the original value from the tuple.
 
-You probably can't imagine how shocking this could be back then. Perl 5 was officially released in October 1994, but the first development versions had been around since the middle of 1993. Randal was surely playing with Perl 5 as soon as it came out. This means that most Perl programmers had not yet seen new features like the [map](http://perldoc.perl.org/functions/map.html) function or references. They certainly weren't comfortable with those ideas.
+You probably can't imagine how shocking this could be back then. Perl 5 was officially released in October 1994, but the first development versions had been around since the middle of 1993. Randal was surely playing with Perl 5 as soon as it came out. This means that most Perl programmers had not yet seen new features like the [map]({{< perlfunc "map" >}}) function or references. They certainly weren't comfortable with those ideas.
 
 Randal, however, knew the _decorate-sort-undecorate_ technique from LISP, especially since he's solidly in the emacs camp in the editor wars. Renzo on [Code Review](http://codereview.stackexchange.com/a/138436/13050) fixed up my attempt at a LISP version:
 
@@ -94,7 +94,7 @@ Tom Christiansen's April 1996 post in _comp.lang.perl.misc_ for [Read directory 
 
 In July, Colin Howarth started the thread ["Schwartzian transform of %$self ... help?"](https://groups.google.com/d/msg/comp.lang.perl.misc/6NEeX4XJx54/nmpMmReMIbcJ).
 
-In October, Tom posted [an expanded draft of perllol](https://groups.google.com/d/msg/comp.lang.perl.misc/VIKNMCeNFAM/18UApg1hWy8J) as part of his [Perl Data Structures Cookbook](/doc/FMTEYEWTK/pdsc/), which turned into [perldsc](http://perldoc.perl.org/perldsc.html) and [perllol](http://perldoc.perl.org/perllol.html). He uses the full term "Schwartzian Transform". The term was catching on.
+In October, Tom posted [an expanded draft of perllol](https://groups.google.com/d/msg/comp.lang.perl.misc/VIKNMCeNFAM/18UApg1hWy8J) as part of his [Perl Data Structures Cookbook](http://www.perl.com/doc/FMTEYEWTK/pdsc/), which turned into [perldsc]({{< perldoc "perldsc" >}}) and [perllol]({{< perldoc "perllol" >}}). He uses the full term "Schwartzian Transform". The term was catching on.
 
 ### Gaining notoriety
 
@@ -132,7 +132,7 @@ Indeed it has haunted us since then, but that's not the end of the story.
 
 ### Variations
 
-Randal's use of the anonymous array is interesting, but it's not the only way to decorate the original value. You could compute the values and store them in a hash. Joseph Hall came up with something called the Orcish Maneuver - a clever pun on [Orc](http://lotr.wikia.com/wiki/Orcs) (perhaps) and "OR Cache". This doesn't use the [map](http://perldoc.perl.org/functions/map.html) function  or references:
+Randal's use of the anonymous array is interesting, but it's not the only way to decorate the original value. You could compute the values and store them in a hash. Joseph Hall came up with something called the Orcish Maneuver - a clever pun on [Orc](http://lotr.wikia.com/wiki/Orcs) (perhaps) and "OR Cache". This doesn't use the [map]({{< perlfunc "map" >}}) function  or references:
 
 ```perl
 my @sorted = sort {

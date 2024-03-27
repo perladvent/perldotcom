@@ -18,7 +18,7 @@
 ℞ 38: Making `cmp` work on text instead of codepoints
 -----------------------------------------------------
 
-Even with Perl 5.12's ["unicode\_strings" feature](http://perldoc.perl.org/feature.html#The-%27unicode_strings%27-feature), some of Perl's core operations do not perform as expected on Unicode strings by default. For example, how is the `cmp` operator to know whether its arguments are octets, larger codepoints, or graphemes, or whether a specific collation should be in effect?
+Even with Perl 5.12's ["unicode\_strings" feature]({{< perldoc "feature" "The-%27unicode_strings%27-feature" >}}), some of Perl's core operations do not perform as expected on Unicode strings by default. For example, how is the `cmp` operator to know whether its arguments are octets, larger codepoints, or graphemes, or whether a specific collation should be in effect?
 
 Where you might write:
 

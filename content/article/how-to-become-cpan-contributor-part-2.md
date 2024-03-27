@@ -102,7 +102,7 @@ perl = 5.006
 ...
 ```
 
-Or you can use the plugin [MinimumPerlFast](https://metacpan.org/pod/Dist::Zilla::Plugin::MinimumPerlFast) which will detect the minimum Perl version needed by the distribution:
+Or you can use the plugin [MinimumPerlFast]({{< mcpan "Dist::Zilla::Plugin::MinimumPerlFast" >}}) which will detect the minimum Perl version needed by the distribution:
 
 ```perl
 ...

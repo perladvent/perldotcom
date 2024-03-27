@@ -1,0 +1,34 @@
+#/usr/bin/env perl
+use v5.10;
+
+package GetLinks {
+	use experimental qw(signatures);
+	use Mojo::DOM;
+	use Mojo::File;
+	use Mojo::URL;
+
+	sub from_file ( $self, $file ) {
+		return [] unless( -f $file );
+		my $dom = Mojo::DOM->new( Mojo::File->new( $file )->slurp )
+			->find( 'a[href]' )
+			->map( attr => 'href' )
+			->grep( sub {
+				warn "FILE $file - newline in URL <$_>\n" if /\v/;
+				my $u = Mojo::URL->new( $_ );
+				$u->is_abs
+					&& $u->scheme ne 'javascript'
+					&& $u->scheme ne 'mailto'
+				} )
+			->to_array;
+		}
+
+	}
+
+foreach my $file ( @ARGV ) {
+	state %Seen;
+	my @links =
+		grep { ! $Seen{$_}++ }
+		GetLinks->from_file( $file )->@*;
+	next unless @links;
+	say join "\n", @links;
+	}
