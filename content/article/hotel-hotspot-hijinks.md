@@ -1,9 +1,9 @@
 {
     "title"       : "Hotel hotspot hijinks",
     "authors"     : ["paul-cochrane"],
-    "date"        : "2024-03-24T22:50:38",
+    "date"        : "2024-03-26T18:00:00",
     "tags"        : [],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "/images/hotel-hotspot-hijinks/hotel-hotspot-stock-login-page.png",
     "thumbnail"   : "/images/hotel-hotspot-hijinks/hotel-hotspot-stock-login-page.png",
     "description" : "Automating a hotel captive portal",
