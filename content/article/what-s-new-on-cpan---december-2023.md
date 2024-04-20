@@ -3,13 +3,13 @@
       "mathew-korica"
    ],
    "date" : "2024-01-09T04:44:56",
-   "image" : null,
+   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
    "tags" : ["new"],
    "draft" : false,
    "description" : "A curated look at December's new CPAN uploads",
    "categories" : "cpan",
    "title" : "What's new on CPAN - December 2023",
-   "thumbnail" : null
+   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png"
 }
 
 
