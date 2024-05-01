@@ -1,10 +1,10 @@
 {
-   "thumbnail" : null,
+   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
    "draft" : false,
    "title" : "What's new on CPAN - November 2023",
    "categories" : "cpan",
    "date" : "2023-12-20T20:02:25",
-   "image" : null,
+   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
    "description" : "A curated look at November's new CPAN uploads",
    "tags" : ["new"],
    "authors" : [

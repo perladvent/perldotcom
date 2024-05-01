@@ -5,9 +5,9 @@
    ],
    "description" : "A curated look at January's new CPAN uploads",
    "draft" : false,
-   "image" : null,
+   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
    "categories" : "cpan",
-   "thumbnail" : null,
+   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
    "tags" : [
       "new"
    ],
