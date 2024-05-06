@@ -11,7 +11,7 @@ use Time::Seconds;
 
 # dont leave tmp file behind
 BEGIN { $SIG{TERM} = $SIG{INT} = sub { exit 0 } }
-END { unlink '.tmp.pod' }
+#END { unlink '.tmp.pod' } #don't need to cleanup since we're not using this file
 
 my @lines = <> if @ARGV or die "requires a filename\n";
 
@@ -27,7 +27,7 @@ my %categories = (
   'Other' => [],
 );
 
-my @attributes = qw/name version description release_date type author/;
+my @attributes = qw/name version description release_date type author pause_id/;
 
 my $total = @lines;
 my $i     = 0;
@@ -56,14 +56,14 @@ for my $release (sort @lines)
     my $ua = HTTP::Tiny->new;
     my $response = $ua->get("http://fastapi.metacpan.org/v1/pod/$module{name}?content-type=text/x-pod");
     next unless $response->{success};
-    open my $tmp, '>:utf8', '.tmp.pod';
-    print $tmp $response->{content};
-    close $tmp; # flush it
-    eval { system "perldoc .tmp.pod" };
-    next if $@;
+    #open my $tmp, '>:utf8', '.tmp.pod';
+    #print $tmp $response->{content};
+    #close $tmp; # flush it
+    #eval { system "perldoc .tmp.pod" };
+    #next if $@;
 
     # format the module description
-    $module{mcpan_link} = "[$module{name}](https://metacpan.org/pod/$module{name})";
+    $module{mcpan_link} = "[$module{name}](https://metacpan.org/pod/$module{name}) ($module{pause_id})";
 
     my @descriptions = (
       sprintf('%s with %s', $module{description}, $module{mcpan_link}),
@@ -74,59 +74,38 @@ for my $release (sort @lines)
     $module{description} = $descriptions[ int rand @descriptions ];
 
     # categorize the module
-    if ($module{name}    =~ /^(?:API|App|WebService|Net::)/)
-    {
+    if ($module{name}    =~ /^(?:API|App|WebService|Net::)/) { #XXX: ::Webhook
       $module{category} = 'APIs & Apps';
     }
-    elsif ($module{name} =~ /^(?:Alien|Badge|Bot|CPAN|Config|Shell|MetaCPAN|Log|Win32)/)
-    {
+    elsif ($module{name} =~ /^(?:Alien|Badge|Bot|CPAN|Config|Shell|MetaCPAN|Log|Win32)/) {
       $module{category} = 'Config & Devops';
     }
-    elsif ($module{name} =~ /^(?:Data|DBI|DBIx|CSV|HTML|DBD|Hash|File|Sereal|XML)/)
-    {
+    elsif ($module{name} =~ /^(?:Data|DBI|DBIx|CSV|HTML|DBD|Hash|File|Sereal|XML)/) {
       $module{category} = 'Data';
     }
-    elsif ($module{name} =~ /^(?:AnyEvent|Devel|Dist|List|POE|MooseX|Scalar|Test|Tie|Git)/)
-    {
+    elsif ($module{name} =~ /^(?:AnyEvent|Devel|Dist|List|POE|MooseX|Scalar|Test|Tie|Git|MooX|Date)/) {
       $module{category} = 'Development & Version Control';
     }
-    elsif ($module{name} =~ /^(?:Device)/)
-    {
+    elsif ($module{name} =~ /^(?:Device)/) {
       $module{category} = 'Hardware';
     }
-    elsif ($module{name} =~ /^(?:Text|Lingua|MarpaX|Pod)/)
-    {
+    elsif ($module{name} =~ /^(?:Text|Lingua|MarpaX|Pod|Locale)/) {
       $module{category} = 'Language & International';
     }
-    elsif ($module{name} =~ /^(?:Algorithm|Bio|Compress|Crypt|Digest|Math)/)
-    {
+    elsif ($module{name} =~ /^(?:Algorithm|Bio|Compress|Crypt|Digest|Math|Astro)/) {
       $module{category} = 'Science & Mathematics';
     }
-    elsif ($module{name} =~ /^(?:Catalyst|Mojo|Dancer|CGI|WWW|FCGI|Plack|Email|LWP)/)
-    {
+    elsif ($module{name} =~ /^(?:Catalyst|Mojo|Dancer|CGI|WWW|FCGI|Plack|Email|LWP)/) {
       $module{category} = 'Web';
     }
-    else
-    {
+    else {
       $module{category} = 'Other';
     }
 
     # confirm category or exclude
-    print "$i/$total $module{name} - accept category or select another:\n";
+    #print "$i/$total $module{name} - accept category or select another:\n";
 
     my @categories;
-    for (sort keys %categories)
-    {
-      my $current = $module{category} eq $_ ? '*' : ' ';
-      push @categories, $_;
-      printf " %s[%u] %s\n", $current, @categories - 1, $_;
-    }
-    my $answer = <<>>; chomp $answer;
-    if ($answer)
-    {
-      next unless $answer =~ /^\d$/ && $answer < @categories;
-      $module{category} = $categories[$answer];
-    }
     push @{$categories{$module{category}}}, \%module;
 }
 
@@ -142,14 +121,13 @@ open my $md_fh, '>:utf8', sprintf 'what-s-new-on-cpan---%s-%s.md',
 my $metadata = {
   title       => sprintf('What\'s new on CPAN - %s %s', $datetime->fullmonth, $datetime->year),
   description => sprintf('A curated look at %s\'s new CPAN uploads', $datetime->fullmonth),
-  authors     => ['david-farrell'],
-  tags        => [],
+  authors     => ['mathew-korica'],
+  tags        => ['new'],
   categories  => 'cpan',
-  image       => "",
-  draft       => JSON::true,
+  draft       => JSON::false,
   date        => $now->datetime,
-  image       => undef,
-  thumbnail   => undef,
+  image       => "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+  thumbnail   => "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
 };
 
 my $json = JSON->new();
