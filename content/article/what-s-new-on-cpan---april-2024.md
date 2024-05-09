@@ -32,7 +32,7 @@ Config & Devops
 ---------------
 * Find and build Microsoft's [ONNX Runtime](https://github.com/microsoft/onnxruntime) AI system with [Alien::onnxruntime](https://metacpan.org/pod/Alien::onnxruntime) (EGOR)
 * [CPAN::Requirements::Dynamic](https://metacpan.org/pod/CPAN::Requirements::Dynamic) (LEONT) will check that your system meets the prerequisites specified by a CPAN distribution
-* [Dist::Build](https://metacpan.org/pod/Dist::Build) (LEONT) provides another way to build and install Perl modules* [Dist::Build](https://metacpan.org/pod/Dist::Build) (LEONT) provides another way to build and install Perl modules
+* [Dist::Build](https://metacpan.org/pod/Dist::Build) (LEONT) provides another way to build and install Perl modules
 * A couple of [Dist::Zilla](https://metacpan.org/pod/Dist::Zilla) plugins:
 	* [Dist::Zilla::Plugin::DistBuild](https://metacpan.org/pod/Dist::Zilla::Plugin::DistBuild) (LEONT) for [CPAN::Requirements::Dynamic](https://metacpan.org/pod/CPAN::Requirements::Dynamic) (see above)
 	* [Dist::Zilla::Plugin::DynamicPrereqs::Meta](https://metacpan.org/pod/Dist::Zilla::Plugin::DynamicPrereqs::Meta) (LEONT) for [Dist::Build](https://metacpan.org/pod/Dist::Build) (see above)
