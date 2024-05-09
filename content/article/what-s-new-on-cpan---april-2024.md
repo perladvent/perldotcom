@@ -72,7 +72,7 @@ Development & Version Control
 * [Net::EPP::Server](https://metacpan.org/pod/Net::EPP::Server) (GBROWN) provides a high-level framework for developing EPP (Extensible Provisioning Protocol) servers
 * Load an [i3](https://i3wm.org/) workspace with [AnyEvent::I3X::Workspace::OnDemand](https://metacpan.org/pod/AnyEvent::I3X::Workspace::OnDemand) (WATERKIP)
 * Parse and format datetimes from PDF's using [DateTime::Format::PDF](https://metacpan.org/pod/DateTime::Format::PDF) (SKIM)
-* Stingify references in:
+* Stringify references in:
 	* [Data::Dump::HTML::Collapsible](https://metacpan.org/pod/Data::Dump::HTML::Collapsible) with [Devel::Confess::Patch::UseDataDumpHTMLCollapsible](https://metacpan.org/pod/Devel::Confess::Patch::UseDataDumpHTMLCollapsible) (PERLANCAR)
 	* [Data::Dump::HTML::PopUp](https://metacpan.org/pod/Data::Dump::HTML::PopUp) with [Devel::Confess::Patch::UseDataDumpHTMLPopUp](https://metacpan.org/pod/Devel::Confess::Patch::UseDataDumpHTMLPopUp) (PERLANCAR)
 * [Test2::Tools::MIDI](https://metacpan.org/pod/Test2::Tools::MIDI) (JMATES) tests whether MIDI files contain particular MIDI structures and events
