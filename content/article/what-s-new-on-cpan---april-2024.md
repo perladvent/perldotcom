@@ -6,7 +6,7 @@
    "categories" : "cpan",
    "draft" : false,
    "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
-   "date" : "2024-05-06T02:22:47",
+   "date" : "2024-05-09T19:00:00",
    "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
    "description" : "A curated look at April's new CPAN uploads",
    "tags" : [
@@ -87,7 +87,7 @@ Development & Version Control
 	* [Mo::utils::Country](https://metacpan.org/pod/Mo::utils::Country) (SKIM) for countries
 	* [Mo::utils::TimeZone](https://metacpan.org/pod/Mo::utils::TimeZone) (SKIM) for timezones
 * [Number::Iterator](https://metacpan.org/pod/Number::Iterator) (LNATION) is a simple iterator for numbers
-	
+
 
 Science & Mathematics
 ---------------------
