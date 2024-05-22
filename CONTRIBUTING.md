@@ -16,8 +16,13 @@ through the questions to set up your initial article template:
     % cpm install -g --cpanfile cpanfile
     % make new
 
-You can then check your article by starting a local server (using [Hugo
-0.59](https://gohugo.io/news/0.59.0-relnotes/) and no other version):
+You can then check your article by starting a local server using [Hugo
+](https://gohugo.io/). Note that v0.59 of Hugo was previously recommended,
+however the repo here is confirmed to be working with versions as recent as
+v0.126 and deployment is using a pinned version. You may want to confirm your
+updates with v0.59 to be sure.
+
+To start the server run:
 
     % make start
 
