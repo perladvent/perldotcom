@@ -1,7 +1,7 @@
 {
     "title"       : "The London Perl & Raku Workshop 2024",
     "authors"     : ["lee-johnson"],
-    "date"        : "2024-05-22T08:51:57",
+    "date"        : "2024-05-22T11:45:00",
     "tags"        : ["lpw","london"],
     "draft"       : false,
     "image"       : "/images/lpw2024/workshop.jpg",
