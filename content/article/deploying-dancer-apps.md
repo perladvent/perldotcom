@@ -57,38 +57,41 @@ Klortho repo contains a file called
 [klortho_service](https://github.com/davorg/klortho/blob/master/bin/klortho_service)
 which looks like this:
 
-    #!/usr/bin/env perl
- 
-    use warnings;
-    use strict;
-    use Daemon::Control;
- 
-    use ENV::Util –load_dotenv;
- 
-    use Cwd qw(abs_path);
-    use File::Basename;
- 
-    Daemon::Control->new({
-      name      => ucfirst lc $ENV{KLORTHO_APP_NAME},
-      lsb_start => ‘$syslog $remote_fs’,
-      lsb_stop  => ‘$syslog’,
-      lsb_sdesc => ‘Advice from Klortho’,
-      lsb_desc  => ‘Klortho knows programming. Listen to Klortho’,
-      path      => abs_path($0),
- 
-      program      => ‘/usr/bin/starman’,
-      program_args => [ ‘–workers’, 10, ‘-l’, “:$ENV{KLORTHO_APP_PORT}”,
-                        dirname(abs_path($0)) . ‘/app.psgi’ ],
- 
-      user  => $ENV{KLORTHO_OWNER},
-      group => $ENV{KLORTHO_GROUP},
- 
-      pid_file    => “/var/run/$ENV{KLORTHO_APP_NAME}.pid”,
-      stderr_file => “$ENV{KLORTHO_LOG_DIR}/error.log”,
-      stdout_file => “$ENV{KLORTHO_LOG_DIR}/output.log”,
- 
-      fork => 2,
-    })->run;
+
+```perl
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+use Daemon::Control;
+
+use ENV::Util –load_dotenv;
+
+use Cwd qw(abs_path);
+use File::Basename;
+
+Daemon::Control->new({
+  name      => ucfirst lc $ENV{KLORTHO_APP_NAME},
+  lsb_start => ‘$syslog $remote_fs’,
+  lsb_stop  => ‘$syslog’,
+  lsb_sdesc => ‘Advice from Klortho’,
+  lsb_desc  => ‘Klortho knows programming. Listen to Klortho’,
+  path      => abs_path($0),
+
+  program      => ‘/usr/bin/starman’,
+  program_args => [ ‘–workers’, 10, ‘-l’, “:$ENV{KLORTHO_APP_PORT}”,
+                    dirname(abs_path($0)) . ‘/app.psgi’ ],
+
+  user  => $ENV{KLORTHO_OWNER},
+  group => $ENV{KLORTHO_GROUP},
+
+  pid_file    => “/var/run/$ENV{KLORTHO_APP_NAME}.pid”,
+  stderr_file => “$ENV{KLORTHO_LOG_DIR}/error.log”,
+  stdout_file => “$ENV{KLORTHO_LOG_DIR}/output.log”,
+
+  fork => 2,
+})->run;
+```
 
 This code takes my hacked-together service start script and raises it to
 another level. We now have a program that works the same way as other
@@ -128,16 +131,20 @@ values.
 My Klortho program doesn't have a database. But it does need a few
 environment variables. Here's its ".env.sample" file:
 
-    export KLORTHO_APP_NAME=klortho
-    export KLORTHO_OWNER=someone
-    export KLORTHO_GROUP=somegroup
-    export KLORTHO_LOG_DIR=/var/log/$KLORTHO_APP_NAME
-    export KLORTHO_APP_PORT=9999
+```bash
+export KLORTHO_APP_NAME=klortho
+export KLORTHO_OWNER=someone
+export KLORTHO_GROUP=somegroup
+export KLORTHO_LOG_DIR=/var/log/$KLORTHO_APP_NAME
+export KLORTHO_APP_PORT=9999
+```
 
 And near the top of my service daemon control program, you'll see the
 line:
 
-    use ENV::Util -load_dotenv;
+```perl
+use ENV::Util -load_dotenv;
+```
 
 That looks to see if there's a ".env" file in the current directory and,
 if it finds one, it is loaded and the contents are inserted in the
