@@ -10,6 +10,11 @@
     "categories"  : "tooling"
   }
 
+*This article was originally published at
+[Perl Hacks](https://perlhacks.com/2024/05/deploying-dancer-apps/).*
+
+---
+
 Over the last week or so, as a background task, I've been moving domains
 from an old server to a newer and rather cheaper server. As part of this
 work, I've been standardising the way I deploy web apps on the new
@@ -166,8 +171,3 @@ serverless system. I know my systems aren't completely up to date. But
 we're getting there.
 
 If you have any suggestions for improvement, please let me know.
-
----
-
-This article was originally published at
-[Perl Hacks](https://perlhacks.com/2024/05/deploying-dancer-apps/).
