@@ -1,4 +1,3 @@
-
   {
     "title"       : "Deploying Dancer Apps",
     "authors"     : ["dave-cross"],
@@ -7,11 +6,9 @@
     "draft"       : false,
     "image"       : "/images/deploying-dancer-apps/deploying-dancer-apps.png",
     "thumbnail"   : "/images/deploying-dancer-apps/thumb-deploying-dancer-apps.png",
-    "description" : "Some thoughts about deploying Dancer apps as persistant daemons",
+    "description" : "Some thoughts about deploying Dancer apps as persistent daemons",
     "categories"  : "tooling"
   }
-
-# Deploying Dancer Apps
 
 Over the last week or so, as a background task, I've been moving domains
 from an old server to a newer and rather cheaper server. As part of this
@@ -56,7 +53,6 @@ that fit in with the standard Linux way of doing things. For example, my
 Klortho repo contains a file called
 [klortho_service](https://github.com/davorg/klortho/blob/master/bin/klortho_service)
 which looks like this:
-
 
 ```perl
 #!/usr/bin/env perl
