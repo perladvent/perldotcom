@@ -2,7 +2,7 @@
   {
     "title"       : "Deploying Dancer Apps",
     "authors"     : ["dave-cross"],
-    "date"        : "2024-05-23T16:32:11",
+    "date"        : "2024-05-24T18:25:00",
     "tags"        : ["devops", "deployment", "dancer", "psgi"],
     "draft"       : false,
     "image"       : "/images/deploying-dancer-apps/deploying-dancer-apps.png",
