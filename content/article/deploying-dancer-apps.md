@@ -4,7 +4,7 @@
     "authors"     : ["dave-cross"],
     "date"        : "2024-05-23T16:32:11",
     "tags"        : ["devops", "deployment", "dancer", "psgi"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "/images/deploying-dancer-apps/deploying-dancer-apps.png",
     "thumbnail"   : "/images/deploying-dancer-apps/thumb-deploying-dancer-apps.png",
     "description" : "Some thoughts about deploying Dancer apps as persistant daemons",
