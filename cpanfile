@@ -12,7 +12,7 @@ requires 'Imager';
 requires 'JSON::MaybeXS.pm';
 requires 'JSON::XS';
 requires 'List::Util';
-requires 'Mojolicious';
+requires 'Mojolicious', '9.34';
 requires 'Path::Tiny';
 requires 'Term::ANSIColor';
 requires 'Text::CSV';
