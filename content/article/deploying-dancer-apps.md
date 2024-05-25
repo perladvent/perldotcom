@@ -163,7 +163,7 @@ in touch if you need any help).
 So that's how it works. I have about half a dozen Dancer2 apps running
 on my new server using this layout. And knowing that I have standardised
 service daemon control scripts and "dotenv" files makes looking after
-them all far larger.
+them all far easier.
 
 And before anyone mentions it, yes, I should rewrite them so they're all
 Docker images. That's a work in progress. And I should run them on some
