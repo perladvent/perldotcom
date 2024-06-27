@@ -73,8 +73,6 @@ Development & Version Control
 	* [Sort::SubBundle::DefHash](https://metacpan.org/pod/Sort::SubBundle::DefHash) to sort DefHash data 
 	* [Sort::SubBundle::Rinci](https://metacpan.org/pod/Sort::SubBundle::Rinci) to sort Rinci metadata
 	* [Sort::SubBundle::Sah](https://metacpan.org/pod/Sort::SubBundle::Sah) to sort a Sah schema
-* Generate HTML tags with [Tags::HTML::Element](https://metacpan.org/pod/Tags::HTML::Element)
-* [Web::ACL](https://metacpan.org/pod/Web::ACL) is a helper for creating basic apikey/slug/IP based ACLs
 * [this_mod](https://metacpan.org/pod/this_mod) is a convenience pragma for loading modules
 * Manage credential files with [Crypt::Credentials](https://metacpan.org/pod/Crypt::Credentials)
 
@@ -110,6 +108,8 @@ Science & Mathematics
 Web
 ---
 * [Mojolicious::Plugin::Credentials](https://metacpan.org/pod/Mojolicious::Plugin::Credentials) provides a credentials store for the [Mojolicious](https://metacpan.org/pod/Mojolicious) framework
+* Generate HTML tags with [Tags::HTML::Element](https://metacpan.org/pod/Tags::HTML::Element)
+* [Web::ACL](https://metacpan.org/pod/Web::ACL) is a helper for creating basic apikey/slug/IP based ACLs
 
 
 Other
