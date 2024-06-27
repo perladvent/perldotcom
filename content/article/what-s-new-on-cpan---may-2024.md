@@ -10,7 +10,7 @@
    "authors" : [
       "mathew-korica"
    ],
-   "date" : "2024-06-23T01:09:27",
+   "date" : "2024-06-27T08:00:00",
    "draft" : false
 }
 
@@ -28,7 +28,7 @@ APIs & Apps
 
 Config & Devops
 ---------------
-* You can now find or build/download the following non-Perl dependencies via [Alien](https://metacpan.org/pod/Alien): 
+* You can now find or build/download the following non-Perl dependencies via [Alien](https://metacpan.org/pod/Alien):
 	* [NLopt](https://github.com/stevengj/nlopt) library with [Alien::NLopt](https://metacpan.org/pod/Alien::NLopt) (DJERIUS)
 	* [Cue](https://cuelang.org/) configuration language tool with [Alien::cue](https://metacpan.org/pod/Alien::cue) (PLICEASE)
 * [Log::Log4perl::Config::YamlConfigurator](https://metacpan.org/pod/Log::Log4perl::Config::YamlConfigurator) (SVW) lets the [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl) logging framework to read YAML configurations
@@ -49,7 +49,7 @@ Data
 	* [Graphics::ColorNamesCMYK::ToutesLesCouleursCom](https://metacpan.org/pod/Graphics::ColorNamesCMYK::ToutesLesCouleursCom) (PERLANCAR)
 	* [Graphics::ColorNamesCMYK](https://metacpan.org/pod/Graphics::ColorNamesCMYK) (PERLANCAR)
 	* [Graphics::ColorNamesLite](https://metacpan.org/pod/Graphics::ColorNamesLite) (PERLANCAR)
-* Some new [Sah](https://metacpan.org/pod/Sah)-based schemas this month: 
+* Some new [Sah](https://metacpan.org/pod/Sah)-based schemas this month:
 	* [Sah::SchemaBundle::Business::ID::NKK](https://metacpan.org/pod/Sah::SchemaBundle::Business::ID::NKK) (PERLANCAR) for Indonesian family card numbers (NKK)
 	* [Sah::SchemaBundle::Business::ID::NOPPBB](https://metacpan.org/pod/Sah::SchemaBundle::Business::ID::NOPPBB) (PERLANCAR) for Indonesian property tax numbers (NOP PBB)
 	* [Sah::SchemaBundle::Business::ID::NPWP](https://metacpan.org/pod/Sah::SchemaBundle::Business::ID::NPWP) (PERLANCAR) for Indonesian taxpayer registration numbers (NPWP)
