@@ -279,5 +279,24 @@ for my ($p, $q) (1,2,3,4) {
 }
 ```
 
-I have only scratched the surface so far. Maybe in the next post I will try to explore further enhancements.
+Just to show realtime result, please see below:
 
+<br>
+
+```perl
+$ p540 -E 'for my ($p, $q) (@ARGV) { say $p, $q; }' 1 2 3 4
+12
+34
+
+$ p540 -E 'for my ($p, $q) (@ARGV) { say $p, $q; }' 1 2 3 4 5
+12
+34
+5
+
+$ p540 -E 'for my ($p, $q) (@ARGV) { say $p, $q; }' 1 2 3 4 5 6
+12
+34
+56
+```
+
+I have only scratched the surface so far. Maybe in the next post I will try to explore further enhancements.
