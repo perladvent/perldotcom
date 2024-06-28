@@ -1,7 +1,7 @@
 {
     "title"       : "What's New in Perl v5.40?",
     "authors"     : ["mohammad-anwar"],
-    "date"        : "2024-06-27T09:00:00",
+    "date"        : "2024-06-28T09:00:00",
     "tags"        : ["release", "enhancements", "features"],
     "draft"       : false,
     "image"       : "/images/what-is-new-in-perl/what-is-new-in-perl.png",
