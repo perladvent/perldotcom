@@ -20,7 +20,7 @@
 
 Every Unicode codepoint has one or more properties, indicating the rules which apply to that codepoint. Perl's regex engine is aware of these properties; use the `\p{}` metacharacter sequence to match a codepoint possessing that property and its inverse, `\P{}` to match a codepoint lacking that property.
 
-Each property has a short name and a long name. For example, to match any codepoint which has the `Letter` property, you may use `\p{Letter}` or `\p{L}`. Similarly, you may use `\P{Uppercase}` or `\P{Upper}`. [perldoc perlunicode's "Unicode Character Properties" section](http://perldoc.perl.org/perlunicode.html#Unicode-Character-Properties) describes these properties in greater detail.
+Each property has a short name and a long name. For example, to match any codepoint which has the `Letter` property, you may use `\p{Letter}` or `\p{L}`. Similarly, you may use `\P{Uppercase}` or `\P{Upper}`. [perldoc perlunicode's "Unicode Character Properties" section]({{< perldoc "perlunicode" "Unicode-Character-Properties" >}}) describes these properties in greater detail.
 
 Examples of these properties useful in regex include:
 

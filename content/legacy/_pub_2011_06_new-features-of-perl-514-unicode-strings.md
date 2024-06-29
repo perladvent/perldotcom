@@ -31,4 +31,4 @@ Now assume you have several strings from several places and you don't know the e
 
 With `unicode_strings` in effect, Perl 5 prefers to use character semantics for all string operations. You can override this lexically with `no feature 'unicode_strings';` or `use locale;`.
 
-For more information, see [perldoc feature](http://perldoc.perl.org/feature.html#the-%27unicode_strings%27-feature) and especially [The Unicode Bug" in perldoc perlunicode](http://perldoc.perl.org/perlunicode.html#The-%22Unicode-Bug%22).
+For more information, see  [feature]({{< perldoc "feature" "the-%27unicode_strings%27-feature" >}}) and especially [The Unicode Bug" in perlunicode]({{< perldoc "perlunicode" "The-%22Unicode-Bug%22" >}}).

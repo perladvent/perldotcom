@@ -258,7 +258,7 @@ The application *app-combine-console-pdfs.pl* does not deal directly with `PDF::
           CombinePDFs::createPDF(\@infiles, \@pages, $outfile, $bookmarks);
       }
 
-If the user passes an insufficient number of arguments, invalid filenames, or incorrect page ranges, the code invokes the the usage subroutine. It also gets invoked if the user asks explicitly for `-help` on the command line. Any good command line application should be written that way. `Getopt::Long` can distinguish between mandatory arguments, with `=` as the symbol after the argument name (infile, pages), optional arguments, with `:` (bookmarks), or flags (overwrite, usage), without a symbol. It can store these arguments as arrays (infile, pages), hashes, or scalars. It also supports type checking.
+If the user passes an insufficient number of arguments, invalid filenames, or incorrect page ranges, the code invokes the the usage subroutine. It also gets invoked if the user asks explicitly for `-help` on the command line. Any good command line application should be written that way. [Getopt::Long]({{<mcpan "Getopt::Long" >}}) can distinguish between mandatory arguments, with `=` as the symbol after the argument name (infile, pages), optional arguments, with `:` (bookmarks), or flags (overwrite, usage), without a symbol. It can store these arguments as arrays (infile, pages), hashes, or scalars. It also supports type checking.
 
 ### CombinePDFs Package
 

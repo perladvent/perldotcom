@@ -35,13 +35,13 @@ As mentioned above, there are parts of software programs that do exist to commun
 
 ### The Review Itself
 
-[Math::Complex](https://perldoc.perl.org/Math/Complex.html) is an open source Perl package that is part of the core Perl distribution. It provides methods for complex arithmetic (and overloading of operators).
+[Math::Complex]({{< mcpan "Math::Complex" >}}) is an open source Perl package that is part of the core Perl distribution. It provides methods for complex arithmetic (and overloading of operators).
 
 [Raphael Manfredi](http://c2.com/cgi/wiki?RaphaelManfredi) created the module in 1996. Since then, first [Jarkko Hietaniemi](http://www.hut.fi/~jhi/) and, currently, [Daniel S. Lewart](http://www.prairienet.org/~dslewart/) have maintained it (according to its own comments). My comments below relate to version 1.34.
 
 I should explain that while I've been using Perl for maybe three years, it's mostly been for test automation and text processing; my day-to-day programming is primarily in C. I tend to notice the things about Perl that are difficult (at times verging on impossible) to do in C.
 
-Early on in the `Math::Complex` package, a huge (and often reused) regular expression `$gre` appears:
+Early on in the [Math::Complex]({{< mcpan "Math::Complex" >}}) package, a huge (and often reused) regular expression `$gre` appears:
 
     # Regular expression for floating point numbers.
     my $gre =
@@ -80,7 +80,7 @@ The construction method `make` is, again, flexible and robust. The author has ex
         die "@{[(caller(1))[3]]}: Cannot take $_[0] of $_[1].\n";
     }
 
-In turn, it calls the built-in `caller` function to refer back to the original code (similar to an `assert` in C, or a lightweight version of the `cluck` or `confess` functions in the [Carp](https://perldoc.perl.org/Carp.html) package).
+In turn, it calls the built-in `caller` function to refer back to the original code (similar to an `assert` in C, or a lightweight version of the `cluck` or `confess` functions in the [Carp]({{< perldoc "Carp" >}}) package).
 
 `make` also calls the the `remake` function, if `make` receives only one argument (for example, a string such as `"1 + 2i"`) and must deduce the real and/or imaginary parts:
 
