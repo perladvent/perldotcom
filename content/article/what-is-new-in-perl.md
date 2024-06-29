@@ -79,8 +79,8 @@ class Employee {
     field $name :param;
     field $age  :param;
 
-    method name { return $name }
-    method age  { return $age  }
+    method name    { return $name }
+    method get_age { return $age  }
 }
 
 my $emp = Employee->new(name => "Joe", age => 40);
@@ -90,7 +90,7 @@ say $emp->get_age;   # 40
 
 <br>
 
-If you noticed, the method `name()` and `age()` is just a generic `getter` method.
+If you noticed, the method `name()` and `get_age()` is just a generic `getter` method.
 
 Luckily in the latest release, the same can be achieved like below with the use of `:reader` without having to explicitly define the `getter` methods.
 
