@@ -85,7 +85,7 @@ class Employee {
 
 my $emp = Employee->new(name => "Joe", age => 40);
 say $emp->name;      # Joe
-say $emp->get_age;   # 40
+say $emp->age;       # 40
 ```
 
 <br>
