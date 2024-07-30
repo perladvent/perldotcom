@@ -85,7 +85,7 @@ It will let you to build and install Perl modules without building and installin
 
 This approach obviously have some cons. They are mostly about transitions (those modules are not portable and other user don't have access to your local::lib), but also you might be trapped in using old version of Perl.
 
-[Local:lib page](https://metacpan.org/pod/distribution/local-lib/lib/local/lib.pm) on CPAN has a comprehensive documentation on how to properly install and use this glorious module.
+[Local:lib]({{< mcpan "local::lib" >}}) on CPAN has a comprehensive documentation on how to properly install and use this glorious module.
 
 ### MetaCPAN - browsing, downloading
 

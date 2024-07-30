@@ -22,11 +22,11 @@
 }
 
 
-When I use the term "Perl Core" I mean the standard library of modules (distributions actually) that ship with the `perl` interpreter, and I think that's what most people mean when they use that term. Knowing which modules are in the Perl Core is useful; it enables developers to build programs without external dependencies over which the developer has little control. The perldoc site has a handy alphabetized [list](http://perldoc.perl.org/index-modules-A.html) of core modules and I generally check there first to browse which modules are in core. The problem though, is that it can be wrong.
+When I use the term "Perl Core" I mean the standard library of modules (distributions actually) that ship with the `perl` interpreter, and I think that's what most people mean when they use that term. Knowing which modules are in the Perl Core is useful; it enables developers to build programs without external dependencies over which the developer has little control. The perldoc site has a handy [alphabetized list]({{< perldoc "index-modules-A" >}}) of core modules and I generally check there first to browse which modules are in core. The problem though, is that it can be wrong.
 
 ### What modules are included in the Perl Core?
 
-Did you know that [HTTP::Tiny]({{<mcpan "HTTP::Tiny" >}}) has shipped with Perl since 2011 (version 5.14.0)? It's not listed on [perldoc](http://perldoc.perl.org) (although that is on the list to be fixed at the next [QA Hackathon](http://act.qa-hackathon.org/qa2016/)). Luckily there is a better solution: the `corelist` program. This is supplied with [Module::CoreList]({{<mcpan "Module::CoreList/" >}}). Let's see when Module::CoreList first shipped with Perl:
+Did you know that [HTTP::Tiny]({{<mcpan "HTTP::Tiny" >}}) has shipped with Perl since 2011 (version 5.14.0)? It's not listed on [perldoc](http://perldoc.perl.org) (although that is on the list to be fixed at the next [QA Hackathon](http://act.qa-hackathon.org/qa2016/)). Luckily there is a better solution: the `corelist` program. This is supplied with [Module::CoreList]({{<mcpan "Module::CoreList" >}}). Let's see when Module::CoreList first shipped with Perl:
 
     $ corelist -a Module::CoreList
 

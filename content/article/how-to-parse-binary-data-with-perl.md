@@ -30,7 +30,7 @@ use autodie;
 open my $fh, '<:raw', '/usr/share/zoneinfo/America/New_York';
 ```
 
-This is a suitably Modern Perlish beginning. I start by importing [autodie]({{<mcpan "autodie" >}}) which ensures the code will `die` if any function call fails. This avoids repetitive `... or die "IO failed"` type coding constructs. 
+This is a suitably Modern Perlish beginning. I start by importing [autodie]({{<mcpan "autodie" >}}) which ensures the code will `die` if any function call fails. This avoids repetitive `... or die "IO failed"` type coding constructs.
 
 Next I use the `:raw` IO layer to open a filehandle to a binary file. This will avoid newline translation issues. No need for `binmode` here. The file I'm opening is a history of New York timezone changes, from the [tz database](https://en.wikipedia.org/wiki/Tz_database).
 
@@ -56,7 +56,7 @@ Now comes the fun part. I've got to split out the data in `$bytes` into separate
 >
 > <cite>Tzfile manual</cite>
 
-The `unpack` function takes a template of the binary data to read (this is defined in the pack [documentation](http://perldoc.perl.org/functions/pack.html)) and returns Perl variables. I'm going to match up the header description with the template codes to design the template.
+The `unpack` function takes a template of the binary data to read (this is defined in the pack [documentation]({{< perlfunc "pack" >}})) and returns Perl variables. I'm going to match up the header description with the template codes to design the template.
 
 
 | Description  |   Example  | Type       | Length | Template Code|
@@ -97,7 +97,7 @@ This gives you a chance to inspect the data byte by byte and see if it matches y
 
 The other thing to be aware of is [endianness](https://en.wikipedia.org/wiki/Endianness) of the data. Often man pages will say a variable is in "standard" or "network" order. This means big endian. Tzfiles have several 32 bit signed integers in big endian order. There is no `unpack` template code which matches that type. To match it I need to use `l>`. The `l` matches signed 32 bit integers and the `>` is a modifier which tells Perl the value is big endian.
 
-Between Perl's built-in template [types](http://perldoc.perl.org/functions/pack.html) and the modifiers, you can match any binary data.
+Between Perl's built-in template [types]({{< perlfunc "pack" >}}) and the modifiers, you can match any binary data.
 
 ### More binary parsing examples
 
@@ -105,7 +105,7 @@ Between Perl's built-in template [types](http://perldoc.perl.org/functions/pack.
 * There are some useful replies on the Perl Monks thread [Confession of a Perl Hacker](http://www.perlmonks.org/?node_id=53473).
 * The Perl Monks [Pack/Unpack tutorial](http://www.perlmonks.org/?node_id=224666) has some great information on the template types.
 * Entry 117 "Use pack and unpack for data munging" from [Effective Perl Programming](http://www.effectiveperlprogramming.com/) shows how to use `unpack` for fixed width data.
-* The official Perl documentation also has a pack/unpack [tutorial](http://perldoc.perl.org/perlpacktut.html).
+* The official Perl documentation also has a pack/unpack [tutorial]({{< perldoc "perlpacktut" >}}).
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

@@ -58,7 +58,7 @@ print <<'END';
 END
 ```
 
-Of course, you don't have to just send HTML text. 
+Of course, you don't have to just send HTML text.
 
 ```perl
 #!/usr/bin/env perl
@@ -149,7 +149,7 @@ print $cgi->end_form;
 
 The problem with this, is the code to generate HTML with CGI can get very long and unreadable. The maintainers of CGI agree, which is why this is at the top of [the documentation for CGI.pm](https://metacpan.org/pod/CGI#HTML-Generation-functions-should-no-longer-be-used):
 
-> All HTML generation functions within CGI.pm are no longer being maintained. [...] The rationale for this is that the HTML generation functions of CGI.pm are an obfuscation at best and a maintenance nightmare at worst. You should be using a template engine for better separation of concerns. See [CGI::Alternatives](https://metacpan.org/pod/CGI::Alternatives) for an example of using CGI.pm with the [Template::Toolkit](https://metacpan.org/pod/Template::Toolkit) module.
+> All HTML generation functions within CGI.pm are no longer being maintained. [...] The rationale for this is that the HTML generation functions of CGI.pm are an obfuscation at best and a maintenance nightmare at worst. You should be using a template engine for better separation of concerns. See [CGI::Alternatives]({{< mcpan "CGI::Alternatives" >}}) for an example of using CGI.pm with the [Template::Toolkit]({{< mcpan "Template::Toolkit" >}}) module.
 
 Using Template Toolkit, that form might look like:
 
@@ -182,7 +182,7 @@ I use Template Toolkit for all my server-side web work. It's also the default in
 
 To use CGI, your web server should have [mod_cgi](http://httpd.apache.org/docs/current/mod/mod_cgi.html) installed. Once installed, you will have to to configure your server to execute CGI programs.
 
-The first way is to have `cgi-bin` directories where every file gets executed instead of transferred. 
+The first way is to have `cgi-bin` directories where every file gets executed instead of transferred.
 
     <Directory "/home/*/www/cgi-bin">
         Options ExecCGI
@@ -211,19 +211,19 @@ So that `foo.pl` will transfer but `foo.cgi` will run, even if both are executab
 
 It was marked deprecated with 5.20 and removed from Core with 5.22. This is not catastrophic; it is still available in CPAN, so you would have to install it, or have your administrator install it, depending on your circumstances.
 
-So, why did CGI drop from "state of the art" to discouraged by its own maintainers? 
+So, why did CGI drop from "state of the art" to discouraged by its own maintainers?
 
 There are two big issues with CGI: speed and complexity. Every HTTP request triggers the forking of a new process on the web server, which is costly for server resources. A more efficient and faster way is to use a multi-process daemon which does its forking on startup and maintains a pool of processes to handle requests.
 
 CGI isn't good at managing the complexity of larger web applications: it has no MVC architecture to help developers separate concerns. This tends to lead to hard-to-maintain programs.
 
-The rise of web frameworks such as Ruby on Rails, and the application servers they run on, have done much to solve both problems. There are many web frameworks written in Perl; among the most popular are [Catalyst]( https://metacpan.org/pod/Catalyst::Manual), [Dancer](https://metacpan.org/pod/Dancer2), and [Mojolicious](https://metacpan.org/pod/Mojolicious).
+The rise of web frameworks such as Ruby on Rails, and the application servers they run on, have done much to solve both problems. There are many web frameworks written in Perl; among the most popular are [Catalyst]( {{< mcpan "Catalyst::Manual" >}}), [Dancer]({{< mcpan "Dancer2" >}}), and [Mojolicious]({{< mcpan "Mojolicious" >}}).
 
 CGI also contains a security [vulnerability](https://metacpan.org/pod/distribution/CGI/lib/CGI.pod#Fetching-the-value-or-values-of-a-single-named-parameter) which must be coded around to avoid parameter injection.
 
 ## References
 
-The "good" parts of CGI.pm, the header creation and parameter parsing, are well-explained in the module's [documentation](https://metacpan.org/pod/CGI). As for the deprecated HTML generation functions, they are documented [separately](https://metacpan.org/pod/CGI::HTML::Functions).
+The "good" parts of CGI.pm, the header creation and parameter parsing, are well-explained in the module's [documentation]({{< mcpan "CGI" >}}). As for the deprecated HTML generation functions, they are documented [separately]({{< mcpan "CGI::HTML::Functions" >}}).
 
 Lincoln Stein, the creator of CGI.pm also wrote the [Official Guide](https://www.amazon.com/Official-Guide-Programming-CGI-pm-Lincoln/dp/0471247448). The book is 20 years old, and out of date but remains a clear and concise resource about CGI.pm.
 

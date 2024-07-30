@@ -18,13 +18,13 @@ When I was first learning to work with databases, I needed a toy project, where 
 
 ## Setup
 
-[DigitalOcean has a good article on setting up and using a MySQL database on a Linux server](https://www.digitalocean.com/community/tutorials/a-basic-mysql-tutorial), covering both Debian and RedHat-based packages. If you want to use Perl to connect to the database as well, you need to add development packages for `DBD::mysql` to connect to. On the Debian side, run `apt-get install libmysqlclient-dev` to get the client-side dev libraries for [DBD::mysql](https://metacpan.org/pod/DBD::mysql) to use to talk to the database, no matter if you get DBD::mysql and [DBI](https://metacpan.org/pod/DBI) from apt or CPAN.
+[DigitalOcean has a good article on setting up and using a MySQL database on a Linux server](https://www.digitalocean.com/community/tutorials/a-basic-mysql-tutorial), covering both Debian and RedHat-based packages. If you want to use Perl to connect to the database as well, you need to add development packages for `DBD::mysql` to connect to. On the Debian side, run `apt-get install libmysqlclient-dev` to get the client-side dev libraries for [DBD::mysql]({{< mcpan "DBD::mysql" >}}) to use to talk to the database, no matter if you get DBD::mysql and [DBI]({{< mcpan "DBI" >}}) from apt or CPAN.
 
 If you're wanting to run from Windows, [Strawberry Perl](http://strawberryperl.com/) comes bundled with DBD::mysql and the client libraries. For Mac users, you may need to use Homebrew to install the client libs.
 
 Note: [MariaDB](https://mariadb.com/) was forked from MySQL by the original developer, Michael Widenius. They are functionally interchangeable. If you want to hear more of the story, [Randal Schwartz interviewed him for FLOSS Weekly](https://twit.tv/shows/floss-weekly/episodes/194). If you want to work with MariaDB instead, there is [DBD::MariaDB](https://mariadb.com/kb/en/library/perl-dbi/), but the MySQL driver "should generally work" with MariaDB. This article will cover MySQL.
 
-There also exists a pure Perl module that interacts with MySQL without the drivers, called [Net::MySQL](https://metacpan.org/pod/Net::MySQL). If you are coding where you cannot install drivers, it could be helpful, but it won't be covered here.
+There also exists a pure Perl module that interacts with MySQL without the drivers, called [Net::MySQL]({{< mcpan "Net::MySQL" >}}). If you are coding where you cannot install drivers, it could be helpful, but it won't be covered here.
 
 ## Connecting
 
@@ -160,6 +160,6 @@ I also had a mechanism that reported my consumption to Twitter, as a means of ac
 
 ## More Info
 
-The documentation for [DBI]({{<mcpan "DBI" >}}) and [DBD::mysql]({{<mcpan "DBD::mysql" >}}) are in-depth and excellent, and there are several articles on Perl.com that are well worth reading. [Mark-Jason Dominus has a Short Guide to DBI](/pub/1999/10/DBI.html/)  and [Simon Cozens wrote more generally about DBI](/pub/2003/10/23/databases.html/).
+The documentation for [DBI]({{< mcpan "DBI" >}}) and [DBD::mysql]({{< mcpan "DBD::mysql" >}}) are in-depth and excellent, and there are several articles on Perl.com that are well worth reading. [Mark-Jason Dominus has a Short Guide to DBI](https://www.perl.com/pub/1999/10/DBI.html/)  and [Simon Cozens wrote more generally about DBI](https://www.perl.com/pub/2003/10/23/databases.html/).
 
 For more on how to protect your databases, [Andy Lester](https://blog.petdance.com/) maintains [Bobby-Tables](http://bobby-tables.com/), which shows you how to avoid SQL injection attacks.

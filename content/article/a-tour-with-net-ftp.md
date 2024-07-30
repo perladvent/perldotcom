@@ -168,7 +168,7 @@ $ perl upload.pl file1.txt file2.txt`.
 
 ## Put things together
 
-I propose a more complete client with some command-line parsing and more actions. In addition to the previous code for listing and uploading, here I added a way to view a file. [Getopt::Long](https://metacpan.org/pod/Getopt::Long) to handle command line parameters.
+I propose a more complete client with some command-line parsing and more actions. In addition to the previous code for listing and uploading, here I added a way to view a file. [Getopt::Long]({{< mcpan "Getopt::Long" >}}) to handle command line parameters.
 
 ```perl
 #!/usr/bin/env perl
@@ -244,5 +244,5 @@ if($options{'action'} eq 'list') {
 
 ## More about design and security
 
-This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real guarantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP]({{< mcpan "Net::FTP" >}})!
+This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP]({{< mcpan "Net::FTP" >}})!
 
