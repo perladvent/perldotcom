@@ -4,7 +4,7 @@
     "authors"     : ["ed-freyfogle"],
     "date"        : "2024-07-30T10:35:43",
     "tags"        : ["opencage", "metacpan", "sponsorship", "geocoding"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "/images/why-we-sponsor-metacpan-opencage/opencage.png",
     "thumbnail"   : "/images/why-we-sponsor-metacpan-opencage/thumb-opencage.png",
     "description" : "A profile of MetaCPAN sponsor OpenCage",
