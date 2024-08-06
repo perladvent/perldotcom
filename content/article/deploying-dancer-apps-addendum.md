@@ -29,7 +29,7 @@ old one. And that turned out to be a bit of a problem. It turned out there
 was a time early each morning when there were too many requests coming into
 the server and it ran out of memory. I was waking up most days to a dead
 server. My previous work meant that fixing it wasn’t hard, but it really
-wasn’t something that I wanted to do each most mornings.
+wasn’t something that I wanted to do most mornings.
 
 So I wanted to look into reducing the amount of memory used by the apps. And
 that turned out to be a two-stage approach.
@@ -106,7 +106,7 @@ command-line option.
 Starman works by loading a main driver process which then fires up as many
 worker processes as you ask it for. Without the “–preload-app” option,
 each of those processes loads a copy of the application. But with this
-option, each worker processes reads the main driver’s copy of the
+option, each worker process reads the main driver’s copy of the
 application and only loads its own copy when it wants to write something.
 This can be a big memory saving – although it’s important to note that the
 documentation warns:
@@ -152,8 +152,8 @@ where I can make these programs smaller and simpler.
 
 1. That last code snippet looks too repetitive. It should be a loop 
    iterating over a hash. The keys are the names of the environment variables 
-   and the values are references to arrays containing that are added to the 
-   program arguments if the environment variable is set.
+   and the values are references to arrays containing the values that are added to the 
+   program arguments if that environment variable is set.
 
 1. I now have five or six “app_service” programs that look very similar.
    I must be able to turn them into one standard program. Do those environment
