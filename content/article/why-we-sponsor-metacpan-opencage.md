@@ -1,6 +1,6 @@
 
   {
-    "title"       : "Why we sponsor MetaCPAN: OpenCage",
+    "title"       : "Why We Sponsor MetaCPAN: OpenCage",
     "authors"     : ["ed-freyfogle"],
     "date"        : "2024-07-30T10:35:43",
     "tags"        : ["opencage", "metacpan", "sponsorship", "geocoding"],
@@ -15,8 +15,7 @@ _Today we kick off a new series profiling the organizations that financially sup
 
 _We start things off with a look at [OpenCage](https://opencagedata.com), which operates a widely-used geocoding API._
 
-Who/What is OpenCage? What is Geocoding?
-----------------------------------------
+## Who/What is OpenCage? What is Geocoding?
 
 We’re a small company with a big goal - geocoding the world with open data.
 
@@ -28,7 +27,7 @@ We spend a lot of time listening to customers and thinking about how to make the
 
 There are different commercial geocoding providers, but probably the main differentiator of our service (_besides the stunning good looks of the founders, obviously_) is that we rely on open data via sources like OpenStreetMap, a community we’re very active in. Just like open source software, [open data offers all sorts of advantages](https://opencagedata.com/why-use-open-data). You can store the data as long as you need, for example, which many of the big commercial providers don’t allow. Another major advantage is the cost. Because the data is free, our service is highly affordable, especially at higher volumes.
 
-**How we use Perl**
+## How we use Perl
 
 We use a whole bunch of different technologies, but the core of our service is Perl.
 
@@ -40,13 +39,11 @@ We use a whole bunch of different technologies, but the core of our service is P
 
   * Perl is rock solid and reliable, especially over time. We also offer [a location auto-suggest widget](https://opencagedata.com/geosearch) written in Javascript, and, to be honest, the sheer pace at which the js universe evolves means maintenance becomes a real nightmare, especially for a small team. Perl moves forward, but predictably and without breaking the past.
 
-Why we sponsor MetaCPAN
------------------------
+## Why we sponsor MetaCPAN
 
 Well, quite simply, as a way to give back to the technology and community we rely upon. We’re a small company, so our means are limited, but it's very important for us to contribute back to the projects we depend on - be it financially, via software, or in other ways. Hopefully our efforts can be an example for others.
 
-Final thoughts
---------------
+## Final thoughts
 
 Many thanks to everyone in the Perl community - in whatever role - who contributes to keep the project thriving. Keep up the good work! A special salute to the other companies who are contributing financially. Hopefully more will join us.
 
