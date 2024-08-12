@@ -2,7 +2,7 @@
   {
     "title"       : "Why We Sponsor MetaCPAN: OpenCage",
     "authors"     : ["ed-freyfogle"],
-    "date"        : "2024-07-30T10:35:43",
+    "date"        : "2024-08-12T12:00:00",
     "tags"        : ["opencage", "metacpan", "sponsorship", "geocoding"],
     "draft"       : false,
     "image"       : "/images/why-we-sponsor-metacpan-opencage/opencage.png",
