@@ -1,7 +1,7 @@
 (function() {
   "use strict";
   var httpRequest, response, url, ul, i, div, url_parts, hostDomain, linkDomain, links, linkCount;
-  url = "https://s3.amazonaws.com/perly-bot.org/links.json";
+  url = "https://perl.theplanetarium.org/links.json";
   linkCount = 10;
 
   if (window.XMLHttpRequest) {
