@@ -1,12 +1,11 @@
 #!/usr/bin/env perl
 use v5.14;
 
-use Cwd;
-use File::Basename;
-use File::Path qw(make_path);
-use File::Spec::Functions;
-
-use FindBin qw($Bin);
+use Cwd                   qw( chdir getcwd );
+use File::Basename        qw( basename dirname );
+use File::Path            qw( make_path );
+use File::Spec::Functions qw( catfile );
+use FindBin               qw( $Bin );
 
 =head1 NAME
 
@@ -37,49 +36,54 @@ my $perldotcom_parent = dirname($perldotcom_repo);
 
 # Find the staging repo. We expect it to be at the same level
 my $staging_github = 'git@github.com:tpf/perl.com-staging.git';
-my $staging_repo   = basename( $staging_github ) =~ s/\.git\z//r;
+my $staging_repo   = basename($staging_github) =~ s/\.git\z//r;
 my $staging_clone  = catfile( $perldotcom_parent, $staging_repo );
-my $dest_dir       = catfile( $staging_clone, 'perl.com' );
+my $dest_dir       = catfile( $staging_clone,     'perl.com' );
 
 # If we don't have the staging clone, get it (or not, if you say no)
-unless( -d $staging_clone ) {
-	say "Didn't find <$staging_clone>";
-	local $SIG{ALRM} = sub { say "\nPrompt timeout. Exiting"; exit 1 };
-	alarm(10);
-	print "Clone <$staging_github> now? [yN] ";
-	chomp( my $answer = <STDIN> );
-	alarm(0);
-	unless( $answer =~ /\A y/xi ) {
-		say "Not cloning. Exiting.";
-		exit 1;
-		}
-	git( 'clone', $staging_github, $staging_clone );
-	}
+unless ( -d $staging_clone ) {
+    say "Didn't find <$staging_clone>";
+    local $SIG{ALRM} = sub { say "\nPrompt timeout. Exiting"; exit 1 };
+    alarm(10);
+    print "Clone <$staging_github> now? [yN] ";
+    chomp( my $answer = <STDIN> );
+    alarm(0);
+    unless ( $answer =~ /\A y/xi ) {
+        say "Not cloning. Exiting.";
+        exit 1;
+    }
+    git( 'clone', $staging_github, $staging_clone );
+}
 
 # check that we have the same version of Hugo that last generated
 # the site. If we don't, we shouldn't charge ahead automatically.
 # Different versions do different things with the HTML.
 my $hugo_generated = do {
-	my $index          = catfile( $dest_dir, 'index.html' );
-	open my $fh, '<:encoding(UTF-8)', $index;
-	my $last_version;
-	while( <$fh> ) {
-		next unless /<meta name="generator" content="(.*?)" \/>/;
-		my( $name, $version ) = split /\s+/, $1;
-		$last_version = $version;
-		last;
-		}
-	$last_version
-	};
+    my $index = catfile( $dest_dir, 'index.html' );
+    open my $fh, '<:encoding(UTF-8)', $index;
+    my $last_version;
+    while (<$fh>) {
+        next unless /<meta name="generator" content="(.*?)" \/>/;
+        my ( $name, $version ) = split /\s+/, $1;
+        $last_version = $version;
+        last;
+    }
+    $last_version;
+};
 
-my @command = ('hugo', '-v', '-d', $dest_dir);
+my @command    = ( 'hugo', '-v', '-d', $dest_dir );
 my $use_docker = 0;
 
-my( $hugo_installed ) = `hugo version` =~ m/Generator v(\d\.\d+\.\d+)-/;
-if (!$hugo_installed) {
-    ($hugo_installed) = `docker run --rm -it klakegg/hugo:0.59.1-ubuntu version` =~ m/Generator v(\d\.\d+\.\d+)-/;
+my ($hugo_installed) = `hugo version` =~ m/Generator v(\d\.\d+\.\d+)-/;
+if ( !$hugo_installed ) {
+    my $version_command = 'docker run --rm -it klakegg/hugo:0.59.1-ubuntu version';
+    print "About to run $version_command\n";
+    ($hugo_installed)
+        = `docker run --rm -it klakegg/hugo:0.59.1-ubuntu version`
+        =~ m/Generator v(\d\.\d+\.\d+)-/;
     my $cwd = getcwd();
-    @command = qq(docker run --rm -it -v $cwd:/src -v $cwd/target:/target -p 1313:1313 klakegg/hugo:0.59.1-ubuntu -v);
+    @command
+        = qq(docker run --rm -it -v $cwd:/src -v $cwd/target:/target -p 1313:1313 klakegg/hugo:0.59.1-ubuntu -v);
     $use_docker = 1;
 }
 
@@ -98,38 +102,39 @@ say <<~"HERE";
 	------------------------------------
 	HERE
 
-unless( $hugo_generated eq $hugo_installed ) {
-	die "Hugo version mismatch. Generated: $hugo_generated Installed: $hugo_installed\n";
-	}
+unless ( $hugo_generated eq $hugo_installed ) {
+    die
+        "Hugo version mismatch. Generated: $hugo_generated Installed: $hugo_installed\n";
+}
 
 # start in the tpf/perldotcom directory so the external commands
 # start from the right place
 die "Could not change to <$perldotcom_repo>: $!\n"
-	unless( chdir $perldotcom_repo );
+    unless ( chdir $perldotcom_repo );
 say "Now in ", getcwd();
 
 # Check that we are up-to-date
-if( git_is_behind_master() ) {
-	die "This clone is behind GitHub! `git pull` and try again\n";
-	}
-elsif( git_is_ahead_master() ) {
-	die "This clone is ahead of GitHub! `git pull` and try again\n";
-	alarm(10);
-	print "Push now? [yN] ";
-	chomp( my $answer = <STDIN> );
-	alarm(0);
-	if( $answer =~ /\A y/xi ) {
-		git( 'push' );
-		}
-	else {
-		# maybe we die here because we want GitHub to have everything
-		# to make the public site
-		say "Not pushing. Remember to do that later.";
-		}
-	}
+if ( git_is_behind_master() ) {
+    die "This clone is behind GitHub! `git pull` and try again\n";
+}
+elsif ( git_is_ahead_master() ) {
+    die "This clone is ahead of GitHub! `git pull` and try again\n";
+    alarm(10);
+    print "Push now? [yN] ";
+    chomp( my $answer = <STDIN> );
+    alarm(0);
+    if ( $answer =~ /\A y/xi ) {
+        git('push');
+    }
+    else {
+        # maybe we die here because we want GitHub to have everything
+        # to make the public site
+        say "Not pushing. Remember to do that later.";
+    }
+}
 else {
-	say "This clone is up-to-date and pushed";
-	}
+    say "This clone is up-to-date and pushed";
+}
 
 # ensure the destination directory is there
 make_path $dest_dir;
@@ -141,46 +146,45 @@ chomp( my $perldotcom_commit = `git rev-parse HEAD` );
 # the staging directory
 system(@command);
 if ($use_docker) {
-    `cp -R target/* $dest_dir`
+    `cp -R target/* $dest_dir`;
 }
 
 # now work inside the staging dir
 die "Could not change to <$staging_clone>: $!\n"
-	unless( chdir $staging_clone );
+    unless ( chdir $staging_clone );
 say "Now in ", getcwd();
 
 # move the 404 template because Hugo can't generate it there
 my $error_dir = 'perl.com/error';
 make_path $error_dir, { error => \my $errors };
-if( @$errors > 0 ) {
-	my $error = $errors->[0]{$error_dir};
-	die "Destination dir <$error_dir> is not there: $error\n"
-	}
+if ( @$errors > 0 ) {
+    my $error = $errors->[0]{$error_dir};
+    die "Destination dir <$error_dir> is not there: $error\n";
+}
 
 rename 'perl.com/404.html' => catfile( $error_dir, '404.html' );
 
-if( $ENV{'NO_GIT'} ) {
-	warn "NO_GIT is set, so stopping here\n";
-	exit 0;
-	}
+if ( $ENV{'NO_GIT'} ) {
+    warn "NO_GIT is set, so stopping here\n";
+    exit 0;
+}
 
 git('status');
 
-git('add', '.');
-git('commit', '-m', "generate site (tpf/perldotcom $perldotcom_commit)" );
+git( 'add', '.' );
+git( 'commit', '-m', "generate site (tpf/perldotcom $perldotcom_commit)" );
 git('push');
-
 
 sub git { system 'git', @_ }
 
 sub git_status_master {
-	my( $line ) = map { /## master\Q.../ } `git status -sb`;
-	}
+    my ($line) = map { /## master\Q.../ } `git status -sb`;
+}
 
 sub git_is_behind_master {
-	git_status_master() =~ m/\[behind\s\d\]/
-	}
+    git_status_master() =~ m/\[behind\s\d\]/;
+}
 
 sub git_is_ahead_master {
-	git_status_master() =~ m/\[ahead\s\d\]/
-	}
+    git_status_master() =~ m/\[ahead\s\d\]/;
+}
