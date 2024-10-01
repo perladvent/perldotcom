@@ -7,7 +7,8 @@
     "image"       : "/images/deploying-dancer-apps/deploying-dancer-apps.png",
     "thumbnail"   : "/images/deploying-dancer-apps/thumb-deploying-dancer-apps.png",
     "description" : "Some thoughts about deploying Dancer apps as persistent daemons",
-    "categories"  : "tooling"
+    "categories"  : "tooling",
+    "canonicalURL" : "https://perlhacks.com/2024/08/deploying-dancer-apps-addendum/"
   }
 
 *This article was originally published at
