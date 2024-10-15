@@ -21,7 +21,7 @@
 
 ### Modulo "Gotchas"
 
-First of all [modulo](http://perldoc.perl.org/perlop.html#Multiplicative-Operators) is an integer operator, and if it receives fractional arguments, Perl will only use the integer portion of the fraction. This means that the following two operations are equivalent:
+First of all [modulo]({{< perldoc "perlop" "Multiplicative-Operators" >}}) is an integer operator, and if it receives fractional arguments, Perl will only use the integer portion of the fraction. This means that the following two operations are equivalent:
 
 ```perl
 my $result1 = 5.5 % 3.2;
@@ -57,7 +57,7 @@ Alternatively looking to CPAN, the [Math::Decimal]({{<mcpan "Math::Decimal" >}})
 
 ###### Further reading
 
-perldoc has an entry for the [modulo operator](http://perldoc.perl.org/perlop.html#Multiplicative-Operators)
+perldoc has an entry for the [modulo operator]({{< perldoc "perlop" "Multiplicative-Operators" >}})
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*
