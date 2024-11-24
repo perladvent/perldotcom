@@ -29,7 +29,7 @@ Unless otherwise noted, all examples in this cookbook require this standard prea
      use strict;    # quote strings, declare variables
      use warnings;  # on by default
      use warnings  qw(FATAL utf8);    # fatalize encoding glitches
-     use open      qw(:std :utf8);    # undeclared streams in UTF-8
+     use open      qw(:std :encoding(UTF-8)); # undeclared streams in UTF-8
      use charnames qw(:full :short);  # unneeded in v5.16
 
 This *does* make even Unix programmers `binmode` your binary streams, or open them with `:raw`, but that's the only way to get at them portably anyway.

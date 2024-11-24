@@ -56,7 +56,7 @@ Here's that program; tested on v5.14.
      use strict;
      use warnings;
      use warnings  qw(FATAL utf8);    # fatalize encoding faults
-     use open      qw(:std :utf8);    # undeclared streams in UTF-8
+     use open      qw(:std :encoding(utf-8)); # undeclared streams in UTF-8
      use charnames qw(:full :short);  # unneeded in v5.16
 
      # std modules

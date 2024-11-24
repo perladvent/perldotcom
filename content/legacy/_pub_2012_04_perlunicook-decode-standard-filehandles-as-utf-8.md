@@ -28,7 +28,7 @@ As documented in [perlrun]({{<perldoc "perlrun" >}}), the `PERL_UNICODE` environ
 
 Within your program, the [open]({{<perldoc "open" >}}) pragma allows you to set the default encoding of these filehandles all at once:
 
-         use open qw(:std :utf8);
+         use open qw(:std :encoding(UTF-8));
 
 Because Perl uses IO layers to implement encoding and decoding, you may also use the [binmode]({{<perlfunc "binmode" >}}) operator on filehandles directly:
 

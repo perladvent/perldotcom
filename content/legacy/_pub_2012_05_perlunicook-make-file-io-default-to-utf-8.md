@@ -30,7 +30,7 @@ Alternately, you can set the default encoding on all filehandles through the ent
 
 The [open](http://perldoc.perl.org/open.html) pragma configures the default encoding of all filehandle operations in its lexical scope:
 
-         use open qw(:utf8);
+         use open qw(:encoding(UTF-8));
 
 Note that the `open` pragma is currently incompatible with the [`autodie`](http://perldoc.perl.org/autodie.html) pragma.
 
