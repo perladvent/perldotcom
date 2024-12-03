@@ -34,7 +34,7 @@ gift, The Perl and Raku Foundation is deeply grateful to
 its confidence in TPRF's mission.
 
 To learn more about TPRF's current activities and goals for the future, please see
- [the TPRF 2024 prospectus](/images/duck-duck-go/tprf-prospectus-2024.pdf)
+ [the TPRF 2024 prospectus](/media/tprf/tprf-prospectus-2024.pdf)
 
 If your organization is interested in becoming a TPRF donor, please [reach out
 to me](mailto:olaf@perlfoundation.org). I'd be more than happy to set up a
