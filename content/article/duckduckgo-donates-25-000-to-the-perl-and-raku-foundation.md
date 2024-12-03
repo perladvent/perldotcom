@@ -13,9 +13,9 @@
 ![DuckDuckGo Growth](/images/duck-duck-go/Logo-Horizontal-Registered2.svg)
 
 Today, on "Giving Tuesday", [The Perl and Raku Foundation
-(TPRF)](https://www.perlfoundation.org/) is extremely pleased to announce a
+(TPRF)](https://www.perlfoundation.org/) is extremely pleased to announce [a
 donation of $25,000 from
-[DuckDuckGo](https://spreadprivacy.com/2024-duckduckgo-charitable-donations).
+DuckDuckGo](https://spreadprivacy.com/2024-duckduckgo-charitable-donations).
 Since 2011, DuckDuckGo has [donated over 6 million
 dollars](https://duckduckgo.com/donations) to organizations that align with
 their "vision of raising the standard of trust online".
