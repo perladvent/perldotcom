@@ -4,15 +4,14 @@
    ],
    "thumbnail" : "/images/get-ready-for-the-2025-perl-and-raku-conference-/palmetto_avatar.png",
    "image" : "/images/get-ready-for-the-2025-perl-and-raku-conference-/tprc2025_851x315.png",
-   "draft" : true,
+   "draft" : false,
    "tags" : [
-      "community",
       "perl-conference"
    ],
    "description" : "Preparations for 2025's conference are well underway, and the CFP is now open!",
    "title" : "Get ready for the 2025 Perl and Raku Conference!",
    "categories" : "community",
-   "date" : "2024-12-01T10:04:20"
+   "date" : "2024-12-03T20:04:20"
 }
 
 The Perl and Raku Conference 2025 is coming up June 27-29, 2025, and it’s set to be an exciting gathering for developers, enthusiasts, and community members alike. This annual event brings together some of the best minds in the world of Perl and Raku programming, and we can’t wait to see you there! For the first time ever, the conference will be presented in the Palmetto State, South Carolina! The technical and cultural hub of upstate South Carolina is the city of Greenville, home of the Lockheed-Martin F-16!
