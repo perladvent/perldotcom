@@ -18,7 +18,7 @@
 
 ### Memoizing callers - Paul Boyd
 
-Paul submitted a solution for [memoizing](http://en.wikipedia.org/wiki/Memoization) calling subroutines using Perl's [caller](http://perldoc.perl.org/functions/caller.html) function. Paul's demo script is below. The "aggressively\_memoize" subroutine will memoize the results of the calling function so that when it is called repeatedly with the same arguments, the memoizer returns the stored result rather than re-calculating it. Cool huh?
+Paul submitted a solution for [memoizing](http://en.wikipedia.org/wiki/Memoization) calling subroutines using Perl's [caller]({{< perlfunc "caller" >}}) function. Paul's demo script is below. The "aggressively\_memoize" subroutine will memoize the results of the calling function so that when it is called repeatedly with the same arguments, the memoizer returns the stored result rather than re-calculating it. Cool huh?
 
 To see this in action, just copy and save the script below as "memoizer.pl". Open up the terminal and type:
 
@@ -67,12 +67,12 @@ sub aggressively_memoize {
         #}
 
         return $cache{$key};
-    };  
-    {   
+    };
+    {
         no strict 'refs';
         no warnings 'redefine';
         *{$caller} = $new_sub;
-    }   
+    }
     return;
 }
 
@@ -97,7 +97,7 @@ say fib(40);
 
 ### An END block in a looping one liner - Josh Goldberg
 
-Josh submitted a looping Perl one liner with a twist - once it has finished looping, the one liner executes a final block of code using Perl's [END](http://perldoc.perl.org/perlmod.html#BEGIN,-UNITCHECK,-CHECK,-INIT-and-END) block. For example this can be used to process a web server log, and then summarize the log statistics:
+Josh submitted a looping Perl one liner with a twist - once it has finished looping, the one liner executes a final block of code using Perl's [END]({{< perldoc "perlmod" "BEGIN,-UNITCHECK,-CHECK,-INIT-and-END" >}}) block. For example this can be used to process a web server log, and then summarize the log statistics:
 
 ```perl
 $ cat /var/log/httpd/access_log |perl -lne '/20\d\d:\d\d:\d\d/;$counts{$&}++;$t++}END { for (sort keys %counts) { print "$_: $counts{$_} (".sprintf("%.02f",$counts{$_}/$t*100)."%)" }'

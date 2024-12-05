@@ -17,7 +17,7 @@
 }
 
 
-A [foreach](https://perldoc.perl.org/perlsyn.html#Foreach-Loops) loop runs a block of code for each element of a list. No big whoop, "perl foreach" continues to be one of the most popular on Google searches for the language. So we thought we'd see what's happened in 20 years. I expand on Tom Christiansen's [slide](/doc/FMTEYEWTK/style/slide22.html/) that's part of his longer presentation then add a new but experimental feature at the end. If you want more, there's plenty to read in [perlsyn](https://perldoc.perl.org/perlsyn.html) or my book [Learning Perl](https://www.learning-perl.com).
+A [foreach]({{< perldoc "perlsyn" "Foreach-Loops" >}}) loop runs a block of code for each element of a list. No big whoop, "perl foreach" continues to be one of the most popular on Google searches for the language. So we thought we'd see what's happened in 20 years. I expand on Tom Christiansen's [slide](https://www.perl.com/doc/FMTEYEWTK/style/slide22.html/) that's part of his longer presentation then add a new but experimental feature at the end. If you want more, there's plenty to read in [perlsyn]({{< perldoc "perlsyn" >}}) or my book [Learning Perl](https://www.learning-perl.com).
 
 ## Going through a list
 
@@ -50,7 +50,7 @@ foreach ( numbers() ) {
 	}
 ```
 
-Some people like to use the synonym `for`. There's a proper C-style [for](https://perldoc.perl.org/perlsyn.html#For-Loops) that has three semicolon-separated parts in the parentheses. If Perl doesn't see the two semicolons it treats `for` just like a `foreach`:
+Some people like to use the synonym `for`. There's a proper C-style [for]({{< perldoc "perlsyn" "For-Loops" >}}) that has three semicolon-separated parts in the parentheses. If Perl doesn't see the two semicolons it treats `for` just like a `foreach`:
 
 ```perl
 for ( my $i = 0; $i < 5; $i++ ) {  # C style
@@ -118,7 +118,7 @@ This output will go on forever:
 
 ## Naming your own topic variable
 
-The `$_` is often handy because it's the default variable for several Perl functions, such as [chomp](https://perldoc.perl.org/functions/chomp.html) or [split](https://perldoc.perl.org/functions/split.html). You can use your own name by specifying a scalar variable between the `foreach` and the parentheses. Usually you don't want to use that variable for something other than the loop so the usual style declares it inline with the `foreach`:
+The `$_` is often handy because it's the default variable for several Perl functions, such as [chomp]({{< perlfunc "chomp" >}}) or [split]({{< perlfunc "split" >}}). You can use your own name by specifying a scalar variable between the `foreach` and the parentheses. Usually you don't want to use that variable for something other than the loop so the usual style declares it inline with the `foreach`:
 
 ```perl
 foreach my $number ( 1, 3, 7 ) {
@@ -274,7 +274,7 @@ while( <STDIN> ) {
 say "Lines are:\n\t", join "\n\t", @lines;
 ```
 
-There's more that you can do with these. The work with labels and nested loops. You can read more about them in [perlsyn](https://perldoc.perl.org/perlsyn.html) or [Learning Perl](https://www.learning-perl.com).
+There's more that you can do with these. The work with labels and nested loops. You can read more about them in [perlsyn]({{< perldoc "perlsyn" >}}) or [Learning Perl](https://www.learning-perl.com).
 
 ## A common file-reading gotcha
 
@@ -378,7 +378,7 @@ The output is the same in both programs:
 	Monty
 	Aliasing via reference is experimental at ...
 
-There's a warning from this experimental feature (and, all such features). The feature might change or even disappear according to [Perl's feature policy](https://perldoc.perl.org/perlpolicy.html). Disable the warning if you are comfortable with that:
+There's a warning from this experimental feature (and, all such features). The feature might change or even disappear according to [Perl's feature policy]({{< perldoc "perlpolicy" >}}). Disable the warning if you are comfortable with that:
 
 ```perl
 no warnings qw(experimental::refaliasing);

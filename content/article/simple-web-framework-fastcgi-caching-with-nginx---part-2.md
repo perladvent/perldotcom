@@ -49,7 +49,7 @@ I wrote [Nginx::FastCGI::Cache]({{<mcpan "Nginx::FastCGI::Cache" >}}) to make it
 
 ```perl
 use Nginx::FastCGI::Cache;
- 
+
 my $nginx_cache = Nginx::FastCGI::Cache->new({ location => '/var/cache/nginx' });
 $nginx_cache->purge_file("http://perltricks.com/");
 ```
@@ -74,7 +74,7 @@ In part 1 our purge cache code used a system call to the GNU find program to del
 
 ### Safety First
 
-Whenever you have a program that is going to recursively delete all files in a directory, you want to be sure that it's looking at the correct directory. That's why the "location" is a mandatory parameter for the Nginx::FastCGI::Cache constructor - no default location is assumed. Additionally, should the Perl process not have sufficient permissions to read the cache directory or delete a cached file, Nginx::FastCGI::Cache will [croak](http://perldoc.perl.org/Carp.html#NAME).
+Whenever you have a program that is going to recursively delete all files in a directory, you want to be sure that it's looking at the correct directory. That's why the "location" is a mandatory parameter for the [Nginx::FastCGI::Cache]({{< mcpan "Nginx::FastCGI::Cache" >}}) constructor—no default location is assumed. Additionally, should the Perl process not have sufficient permissions to read the cache directory or delete a cached file, [Nginx::FastCGI::Cache]({{< mcpan "Nginx::FastCGI::Cache" >}}) will [croak]({{< perldoc "Carp" >}}).
 
 ### Other nginx considerations
 

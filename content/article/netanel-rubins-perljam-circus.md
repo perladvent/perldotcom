@@ -39,7 +39,7 @@ This isn't true. Since 2008 Perl has supported subroutine signatures, with type 
 >
 > -- <cite>Netanel Rubin, The Perl Jam 2</cite>
 
-Netanel starts by describing taint mode and claims that hashes are so secure, hash keys bypass Perl's taint check. It's true that hash keys are never considered tainted. This is documented in [perlsec](http://perldoc.perl.org/perlsec.html#Taint-mode) and discussed in depth in Chapter 2 of [Mastering Perl](http://masteringperl.org). But it's not because hashes are assumed to be secure, it's because tainting hash keys involves a huge performance penalty. He never explains his claim as to why arrays are considered secure.
+Netanel starts by describing taint mode and claims that hashes are so secure, hash keys bypass Perl's taint check. It's true that hash keys are never considered tainted. This is documented in [perlsec]({{< perldoc "perlsec" "Taint-mode" >}}) and discussed in depth in Chapter 2 of [Mastering Perl](http://masteringperl.org). But it's not because hashes are assumed to be secure, it's because hash keys aren't full scalar values. He never explains his claim as to why arrays are considered secure.
 
 Perl's `ref` function is a reliable and secure way to determine the data type of a reference. Arguments passed to functions are always passed as an array of scalars via `@_`. There is no doubt, no ambiguity. It's not required security-wise, but if you want to use them you can use function signatures, types and meta-object programming in Perl. They've been available for years.
 
@@ -66,9 +66,9 @@ if ($cgi->upload( 'file' )) {
 
 The issue with this code is that if `$file` has the value of `ARGV`, the diamond operator `<$file>` will call `open` on every value in `@ARGV`. CGI populates `@ARGV` with the HTTP query parameters which creates the vulnerability. So if the HTTP query parameter is `ls|`, Perl will execute `ls`. If the CGI program was running in taint mode, this attack vector would fail. Regardless, it's a well-understood risk, {{<stale-link "the PLEAC project's Perl recommendations from 1999" "http://web.archive.org/web/20160317035754/ramenlabs.com/pleac-pdf/pleac_perl.pdf" "http://ramenlabs.com/pleac-pdf/pleac_perl.pdf">}}  shows how to properly parse file descriptors in CGI parameters (ex 19.4). O'Reilly's [CGI Programming on the Web](http://www.oreilly.com/openbook/cgi/ch07_04.html) by Shishir Gundavaram recommended parsing metacharacters like `|` from user input, which also prevents this attack. That book was published in 1996.
 
-The piping open behavior is well documented in [open](http://perldoc.perl.org/functions/open.html), [perlipc](http://perldoc.perl.org/perlipc.html#Using-open%28%29-for-IPC) and [perlsec](http://perldoc.perl.org/perlsec.html). Chapter 2 of [Mastering Perl](http://masteringperl.org) also covers it. It's a useful feature when you want to efficiently process a lot of data from an external command: just like a shell pipe, it creates a socket between the Perl program and the external binary, avoiding the need to read the entire output into memory at once.
+The piping open behavior is well documented in [open]({{< perlfunc "open" >}}), [perlipc]({{< perldoc "perlipc" "Using-open%28%29-for-IPC" >}}) and [perlsec]({{< perldoc "perlsec" >}}). Chapter 2 of [Mastering Perl](http://masteringperl.org) also covers it. It's a useful feature when you want to efficiently process a lot of data from an external command: just like a shell pipe, it creates a socket between the Perl program and the external binary, avoiding the need to read the entire output into memory at once.
 
-Netanel also identified a SQL injection vulnerability in Bugzilla. The weakness was caused by a poorly coded function which failed to properly validate input used in a dynamic SQL query. The developers should have used the safer pass-by-parameter [DBI]({{<mcpan "DBI" >}}) `prepare` and `execute` functions.
+Netanel also identified a SQL injection vulnerability in Bugzilla. The weakness was caused by a poorly-coded function which failed to properly validate input used in a dynamic SQL query. The developers should have used the safer pass-by-parameter [DBI]({{<mcpan "DBI" >}}) `prepare` and `execute` functions.
 
 In both cases Perl provided methods for securely parsing untrusted input, but the developers didn't use them.
 
@@ -113,9 +113,9 @@ Netanel responds:
 >
 > -- <cite>Netanel Rubin, The Perl Jam 2</cite>
 
-The funny thing is Perl is improving all the time. Every year there is a major release of Perl which brings new features and enhancements to the language ([history](http://perldoc.perl.org/index-history.html)). Last year's [release](http://perldoc.perl.org/perldelta.html) included a new operator, the [double diamond](http://www.effectiveperlprogramming.com/2015/05/use-perl-5-22s-operator-for-safe-command-line-handling/) `<< >>` which disables the piping open behavior shown earlier. CGI.pm was removed from Perl's core modules list in May 2014. Both of those occurrences predate Netanel's talk.
+The funny thing is Perl is improving all the time. Every year there is a major release of Perl which brings new features and enhancements to the language ([history]({{< perldoc "index-history" >}})). Last year's [release]({{< perldoc "perldelta" >}}) included a new operator, the [double diamond](http://www.effectiveperlprogramming.com/2015/05/use-perl-5-22s-operator-for-safe-command-line-handling/) `<< >>` which disables the piping open behavior shown earlier. CGI.pm was removed from Perl's core modules list in May 2014. Both of those occurrences predate Netanel's talk.
 
-Instead of waiting for a major release milestone, the Perl development team can fix critical security issues in a minor release if needed (for example see [5.16.3](http://perldoc.perl.org/perl5163delta.html)).
+Instead of waiting for a major release milestone, the Perl development team can fix critical security issues in a minor release if needed (for example see [5.16.3]({{< perldoc "perl5163delta" >}})).
 
 Perl also has a strong toolchain for evaluating Perl code. [Perl::Critic]({{<mcpan "Perl::Critic" >}}) is a linter that reviews Perl code against recommended coding practices. There is even a [policy]({{<mcpan "Perl::Critic::Policy::ValuesAndExpressions::PreventSQLInjection" >}}) to check for potential SQL injection vulnerabilities.
 

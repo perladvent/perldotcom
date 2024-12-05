@@ -135,7 +135,7 @@ Finally I override the `Private` subroutine with the new coderef:
 
     *{"Sub:\:Attributes:\:$subroutine_name"} = $coderef;
 
-This is how you override subroutines using a [typeglob](http://perldoc.perl.org/perldata.html#Typeglobs-and-Filehandles) ([Mastering Perl](https://www.amazon.com/Mastering-Perl-brian-d-foy/dp/144939311X/) has a whole chapter dedicated to features like these, highly recommended). But what about that backslash in the middle of the colons `:\:`?. That escape is necessary for the code to run on Perl versions 5.16 through 5.18 (thanks to Andreas König for debugging this).
+This is how you override subroutines using a [typeglob]({{< perldoc "perldata" "Typeglobs-and-Filehandles" >}}) ([Mastering Perl](https://www.amazon.com/Mastering-Perl-brian-d-foy/dp/144939311X/) has a whole chapter dedicated to features like these, highly recommended). But what about that backslash in the middle of the colons `:\:`?. That escape is necessary for the code to run on Perl versions 5.16 through 5.18 (thanks to Andreas König for debugging this).
 
 If you're wondering why I bothered to create `$old_coderef` at all, it's so that a subroutine can have multiple attributes with new behaviors nested inside each other.
 
@@ -217,7 +217,7 @@ I store the attributes for a subroutine under the package name in the symbol tab
 
 ### Why no FETCH_CODE_ATTRIBUTES?
 
-The `attribute` [docs](http://perldoc.perl.org/attributes.html) mention another subroutine, called `FETCH_CODE_ATTRIBUTES` that given a coderef, should return the attributes for the referenced subroutine. When `attributes::get` is called, it passes the class of the declaring package, which is `Sub::Attributes`:
+The `attribute` [docs]({{< perldoc "attributes" >}}) mention another subroutine, called `FETCH_CODE_ATTRIBUTES` that given a coderef, should return the attributes for the referenced subroutine. When `attributes::get` is called, it passes the class of the declaring package, which is `Sub::Attributes`:
 
 ```perl
 # $class == "Sub::Attributes"
@@ -360,11 +360,11 @@ I added a regex which captures the attribute name and value when passing attribu
 
 ### Resources
 
-* [attributes](http://perldoc.perl.org/attributes.html) is the official documentation on attributes.
+* [attributes]({{< perldoc "attributes" >}}) is the official documentation on attributes.
 * [Sub::Attributes]({{<mcpan "Sub::Attributes" >}}) is my module which implements the above code, and adds a few more custom attributes.
-* [perldata](http://perldoc.perl.org/perldata.html#Typeglobs-and-Filehandles) has an entry on typeglobs and the symbol table.
+* [perldata]({{< perldoc "perldata" "Typeglobs-and-Filehandles" >}}) has an entry on typeglobs and the symbol table.
 * Chapters 7 & 8 of [Mastering Perl](https://www.amazon.com/Mastering-Perl-brian-d-foy/dp/144939311X/) second edition cover the symbol table and overrriding subroutines in detail.
-* [perlsub](http://perldoc.perl.org/perlsub.html) has information on lvalue subroutines.
+* [perlsub]({{< perldoc "perlsub" >}}) has information on lvalue subroutines.
 * Two useful blog posts by mascip on [possible uses](http://blogs.perl.org/users/mascip/2014/02/subroutine-attributes-how-to-use-them-and-what-for.html) and [when to use](http://blogs.perl.org/users/mascip/2014/02/three-ways-to-introduce-othogonal-behavior-aspects-method-modifiers-and-subroutine-attributes.html) subroutine attributes.
 * [Attribute::Handlers]({{<mcpan "Attribute::Handlers" >}}) provides a mechanism for calling subroutines via attributes.
 
