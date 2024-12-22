@@ -1,10 +1,10 @@
 {
    "title" : "What's new on CPAN - September 2024",
-   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "image" : "/images/whats-new-on-cpan/AFD0459E-3AA7-11E5-801C-5EB3B8BB4BA2.png",
    "draft" : false,
    "description" : "A curated look at September's new CPAN uploads",
    "categories" : "cpan",
-   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "thumbnail" : "/images/whats-new-on-cpan/thumb_AFD0459E-3AA7-11E5-801C-5EB3B8BB4BA2.png",
    "date" : "2024-10-14T02:07:42",
    "tags" : [
       "new"

@@ -1,5 +1,5 @@
 {
-   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "image" : "/images/whats-new-on-cpan/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
    "draft" : false,
    "description" : "A curated look at July's new CPAN uploads",
    "date" : "2024-08-26T22:00:00",
@@ -7,7 +7,7 @@
       "mathew-korica"
    ],
    "categories" : "cpan",
-   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "thumbnail" : "/images/whats-new-on-cpan/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
    "tags" : [
       "new"
    ],

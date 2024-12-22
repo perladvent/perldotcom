@@ -5,9 +5,9 @@
    ],
    "categories" : "cpan",
    "draft" : false,
-   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "thumbnail" : "/images/whats-new-on-cpan/thumb_18F30D70-C0E3-11E4-AB33-E3A60EA848F6.png",
    "date" : "2024-05-09T19:00:00",
-   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "image" : "/images/whats-new-on-cpan/18F30D70-C0E3-11E4-AB33-E3A60EA848F6.png",
    "description" : "A curated look at April's new CPAN uploads",
    "tags" : [
       "new"
