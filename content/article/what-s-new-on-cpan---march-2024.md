@@ -1,11 +1,11 @@
 {
-   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "image" : "/images/whats-new-on-cpan/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
    "description" : "A curated look at March's new CPAN uploads",
    "title" : "What's new on CPAN - March 2024",
    "tags" : [
       "new"
    ],
-   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "thumbnail" : "/images/whats-new-on-cpan/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
    "categories" : "cpan",
    "draft" : false,
    "authors" : [
