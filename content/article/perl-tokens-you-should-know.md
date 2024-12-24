@@ -44,9 +44,9 @@ The \_\_LINE\_\_ token returns the value of the current line number. \_\_FILE\_\
 
 ### END, DATA
 
-\_\_END\_\_ defines the end of the Perl code in the file. Any text that appears after \_\_END\_\_ is ignored by the Perl compiler. Perl programmers often put module documentation after an \_\_END\_\_ token. Even though POD markup language is ignored by the Perl compiler, using \_\_END\_\_ provides the guarantee that even if the POD markup contains a syntax error, the Perl compiler will not scan that part of the file. A clear example of that can be seen in the [LWP source code](https://metacpan.org/source/GAAS/libwww-perl-6.05/lib/LWP.pm).
+\_\_END\_\_ defines the end of the Perl code in the file. Any text that appears after \_\_END\_\_ is ignored by the Perl compiler. Perl programmers often put module documentation after an \_\_END\_\_ token. Even though POD markup language is ignored by the Perl compiler, using \_\_END\_\_ provides the guarantee that even if the POD markup contains a syntax error, the Perl compiler will not scan that part of the file. A clear example of that can be seen in the [LWP source code]({{< mcpan LWP >}}).
 
-\_\_DATA\_\_ is similar to \_\_END\_\_ in that it defines the end of the Perl code in any file. However, any text that appears on the line immediately after \_\_DATA\_\_ until the end of the file, is read into the filehandle PACKAGENAME::DATA, (where package name is the name of the package that \_\_DATA\_\_ appeared in). The documentation for [SelfLoader](http://perldoc.perl.org/SelfLoader.html) discusses \_\_DATA\_\_ and \_\_END\_\_ in more detail.
+\_\_DATA\_\_ is similar to \_\_END\_\_ in that it defines the end of the Perl code in any file. However, any text that appears on the line immediately after \_\_DATA\_\_ until the end of the file, is read into the filehandle PACKAGENAME::DATA, (where package name is the name of the package that \_\_DATA\_\_ appeared in). The documentation for [SelfLoader]({{< perldoc "SelfLoader" >}}) discusses \_\_DATA\_\_ and \_\_END\_\_ in more detail.
 
 ### SUB
 

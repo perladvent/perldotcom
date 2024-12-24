@@ -61,7 +61,7 @@ while (<$dict>) {
 
 This script reads a search term from its command line args, converting it to uppercase. It then opens the dictionary which is encoded in [Latin 1](https://en.wikipedia.org/wiki/ISO/IEC_8859-1), and scans for lines matching the pattern: `qr/^[A-Z][A-Z0-9' ;-]*$/`, which tries to only match lines marking the beginning of an entry ("WOLVERENE; WOLVERINE"). It then uses `readline` to slurp the dictionary definition, until it finds the next entry, at which point it sets the filehandle pointer back one line, and prints the text it matched.
 
-One of the nice properties of Latin 1 is every character is a single byte, which means I don't need to worry about [seek]({{< perldoc "seek" >}}) breaking on a character because [length]({{< perldoc "length" >}}) was counting in characters, but `seek` uses bytes.
+One of the nice properties of Latin 1 is every character is a single byte, which means I don't need to worry about [seek]({{< perlfunc "seek" >}}) breaking on a character because [length]({{< perlfunc "length" >}}) was counting in characters, but `seek` uses bytes.
 
 Run run the script like this:
 
@@ -71,7 +71,7 @@ On my laptop it takes about a second to run, which isn't bad considering the dic
 
 A faster search
 ---------------
-One obvious improvement is to have the script exit once it finds an entry which is alphabetically higher than the search term. The entry after "LLAMA" is "LLANDEILO GROUP", which I can compare using [cmp]({{< perldoc "cmp" >}}). If the search term sorts earlier than the comparison term, `cmp` will return 1, if they match 0, otherwise it will return -1:
+One obvious improvement is to have the script exit once it finds an entry which is alphabetically higher than the search term. The entry after "LLAMA" is "LLANDEILO GROUP", which I can compare using [cmp]({{< perlfunc "cmp" >}}). If the search term sorts earlier than the comparison term, `cmp` will return 1, if they match 0, otherwise it will return -1:
 
 ```perl
 "LLAMA" cmp "LLANDEILO GROUP"; # -1
@@ -91,7 +91,7 @@ while (<$dict>) {
   last unless @alphabet;
 }
 ```
-When this script encounters a new letter's section, it calls [tell]({{< perldoc "tell" >}}) on the filehandle to determine the byte location, and then prints the details to stdout:
+When this script encounters a new letter's section, it calls [tell]({{< perlfunc "tell" >}}) on the filehandle to determine the byte location, and then prints the details to stdout:
 
     $ ./build-index.pl
     A => 601
