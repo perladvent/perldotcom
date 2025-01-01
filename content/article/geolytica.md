@@ -4,8 +4,8 @@
     "date"        : "2024-12-31T12:00:00",
     "tags"        : ["geolytica", "geoparsing", "ai", "geocoding", "poi", "geodata"],
     "draft"       : false,
-    "image"       : "https://geolytica.com/Geolyticacomlogo.png",
-    "thumbnail"   : "https://geolytica.com/Geolyticacomlogo.png",
+    "image"       : "/images/geolytica-powered-by-perl/Geolyticacomlogo.png",
+    "thumbnail"   : "/images/geolytica-powered-by-perl/Geolyticacomlogo.png",
     "description" : "Celebrating 20 years of innovation at Geolytica, Ervin Ruci shares his journey with Perl, from building geocoding engines to enhancing OpenStreetMap data.",
     "categories"  : "perl"
 }
