@@ -6,7 +6,7 @@
     "draft"       : false,
     "image"       : "https://geolytica.com/Geolyticacomlogo.png",
     "thumbnail"   : "https://geolytica.com/Geolyticacomlogo.png",
-    "description" : "Some thoughts on our use of Perl over the years",
+    "description" : "Celebrating 20 years of innovation at Geolytica, Ervin Ruci shares his journey with Perl, from building geocoding engines to enhancing OpenStreetMap data.",
     "categories"  : "perl"
 }
 
