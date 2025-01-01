@@ -1,5 +1,5 @@
 {
-    "title"       : "yet another Perl powered company: Geolytica",
+    "title"       : "Yet Another Perl-Powered Company: Geolytica",
     "authors"     : ["ervin-ruci"],
     "date"        : "2024-12-31T12:00:00",
     "tags"        : ["geolytica", "geoparsing", "ai", "geocoding", "poi", "geodata"],
