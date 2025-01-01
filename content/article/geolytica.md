@@ -21,11 +21,11 @@ became a location independent entrepreneur.
 My current active companies listed at [Geolytica.com](https://geolytica.com)
 all use Perl in the majority of the codebase - some exclusively so. The problem
 I'm focusing on is location intelligence, based on various types of ground
-truth data - such as street addresses and poi data associated with geographic
-coordinates (latitude, longitude).
+truth data - such as street addresses and Point of Interest (POI) data
+associated with geographic coordinates (latitude, longitude).
 
 Most of my time is spent figuring out new ways to maintain and update vast
-amounts of address point data and point of interest data - which power the
+amounts of address point data and POI data - which power the
 geocoding/geoparsing APIs at
 [geocode.xyz](https://geocode.xyz)/[geocoder.ca](https://geocoder.ca) as well
 as our customers' navigation/analytics/gaming/etc platforms.
@@ -54,7 +54,7 @@ or when it was written.
 And not just for simple scripting stuff. Perl powers our spiders, parsing
 systems, and a myriad of AI processes thrown in to achieve greater automation.
 Exactly one year ago we used our in-house (let's call it PerlGPT) to enhance
-and cleanup the Openstreetmap poi data base and published the results here:
+and cleanup the Openstreetmap POI data base and published the results here:
 [poidata.xyz](https://poidata.xyz/odbl)
 
 Data cleanup and enhancement is a very tough problem, and Perl is the right
