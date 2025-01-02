@@ -56,7 +56,7 @@ In order to actually hear some sound, you can either play the MIDI directly, wit
 timidity -c ~/timidity.cfg some.mid -Ow -o - | ffmpeg -i - -acodec libmp3lame -ab 64k some.mp3
 ```
 
-But wait! You can also genrate and play MIDI in real-time with the [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [MIDI::RtMidi::ScorePlayer]({{< mcpan "MIDI::RtMidi::ScorePlayer" >}}) modules. :D
+But wait! You can also generate and play MIDI in real-time with the [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [MIDI::RtMidi::ScorePlayer]({{< mcpan "MIDI::RtMidi::ScorePlayer" >}}) modules. :D
 
 Back to Creating Music!
 -----------------------
