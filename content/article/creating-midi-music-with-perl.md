@@ -336,7 +336,7 @@ use MIDI::Drummer::Tiny;
 
 my $d = MIDI::Drummer::Tiny->new;
 
-$d->count_in(4);  # Closed hi-hat for 4 bars
+$d->count_in(16);  # Closed hi-hat for 16 notes
 
 $d->write;
 ```
