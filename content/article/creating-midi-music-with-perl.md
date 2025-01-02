@@ -1,15 +1,19 @@
-
 {
-    "title"       : "Creating MIDI Music with Perl",
-    "authors"     : ["gene-boggs"],
-    "date"        : "2025-01-01T20:40:29",
-    "tags"        : ["music"],
-    "draft"       : false,
-    "image"       : "",
-    "thumbnail"   : "",
-    "description" : "How to create MIDI music with Perl!",
-    "categories"  : "data"
+   "title" : "Creating MIDI Music with Perl",
+   "description" : "How to create MIDI music with Perl!",
+   "date" : "2025-01-01T20:40:29",
+   "categories" : "data",
+   "authors" : [
+      "gene-boggs"
+   ],
+   "draft" : false,
+   "image" : "/images/creating-midi-music-with-perl/piano-camel.png",
+   "tags" : [
+      "MIDI",
+      "music"
+   ],
+   "thumbnail" : "/images/creating-midi-music-with-perl/thumb_piano-camel.png"
 }
 
 
-![pianola-camel](static/images/creating-midi-music-with-perl/piano-camel.png)
+TBD...
