@@ -267,7 +267,7 @@ To get chord inversions, use the [Music::Chord::Positions]({{< mcpan "Music::Cho
 Phrasing
 --------
 
-This bit requires creativity! But fortunately, there is also the [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}}) module. With it, rhythms can be generated and then applied to single-note, chords, or drum parts.
+This bit requires creativity! But fortunately, there is also the [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}}) module. With it, rhythms can be generated and then applied to single-note, chord, or drum parts.
 
 ```perl
 my $score = setup_score();
@@ -361,7 +361,7 @@ With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::Cre
 
 And how about random grooves ([example](https://github.com/ology/Music/blob/master/random-beat))? Crazy!
 
-Please see the tutorials in the [MIDI-Drummer-Tiny](https://metacpan.org/dist/MIDI-Drummer-Tiny) distribution.
+Please see the tutorials in the [MIDI-Drummer-Tiny](https://metacpan.org/dist/MIDI-Drummer-Tiny) distribution for details on how to implement beats in your program.
 
 Differentiation of Parts
 ------------------------
