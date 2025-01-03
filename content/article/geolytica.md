@@ -5,11 +5,12 @@
     "date"        : "2024-12-31T12:00:00",
     "tags"        : ["geolytica", "geoparsing", "ai", "geocoding", "poi", "geodata"],
     "draft"       : false,
-    "image"       : "/images/geolytica-powered-by-perl/Geolyticacomlogo.png",
-    "thumbnail"   : "/images/geolytica-powered-by-perl/Geolyticacomlogo.png",
+    "image"       : "/images/geolytica-powered-by-perl/camel.png",
+    "thumbnail"   : "/images/geolytica-powered-by-perl/camel.png",
     "description" : "Celebrating 20 years of innovation at Geolytica, Ervin Ruci shares his journey with Perl, from building geocoding engines to enhancing OpenStreetMap data.",
     "categories"  : "perl"
 }
+
 
 ## Who am I?
 
@@ -36,6 +37,8 @@ exact day in 2005 I wrote the first line of code for the geocoder.ca geocoding
 engine - wasn't using a versioning system back then - but I know that line of
 code is still there and it works in the modern Perl we are using, just like it
 did back then without any modifications.
+
+![Geolytical logo](/images/geolytica-powered-by-perl/Geolyticacomlogo.png "Geolytica logo")
 
 ## Perl at Geolytica
 
