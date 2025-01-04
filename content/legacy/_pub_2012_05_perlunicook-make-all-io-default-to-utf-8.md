@@ -28,7 +28,7 @@ If you've configured everything such that all incoming and outgoing data uses th
 
 Within your program, you can achieve the same effects with the [open](http://perldoc.perl.org/open.html) pragma to set default encodings on filehandles and the [Encode](http://perldoc.perl.org/Encode.html) module to decode the elements of `@ARGV`:
 
-         use open qw(:std :utf8);
+         use open qw(:std :encoding(UTF-8));
          use Encode qw(decode_utf8);
          @ARGV = map { decode_utf8($_, 1) } @ARGV;
 
