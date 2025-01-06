@@ -5,7 +5,7 @@
     "date"   : "2017-12-06T14:34:04",
     "tags"   : ["news","perldotcom"],
     "draft"  : false,
-    "thumbnail"  : "/images/site/perl-onion.png",
+    "thumbnail"  : "/images/site/perl-camel.png",
     "description" : "The updated site is better than ever",
     "categories": "community"
   }
