@@ -26,6 +26,11 @@ To start the server run:
 
     % make start
 
+If you'd rather use the pinned version of Hugo which will be used for deploy
+(and you have Docker installed), run:
+
+    % make legacy-start
+
 Once you submit your article, an editor will help guide it to its final form.
 
 Don't know what to write about? See our
