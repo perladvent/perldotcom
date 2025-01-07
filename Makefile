@@ -27,6 +27,10 @@ contributors:
 start: json contributors ## start the local server
 	hugo server --buildDrafts --buildFuture --disableFastRender -d built
 
+.PHONY: legacy-start
+legacy-start: json contributors ## start the local server
+	docker run --rm -it -v $(PWD):/src -p 1313:1313 klakegg/hugo:0.59.1-ubuntu server --buildDrafts --buildFuture --disableFastRender -d built
+
 .PHONY: deploy
 deploy: on_master json contributors ## deploy the website to the static repo
 	bin/deploy
