@@ -5,12 +5,12 @@
    "tags" : [
       "new"
    ],
-   "thumbnail" : "/images/whats-new-on-cpan/yellow.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/gradian.svg",
    "draft" : false,
    "authors" : [
       "mathew-korica"
    ],
-   "image" : "/images/whats-new-on-cpan/yellow.svg",
+   "image" : "/images/whats-new-on-cpan/gradian.svg",
    "date" : "2024-07-21T22:00:00"
 }
 
