@@ -5,12 +5,12 @@
    "tags" : [
       "new"
    ],
-   "thumbnail" : "/images/whats-new-on-cpan/thumb_81C6F1B4-DCE9-11E4-86D9-23646037288D.png",
+   "thumbnail" : "/images/whats-new-on-cpan/yellow.svg",
    "draft" : false,
    "authors" : [
       "mathew-korica"
    ],
-   "image" : "/images/whats-new-on-cpan/81C6F1B4-DCE9-11E4-86D9-23646037288D.png",
+   "image" : "/images/whats-new-on-cpan/yellow.svg",
    "date" : "2024-07-21T22:00:00"
 }
 

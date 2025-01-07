@@ -4,8 +4,8 @@
    "authors" : [
       "mathew-korica"
    ],
-   "thumbnail" : "/images/whats-new-on-cpan/thumb_FA370A74-683C-11E5-9273-385046321329.png",
-   "image" : "/images/whats-new-on-cpan/FA370A74-683C-11E5-9273-385046321329.png",
+   "thumbnail" : "/images/whats-new-on-cpan/purple.svg",
+   "image" : "/images/whats-new-on-cpan/purple.svg",
    "date" : "2024-12-03T00:00:00",
    "tags" : [
       "new"
