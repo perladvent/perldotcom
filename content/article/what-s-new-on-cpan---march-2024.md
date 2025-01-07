@@ -1,11 +1,11 @@
 {
-   "image" : "/images/whats-new-on-cpan/gradian.svg",
+   "image" : "/images/whats-new-on-cpan/blue.svg",
    "description" : "A curated look at March's new CPAN uploads",
    "title" : "What's new on CPAN - March 2024",
    "tags" : [
       "new"
    ],
-   "thumbnail" : "/images/whats-new-on-cpan/gradian.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/blue.svg",
    "categories" : "cpan",
    "draft" : false,
    "authors" : [
