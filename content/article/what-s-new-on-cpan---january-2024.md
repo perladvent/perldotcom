@@ -5,9 +5,9 @@
    ],
    "description" : "A curated look at January's new CPAN uploads",
    "draft" : false,
-   "image" : "/images/whats-new-on-cpan/D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
+   "image" : "/images/whats-new-on-cpan/blue.svg",
    "categories" : "cpan",
-   "thumbnail" : "/images/whats-new-on-cpan/thumb_D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
+   "thumbnail" : "/images/whats-new-on-cpan/blue.svg",
    "tags" : [
       "new"
    ],
