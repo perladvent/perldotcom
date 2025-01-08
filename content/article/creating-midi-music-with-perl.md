@@ -106,7 +106,6 @@ $score->synch(
 ) for 1 .. 4;
 ```
 
-=for html
 [Audio example](/images/creating-midi-music-with-perl/audio-2.mp3)
 
 Setting Channels, Patches, Volume, and Tempo
@@ -166,7 +165,6 @@ sub treble {
 
 For MIDI-Perl, the named note with octave `"C4"` and the MIDI number `"60"` are identical, as shown above.
 
-=for html
 [Audio example](/images/creating-midi-music-with-perl/audio-3.mp3)
 
 Next is an algorithm that selects notes at random, but from a named scale over two octaves:
@@ -193,7 +191,6 @@ sub treble {
 }
 ```
 
-=for html
 [Audio example](/images/creating-midi-music-with-perl/audio-4.mp3)
 
 Single Notes, Basslines, and "Melody"
@@ -231,7 +228,6 @@ for my $i (1 .. 8) {
 $score->write_score("$0.mid");
 ```
 
-=for html
 [Audio example](/images/creating-midi-music-with-perl/audio-5.mp3)
 
 We can construct chord progressions by name:
@@ -257,7 +253,6 @@ for my $c (qw(Cm7 F7 BbM7 EbM7 Adim7 D7 Gm)) {
 $score->write_score("$0.mid");
 ```
 
-=for html
 [Audio example](/images/creating-midi-music-with-perl/audio-6.mp3)
 
 Chord progressions may be constructed algorithmically. This is what we are really after. Here is an example of a randomized state machine that selects chords from the major scale using the default settings of the [Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}}) module:
@@ -279,7 +274,6 @@ $score->n('wn', @$_) for @$chords;
 $score->write_score("$0.mid");
 ```
 
-=for html
 [Audio example](/images/creating-midi-music-with-perl/audio-7.mp3)
 
 Advanced Neo-Riemannian operations can be used with the [Music::Chord::Progression::Transform]({{< mcpan "Music::Chord::Progression::Transform" >}}) module.
@@ -329,7 +323,6 @@ for (1 .. 4) { # repeat the phrases 4 times
 $score->write_score("$0.mid");
 ```
 
-=for html
 [Audio example](/images/creating-midi-music-with-perl/audio-8.mp3)
 
 **Sidebar**: Modulo arithmetic
@@ -388,7 +381,6 @@ $d->metronome44; # 4/4 time for the number of bars
 $d->write;
 ```
 
-=for html
 [Audio example](/images/creating-midi-music-with-perl/audio-9.mp3)
 
 With this module, you can craft unique grooves ([example](https://github.com/ology/MIDI-Drummer-Tiny/blob/master/eg/fool-in-the-rain)).
