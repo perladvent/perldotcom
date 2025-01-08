@@ -72,7 +72,7 @@ my $dt2 = DateTime->new(
 $fmt->format( $dt => $dt2 ); # "2 yr. ago"
 ```
 
-When using the method `formatToParts` (or `format_to_parts`) you will receive an array reference of hash reference making it easy to customise and handle as you wish. For example:
+When using the method `formatToParts` (or `format_to_parts`) you will receive an array reference of hash references, making it easy to customise and handle as you wish. For example:
 
 ```perl
 use DateTime::Format::RelativeTime;
