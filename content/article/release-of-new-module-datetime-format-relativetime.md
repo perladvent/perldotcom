@@ -6,7 +6,7 @@
     "draft"       : false,
     "image"       : "/images/release-of-new-module-datetime-format-relativetime/perl-for-relative-time-formatting.jpg",
     "thumbnail"   : "",
-    "description" : "Release of the new Perl module DateTime::Format::RelativeTime, designed to mirror its equivalent Web API Intl.RelativeTimeFormat",
+    "description" : "Introducing the new Perl module DateTime::Format::RelativeTime, designed to mirror its equivalent Web API: Intl.RelativeTimeFormat",
     "categories"  : "development"
 }
 
