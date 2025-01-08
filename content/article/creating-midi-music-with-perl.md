@@ -30,16 +30,18 @@ Okay, what are these musical elements from the perspective of a programming lang
 Setup, Play, Write
 ------------------
 
-Here is a basic algorithm that builds an ascending musical phrase:
+Here is a basic algorithm that builds an ascending musical phrase two times:
 
 ```perl
 use MIDI::Util qw(setup_score);
 
 my $score = setup_score();
 
-for my $note (qw(C4 D4 E4 F4)) {
-  $score->n('en', $note);
-  $score->r('en');
+for (1 .. 2) {
+  for my $note (qw(C4 D4 E4 F4)) {
+    $score->n('qn', $note);
+    $score->r('qn');
+  }
 }
 
 $score->write_score("$0.mid");
@@ -48,7 +50,7 @@ $score->write_score("$0.mid");
 Here, the **score** is the central MIDI object. We append eighth-notes and rests to the score to create the phrase. This score is written to a file that can then be converted to an audio format and played with speakers.
 
 =for html
-  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+  <audio controls><source src="https://raw.githubusercontent.com/perladvent/perldotcom/7eee4530efbb540ccbd0637718d74b73569161a5/static/images/creating-midi-music-with-perl/cmmwp-1.mp3" type="audio/mp3"></audio>
 
 Rendering Audio
 ---------------
@@ -106,7 +108,7 @@ $score->synch(
 ```
 
 =for html
-  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+  <audio controls><source src="https://raw.githubusercontent.com/perladvent/perldotcom/7eee4530efbb540ccbd0637718d74b73569161a5/static/images/creating-midi-music-with-perl/cmmwp-2.mp3" type="audio/mp3"></audio>
 
 Setting Channels, Patches, Volume, and Tempo
 --------------------------------------------
@@ -166,7 +168,7 @@ sub treble {
 For MIDI-Perl, the named note with octave `"C4"` and the MIDI number `"60"` are identical, as shown above.
 
 =for html
-  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+  <audio controls><source src="https://raw.githubusercontent.com/perladvent/perldotcom/7eee4530efbb540ccbd0637718d74b73569161a5/static/images/creating-midi-music-with-perl/cmmwp-3.mp3" type="audio/mp3"></audio>
 
 Next is an algorithm that selects notes at random, but from a named scale over two octaves:
 
@@ -193,7 +195,7 @@ sub treble {
 ```
 
 =for html
-  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+  <audio controls><source src="https://raw.githubusercontent.com/perladvent/perldotcom/7eee4530efbb540ccbd0637718d74b73569161a5/static/images/creating-midi-music-with-perl/cmmwp-4.mp3" type="audio/mp3"></audio>
 
 Single Notes, Basslines, and "Melody"
 -------------------------------------
@@ -231,7 +233,7 @@ $score->write_score("$0.mid");
 ```
 
 =for html
-  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+  <audio controls><source src="https://raw.githubusercontent.com/perladvent/perldotcom/7eee4530efbb540ccbd0637718d74b73569161a5/static/images/creating-midi-music-with-perl/cmmwp-5.mp3" type="audio/mp3"></audio>
 
 We can construct chord progressions by name:
 
@@ -257,7 +259,7 @@ $score->write_score("$0.mid");
 ```
 
 =for html
-  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+  <audio controls><source src="https://raw.githubusercontent.com/perladvent/perldotcom/7eee4530efbb540ccbd0637718d74b73569161a5/static/images/creating-midi-music-with-perl/cmmwp-6.mp3" type="audio/mp3"></audio>
 
 Chord progressions may be constructed algorithmically. This is what we are really after. Here is an example of a randomized state machine that selects chords from the major scale using the default settings of the [Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}}) module:
 
@@ -279,7 +281,7 @@ $score->write_score("$0.mid");
 ```
 
 =for html
-  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+  <audio controls><source src="https://raw.githubusercontent.com/perladvent/perldotcom/7eee4530efbb540ccbd0637718d74b73569161a5/static/images/creating-midi-music-with-perl/cmmwp-7.mp3" type="audio/mp3"></audio>
 
 Advanced Neo-Riemannian operations can be used with the [Music::Chord::Progression::Transform]({{< mcpan "Music::Chord::Progression::Transform" >}}) module.
 
@@ -329,7 +331,7 @@ $score->write_score("$0.mid");
 ```
 
 =for html
-  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+  <audio controls><source src="https://raw.githubusercontent.com/perladvent/perldotcom/7eee4530efbb540ccbd0637718d74b73569161a5/static/images/creating-midi-music-with-perl/cmmwp-8.mp3" type="audio/mp3"></audio>
 
 **Sidebar**: Modulo arithmetic
 
@@ -388,7 +390,7 @@ $d->write;
 ```
 
 =for html
-  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+  <audio controls><source src="https://raw.githubusercontent.com/perladvent/perldotcom/7eee4530efbb540ccbd0637718d74b73569161a5/static/images/creating-midi-music-with-perl/cmmwp-9.mp3" type="audio/mp3"></audio>
 
 With this module, you can craft unique grooves ([example](https://github.com/ology/MIDI-Drummer-Tiny/blob/master/eg/fool-in-the-rain)).
 
