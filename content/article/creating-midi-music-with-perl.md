@@ -47,6 +47,9 @@ $score->write_score("$0.mid");
 
 Here, the **score** is the central MIDI object. We append eighth-notes and rests to the score to create the phrase. This score is written to a file that can then be converted to an audio format and played with speakers.
 
+=for html
+  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+
 Rendering Audio
 ---------------
 
@@ -101,6 +104,9 @@ $score->synch(
   sub { treble($score) },
 ) for 1 .. 4;
 ```
+
+=for html
+  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
 
 Setting Channels, Patches, Volume, and Tempo
 --------------------------------------------
@@ -159,11 +165,14 @@ sub treble {
 
 For MIDI-Perl, the named note with octave `"C4"` and the MIDI number `"60"` are identical, as shown above.
 
+=for html
+  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+
 Next is an algorithm that selects notes at random, but from a named scale over two octaves:
 
 ```perl
 use Music::Scales qw(get_scale_MIDI);
-...
+# ...
 
 sub treble {
   set_chan_patch($score, 1, 0);
@@ -182,6 +191,9 @@ sub treble {
   }
 }
 ```
+
+=for html
+  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
 
 Single Notes, Basslines, and "Melody"
 -------------------------------------
@@ -218,6 +230,9 @@ for my $i (1 .. 8) {
 $score->write_score("$0.mid");
 ```
 
+=for html
+  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+
 We can construct chord progressions by name:
 
 ```perl
@@ -241,6 +256,9 @@ for my $c (qw(Cm7 F7 BbM7 EbM7 Adim7 D7 Gm)) {
 $score->write_score("$0.mid");
 ```
 
+=for html
+  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+
 Chord progressions may be constructed algorithmically. This is what we are really after. Here is an example of a randomized state machine that selects chords from the major scale using the default settings of the [Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}}) module:
 
 ```perl
@@ -260,6 +278,9 @@ $score->n('wn', @$_) for @$chords;
 $score->write_score("$0.mid");
 ```
 
+=for html
+  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
+
 Advanced Neo-Riemannian operations can be used with the [Music::Chord::Progression::Transform]({{< mcpan "Music::Chord::Progression::Transform" >}}) module.
 
 To get chord inversions, use the [Music::Chord::Positions]({{< mcpan "Music::Chord::Positions" >}}) module. For instance, say we have a chord like C major (`C4-E4-G4`), and we want the first or second inversion. Sure, we could just rewrite it to be `E4-G4-C5` or `G4-C5-E5` - but that's not programming! The inversion of a chosen chord can be programmatically altered if deemed necessary.
@@ -267,31 +288,38 @@ To get chord inversions, use the [Music::Chord::Positions]({{< mcpan "Music::Cho
 Phrasing
 --------
 
-This bit requires creativity! But fortunately, there is also the [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}}) module. With it, rhythms can be generated and then applied to single-note, chord, or drum parts.
+This bit requires creativity! But fortunately, there is also the [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}}) module. With it, rhythms can be generated and then applied to single-note, chord, or drum parts. And this time, let's choose the pitches more musically:
 
 ```perl
+use Music::VoiceGen ();
+# ...
+
 my $score = setup_score();
 
+# get rhythmic phrases
 my $mdp = Music::Duration::Partition->new(
     size    => 8, # 2 measures in 4/4
     pool    => [qw(hn dqn qn en)],
     verbose => 1,
 );
-
 my @motifs = $mdp->motifs(4);
 
-my @pitches = get_scale_MIDI('C', 4, 'major');
-
+# assign voices to the rhythmic motifs
+my @pitches = (
+  get_scale_MIDI('C', 4, 'minor'),
+  get_scale_MIDI('C', 5, 'minor'),
+);
+my $voice = Music::VoiceGen->new(
+    pitches   => \@pitches,
+    intervals => [qw(-3 -2 -1 1 2 3)],
+);
 my @voices;
 for my $motif (@motifs) {
-    my @notes;
-    for my $i (@$motif) {
-        push @notes, $pitches[int rand @pitches];
-    }
+    my @notes = map { $voice->rand } @$motif;
     push @voices, \@notes;
 }
 
-for my $i (1 .. 4) {
+for (1 .. 4) { # repeat the phrases 4 times
     for my $n (0 .. $#motifs) {
         $mdp->add_to_score($score, $motifs[$n], $voices[$n]);
     }
@@ -299,6 +327,9 @@ for my $i (1 .. 4) {
 
 $score->write_score("$0.mid");
 ```
+
+=for html
+  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
 
 **Sidebar**: Modulo arithmetic
 
@@ -350,10 +381,14 @@ use MIDI::Drummer::Tiny;
 
 my $d = MIDI::Drummer::Tiny->new(bars => 8);
 
+$d->count_in(4);
 $d->metronome44; # 4/4 time for the number of bars
 
 $d->write;
 ```
+
+=for html
+  <audio controls><source src="https://github.com/ology/Music/raw/master/jingle-bells-plain.mp3" type="audio/mp3"></audio>
 
 With this module, you can craft unique grooves ([example](https://github.com/ology/MIDI-Drummer-Tiny/blob/master/eg/fool-in-the-rain)).
 
