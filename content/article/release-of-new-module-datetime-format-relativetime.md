@@ -1,5 +1,5 @@
 {
-    "title"       : "Release of new module DateTime::Format::RelativeTime",
+    "title"       : "Introducing DateTime::Format::RelativeTime",
     "authors"     : ["jacques-deguest"],
     "date"        : "2025-01-04T12:29:19",
     "tags"        : ["datetime", "l10n", "unicode", "cldr"],
