@@ -170,7 +170,7 @@ say dump( $options );
 
 would yield:
 
-```
+```perl
 {
     locale => "mr",
     numberingSystem => "deva"
