@@ -94,7 +94,7 @@ would yield:
 
 You can use a negative number to indicate the past, and you can also use decimals, such as:
 
-```
+```perl
 my $parts = $fmt->formatToParts( -12.5, 'hours' );
 say dump( $parts );
 ```
