@@ -159,7 +159,7 @@ The option `numeric` can be set to `auto` or `always`. If it is on `auto`, the A
 
 Just like its Web API counterpart, you can use the method `resolvedOptions` after having instantiated an object to check how `DateTime::Format::RelativeTime` has resolved the options you provided, or possibly come up with default ones:
 
-```
+```perl
 use DateTime::Format::RelativeTime;
 use Data::Pretty qw( dump );
 # locale is "Marathi"
