@@ -92,7 +92,7 @@ would yield:
 ]
 ```
 
-You can use negative number to indicate the past, and you can also use decimals, such as:
+You can use a negative number to indicate the past, and you can also use decimals, such as:
 
 ```
 my $parts = $fmt->formatToParts( -12.5, 'hours' );
