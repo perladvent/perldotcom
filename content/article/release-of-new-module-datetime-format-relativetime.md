@@ -157,7 +157,7 @@ would yield:
 
 The option `numeric` can be set to `auto` or `always`. If it is on `auto`, the API will check if it can find a time relative term, such as `today` or `yesterday` instead of returning `in 0 day` or `1 day ago`. If it is set to `always`, then the API will always return a format involving a number like the ones I just mentioned.
 
-Just like its Web API counterpart, you can use the method `resolvedOptions` after having instantiated an object to check how `DateTime::Format::RelativeTime` has resolved the options you provided, or possibly came up with default ones:
+Just like its Web API counterpart, you can use the method `resolvedOptions` after having instantiated an object to check how `DateTime::Format::RelativeTime` has resolved the options you provided, or possibly come up with default ones:
 
 ```
 use DateTime::Format::RelativeTime;
