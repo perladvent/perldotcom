@@ -387,7 +387,7 @@ $d->write;
 
 [Audio example](/images/creating-midi-music-with-perl/audio-9.mp3)
 
-With this module, you can craft unique grooves ([code example](https://github.com/ology/MIDI-Drummer-Tiny/blob/master/eg/fool-in-the-rain)), like John Bonham's ["Fool in the Rain"](/images/creating-midi-music-with-perl/audio-10.mp3).
+With this module, you can craft unique grooves like John Bonham's ["Fool in the Rain"](/images/creating-midi-music-with-perl/audio-10.mp3) ([code example](https://github.com/ology/MIDI-Drummer-Tiny/blob/master/eg/fool-in-the-rain)).
 
 With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}), you can make algorithmic drums ([code example](https://github.com/ology/Music/blob/master/euclidean-beats)).
 
