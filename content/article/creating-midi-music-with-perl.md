@@ -400,7 +400,7 @@ Please see the tutorials in the [MIDI-Drummer-Tiny](https://metacpan.org/dist/MI
 Differentiation of Parts
 ------------------------
 
-This is an involved subject. Ideally, the different parts of a composition are distinct. If the piece starts slow (i.e. with a low note density per measure - not tempo change), then the next section should be more dense, then less again. Start quiet and soft? Follow with loud. If a part is staccato and edgy, it may be followed by a smooth legato section. Low register first, then higher register next. Etc, etc. If a piece never changes, it is monotonous!
+This is an involved subject. Ideally, the different parts of a composition are distinct. If the piece starts slow (i.e. with a low note density per measure - not tempo change), then the next section should be more dense, then less again. Start quiet and soft? Follow with loud. If a part is staccato and edgy, it may be followed by a smooth legato section. Low register first, then higher register next, etc, etc. If a piece never changes, it is monotonous!
 
 However that being said, consider "Thursday Afternoon" by Brian Eno. Brilliant.
 
