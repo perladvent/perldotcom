@@ -196,7 +196,7 @@ sub treble {
 Single Notes, Basslines, and "Melody"
 -------------------------------------
 
-We saw above, how to select pitches at random. But this is the least musical or interesting way. Pitches may be selected by interval choice, as with the excellent [Music::VoiceGen]({{< mcpan "Music::VoiceGen" >}}) module. You could also choose by mathematical computation with [Music::Voss]({{< mcpan "Music::Voss" >}}) ([example](https://github.com/ology/Music/blob/master/kiloparsec)), or a probability density, or an evolutionary fitness function, etc.
+We saw above, how to select pitches at random. But this is the least musical or interesting way. Pitches may be selected by interval choice, as with the excellent [Music::VoiceGen]({{< mcpan "Music::VoiceGen" >}}) module. You could also choose by mathematical computation with [Music::Voss]({{< mcpan "Music::Voss" >}}) ([code example](https://github.com/ology/Music/blob/master/kiloparsec)), or a probability density, or an evolutionary fitness function, etc.
 
 Basslines are single note lines in a lower register. They have their own characteristics, which I will not attempt to summarize. One thing you can do is to make sure your notes are in the octaves 1 to 3. Fortunately, there is a module for this very thing called [Music::Bassline::Generator]({{< mcpan "Music::Bassline::Generator" >}}). Woo!
 
@@ -387,11 +387,11 @@ $d->write;
 
 [Audio example](/images/creating-midi-music-with-perl/audio-9.mp3)
 
-With this module, you can craft unique grooves ([example](https://github.com/ology/MIDI-Drummer-Tiny/blob/master/eg/fool-in-the-rain)).
+With this module, you can craft unique grooves ([code example](https://github.com/ology/MIDI-Drummer-Tiny/blob/master/eg/fool-in-the-rain)).
 
-With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}), you can make algorithmic drums ([example](https://github.com/ology/Music/blob/master/euclidean-beats)).
+With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}), you can make algorithmic drums ([code example](https://github.com/ology/Music/blob/master/euclidean-beats)).
 
-And how about random grooves ([example](https://github.com/ology/Music/blob/master/random-beat))? Crazy!
+And how about random grooves ([code example](https://github.com/ology/Music/blob/master/random-beat))? Crazy!
 
 Please see the tutorials in the [MIDI-Drummer-Tiny](https://metacpan.org/dist/MIDI-Drummer-Tiny) distribution for details on how to implement beats in your program.
 
