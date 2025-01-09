@@ -167,7 +167,7 @@ For MIDI-Perl, the named note with octave `"C4"` and the MIDI number `"60"` are 
 
 [Audio example](/images/creating-midi-music-with-perl/audio-3.mp3)
 
-Next is an algorithm that selects notes at random, but from a named scale over two octaves:
+Another, more "music-theory way" is to select notes from a named scale (and this time, over two octaves):
 
 ```perl
 use Music::Scales qw(get_scale_MIDI);
@@ -185,8 +185,8 @@ sub treble {
 
   for my $n (1 .. 4) {
     my $pitch = $pitches[int rand @pitches];
-    $score->n('qn', $pitch);
-    $score->r('qn');
+    $score->n('en', $pitch);
+    $score->r('en');
   }
 }
 ```
@@ -222,7 +222,8 @@ my $score = setup_score();
 for my $i (1 .. 8) {
   my @chord = map { $pitches[int rand @pitches] } 1 .. 3;
   print ddc(\@chord);
-  $score->n('wn', @chord);
+  $score->n('hn', @chord);
+  $score->r('hn');
 }
 
 $score->write_score("$0.mid");
@@ -255,19 +256,18 @@ $score->write_score("$0.mid");
 
 [Audio example](/images/creating-midi-music-with-perl/audio-6.mp3)
 
-Chord progressions may be constructed algorithmically. This is what we are really after. Here is an example of a randomized state machine that selects chords from the major scale using the default settings of the [Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}}) module:
+Chord progressions may be constructed algorithmically. Here is an example of a randomized state machine that selects chords from the major scale using the default settings of the [Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}}) module:
 
 ```perl
 use Data::Dumper::Compact 'ddc';
 use MIDI::Util qw(setup_score);
 use Music::Chord::Progression;
 
-my $prog = Music::Chord::Progression->new;
+my $score = setup_score();
 
+my $prog = Music::Chord::Progression->new;
 my $chords = $prog->generate;
 print ddc($chords);
-
-my $score = setup_score();
 
 $score->n('wn', @$_) for @$chords;
 
@@ -283,19 +283,20 @@ To get chord inversions, use the [Music::Chord::Positions]({{< mcpan "Music::Cho
 Phrasing
 --------
 
-This bit requires creativity! But fortunately, there is also the [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}}) module. With it, rhythms can be generated and then applied to single-note, chord, or drum parts. And this time, let's choose the pitches more musically:
+This bit requires creativity! But fortunately, there is also the [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}}) module. With it, rhythms can be generated and then applied to single-note, chord, or drum parts. This time, let's choose the pitches more musically:
 
 ```perl
+use MIDI::Util qw(setup_score);
+use Music::Duration::Partition ();
+use Music::Scales qw(get_scale_MIDI);
 use Music::VoiceGen ();
-# ...
 
 my $score = setup_score();
 
 # get rhythmic phrases
 my $mdp = Music::Duration::Partition->new(
-    size    => 8, # 2 measures in 4/4
-    pool    => [qw(hn dqn qn en)],
-    verbose => 1,
+    size => 4, # 1 measure in 4/4
+    pool => [qw(hn dqn qn en)],
 );
 my @motifs = $mdp->motifs(4);
 
@@ -363,20 +364,23 @@ use MIDI::Drummer::Tiny;
 
 my $d = MIDI::Drummer::Tiny->new;
 
-$d->count_in(16);  # Closed hi-hat for 16 notes
+$d->count_in(4);  # Closed hi-hat for 4 measures
 
 $d->write;
 ```
 
-A "backbeat" rhythm:
+A simple "backbeat" rhythm:
 
 ```perl
 use MIDI::Drummer::Tiny;
 
-my $d = MIDI::Drummer::Tiny->new(bars => 8);
+my $d = MIDI::Drummer::Tiny->new(file => "$0.mid");
 
-$d->count_in(4);
-$d->metronome44; # 4/4 time for the number of bars
+$d->note(
+    $d->quarter,
+    $d->open_hh,
+    $_ % 2 ? $d->kick : $d->snare
+) for 1 .. $d->beats * $d->bars;
 
 $d->write;
 ```
