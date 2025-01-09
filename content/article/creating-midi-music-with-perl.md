@@ -47,7 +47,7 @@ for (1 .. 2) {
 $score->write_score("$0.mid");
 ```
 
-Here, the **score** is the central MIDI object. We append eighth-notes and rests to the score to create the phrase. This score is written to a file that can then be converted to an audio format and played with speakers.
+Here, the **score** is the central MIDI object. We append quarter-notes and rests to the score to create the phrase. This score is written to a file that can then be converted to an audio format and played with speakers.
 
 {{< audio src="/images/creating-midi-music-with-perl/audio-1.mp3" type="audio/mpeg" >}}
 
@@ -391,7 +391,7 @@ With this module, you can craft unique grooves like John Bonham's "Fool in the R
 
 {{< audio src="/images/creating-midi-music-with-perl/audio-10.mp3" type="audio/mpeg" >}}
 
-With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}), you can make algorithmic drums ([code example](https://github.com/ology/Music/blob/master/euclidean-beats)).
+With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}), you can make algorithmic drums ([code example](https://github.com/ology/Music/blob/master/euclidean-beats)):
 
 {{< audio src="/images/creating-midi-music-with-perl/audio-11.mp3" type="audio/mpeg" >}}
 
