@@ -328,7 +328,7 @@ $score->write_score("$0.mid");
 
 **Sidebar**: Modulo arithmetic
 
-If we want to stay within a range, say the chromatic scale of all notes, use the % operator:
+If we want to stay within a range, say the chromatic scale of all notes, use the `%` operator:
 
 ```perl
 use Data::Dumper::Compact qw(ddc);
@@ -342,7 +342,7 @@ print ddc(\%tritones);
 
 **Sidebar**: Alternation math
 
-If we want to change every other iteration (of $i as in the above example), we can also use the % operator:
+If we want to change every other iteration, we can also use the `%` operator:
 
 ```perl
 if ($i % 2 == 0) {
