@@ -397,6 +397,8 @@ With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::Cre
 
 And how about random grooves ([code example](https://github.com/ology/Music/blob/master/random-beat))? Crazy!
 
+{{< audio src="/images/creating-midi-music-with-perl/audio-12.mp3" type="audio/mpeg" >}}
+
 Please see the tutorials in the [MIDI-Drummer-Tiny](https://metacpan.org/dist/MIDI-Drummer-Tiny) distribution for details on how to implement beats in your program.
 
 Differentiation of Parts
