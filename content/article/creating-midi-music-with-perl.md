@@ -393,6 +393,8 @@ With this module, you can craft unique grooves like John Bonham's "Fool in the R
 
 With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}), you can make algorithmic drums ([code example](https://github.com/ology/Music/blob/master/euclidean-beats)).
 
+{{< audio src="/images/creating-midi-music-with-perl/audio-11.mp3" type="audio/mpeg" >}}
+
 And how about random grooves ([code example](https://github.com/ology/Music/blob/master/random-beat))? Crazy!
 
 Please see the tutorials in the [MIDI-Drummer-Tiny](https://metacpan.org/dist/MIDI-Drummer-Tiny) distribution for details on how to implement beats in your program.
