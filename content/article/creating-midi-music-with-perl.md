@@ -49,7 +49,7 @@ $score->write_score("$0.mid");
 
 Here, the **score** is the central MIDI object. We append eighth-notes and rests to the score to create the phrase. This score is written to a file that can then be converted to an audio format and played with speakers.
 
-[Audio example](/images/creating-midi-music-with-perl/audio-1.mp3)
+{{< audio src="/images/creating-midi-music-with-perl/audio-1.mp3" type="audio/mpeg" >}}
 
 Rendering Audio
 ---------------
@@ -106,7 +106,7 @@ $score->synch(
 ) for 1 .. 4;
 ```
 
-[Audio example](/images/creating-midi-music-with-perl/audio-2.mp3)
+{{< audio src="/images/creating-midi-music-with-perl/audio-2.mp3" type="audio/mpeg" >}}
 
 Setting Channels, Patches, Volume, and Tempo
 --------------------------------------------
@@ -165,7 +165,7 @@ sub treble {
 
 For MIDI-Perl, the named note with octave `"C4"` and the MIDI number `"60"` are identical, as shown above.
 
-[Audio example](/images/creating-midi-music-with-perl/audio-3.mp3)
+{{< audio src="/images/creating-midi-music-with-perl/audio-3.mp3" type="audio/mpeg" >}}
 
 Another, more "music-theory way" is to select notes from a named scale (and this time, over two octaves):
 
@@ -191,7 +191,7 @@ sub treble {
 }
 ```
 
-[Audio example](/images/creating-midi-music-with-perl/audio-4.mp3)
+{{< audio src="/images/creating-midi-music-with-perl/audio-4.mp3" type="audio/mpeg" >}}
 
 Single Notes, Basslines, and "Melody"
 -------------------------------------
@@ -229,7 +229,7 @@ for my $i (1 .. 8) {
 $score->write_score("$0.mid");
 ```
 
-[Audio example](/images/creating-midi-music-with-perl/audio-5.mp3)
+{{< audio src="/images/creating-midi-music-with-perl/audio-5.mp3" type="audio/mpeg" >}}
 
 We can construct chord progressions by name:
 
@@ -254,7 +254,7 @@ for my $c (qw(Cm7 F7 BbM7 EbM7 Adim7 D7 Gm)) {
 $score->write_score("$0.mid");
 ```
 
-[Audio example](/images/creating-midi-music-with-perl/audio-6.mp3)
+{{< audio src="/images/creating-midi-music-with-perl/audio-6.mp3" type="audio/mpeg" >}}
 
 Chord progressions may be constructed algorithmically. Here is an example of a randomized state machine that selects chords from the major scale using the default settings of the [Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}}) module:
 
@@ -274,7 +274,7 @@ $score->n('wn', @$_) for @$chords;
 $score->write_score("$0.mid");
 ```
 
-[Audio example](/images/creating-midi-music-with-perl/audio-7.mp3)
+{{< audio src="/images/creating-midi-music-with-perl/audio-7.mp3" type="audio/mpeg" >}}
 
 Advanced Neo-Riemannian operations can be used with the [Music::Chord::Progression::Transform]({{< mcpan "Music::Chord::Progression::Transform" >}}) module.
 
@@ -324,7 +324,7 @@ for (1 .. 4) { # repeat the phrases 4 times
 $score->write_score("$0.mid");
 ```
 
-[Audio example](/images/creating-midi-music-with-perl/audio-8.mp3)
+{{< audio src="/images/creating-midi-music-with-perl/audio-8.mp3" type="audio/mpeg" >}}
 
 **Sidebar**: Modulo arithmetic
 
@@ -385,9 +385,11 @@ $d->note(
 $d->write;
 ```
 
-[Audio example](/images/creating-midi-music-with-perl/audio-9.mp3)
+{{< audio src="/images/creating-midi-music-with-perl/audio-9.mp3" type="audio/mpeg" >}}
 
-With this module, you can craft unique grooves like John Bonham's ["Fool in the Rain"](/images/creating-midi-music-with-perl/audio-10.mp3) ([code example](https://github.com/ology/MIDI-Drummer-Tiny/blob/master/eg/fool-in-the-rain)).
+With this module, you can craft unique grooves like John Bonham's "Fool in the Rain" ([code example](https://github.com/ology/MIDI-Drummer-Tiny/blob/master/eg/fool-in-the-rain)):
+
+{{< audio src="/images/creating-midi-music-with-perl/audio-10.mp3" type="audio/mpeg" >}}
 
 With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}), you can make algorithmic drums ([code example](https://github.com/ology/Music/blob/master/euclidean-beats)).
 
