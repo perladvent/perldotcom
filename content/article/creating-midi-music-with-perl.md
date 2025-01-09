@@ -378,7 +378,7 @@ my $d = MIDI::Drummer::Tiny->new(file => "$0.mid");
 
 $d->note(
     $d->quarter,
-    $d->open_hh,
+    $d->closed_hh,
     $_ % 2 ? $d->kick : $d->snare
 ) for 1 .. $d->beats * $d->bars;
 
