@@ -54,7 +54,7 @@ Here, the **score** is the central MIDI object. We append eighth-notes and rests
 Rendering Audio
 ---------------
 
-In order to actually hear some sound, you can either play the MIDI directly, with a command-line player like `timidity` and a "soundfont." Also the MIDI file can be used to create an audio formatted file (e.g. WAV, MP3) that can be played. Here is the command for this, that I use on my Mac:
+In order to actually hear some sound, you can either play the MIDI directly, with a command-line player like `timidity` and an `sf2` "soundfont" file, as in [this list](https://archive.org/download/free-soundfonts-sf2-2019-04). Also the MIDI file can be used to create an audio formatted file (e.g. WAV, MP3) that can be played. Here is the command for this, that I use on my Mac:
 
 ```
 timidity -c ~/timidity.cfg some.mid -Ow -o - | ffmpeg -i - -acodec libmp3lame -ab 64k some.mp3
