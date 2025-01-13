@@ -119,11 +119,15 @@ my $bpm = shift || 120;
 
 my $score = setup_score(bpm => $bpm);
 
-$score->synch(\&bass, \&treble);
+$score->synch(
+  sub { bass($score) },
+  sub { treble($score) },
+);
 
 $score->write_score("$0.mid");
 
 sub bass {
+  my ($score) = @_;
   set_chan_patch($score, 0, 35);
   for my $note (qw(C3 F3 G3 C4)) {
     $score->n('qn', $note, 'v127');
@@ -131,6 +135,7 @@ sub bass {
 }
 
 sub treble {
+  my ($score) = @_;
   set_chan_patch($score, 1, 0);
   for my $note (qw(C4 D4 E4 F4)) {
     $score->n('en', $note, 'v110');
@@ -139,7 +144,7 @@ sub treble {
 }
 ```
 
-Notice that the `\&` syntax is used for the `synch`'d subs. This makes the bass and treble subroutines use the `$score` object as a global variable. Sometimes this is done... Some may hate this. Fortunately, it's optional.
+If the synched subroutines do not amount to the same number of beats, the `synch` will probably not work as expected, and will stop playing the shorter part and keep playing the longer part until it is finished.
 
 Selecting Pitches
 -----------------
