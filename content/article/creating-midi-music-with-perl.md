@@ -28,9 +28,9 @@ Well, for our purposes, music is a combination of rhythm, melody, and harmony.
 Okay, what are these musical elements from the perspective of a programming language? And how do you create these elements with code? Enter: Perl.
 
 Set Up, Play, Write
-------------------
+-------------------
 
-Here is a basic algorithm that builds an ascending musical phrase two times:
+Here is a basic algorithm that builds an ascending musical phrase two times. It uses named notes with the octave (e.g. C<C4>):
 
 ```perl
 use MIDI::Util qw(setup_score);
@@ -62,7 +62,7 @@ But wait! You can also generate and play MIDI in real-time with the [MIDI::RtMid
 Back to Creating Music!
 -----------------------
 
-So far, we have encountered the "Setup, Play, and Write" algorithm. Next we shall replace the "Play" bit with "Sync" and play the bass and treble parts simultaneously:
+So far, we have encountered the "Setup, Play, and Write" algorithm. Next we shall replace the "Play" bit with "Sync" and play the bass and treble parts simultaneously (and again, we use a named note plus octave number in each of the subroutines):
 
 ```perl
 use MIDI::Util qw(setup_score);
