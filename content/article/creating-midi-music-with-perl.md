@@ -420,6 +420,8 @@ You too can make music with Perl! This can be comprised of single-note lines (me
 References
 ----------
 
+My personal, non-algorithmic, hand-made music is available to stream at [Songwhip](https://songwhip.com/geneboggs)
+
 [MIDI::Util]({{< mcpan "MIDI::Util" >}})
 
 [Music::Scales]({{< mcpan "Music::Scales" >}})
