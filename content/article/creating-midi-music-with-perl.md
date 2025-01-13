@@ -39,15 +39,12 @@ my $score = setup_score();
 
 for (1 .. 2) {
   for my $note (qw(C4 D4 E4 F4)) {
-    $score->n('qn', $note);
-    $score->r('qn');
+    $score->n('qn', $note); # Adds a quarter note
+    $score->r('qn');        # Adds a quarter note rest
   }
 }
 
 $score->write_score("$0.mid");
-```
-
-Here, the **score** is the central MIDI object. We append quarter-notes and rests to the score to create the phrase. This score is written to a file that can then be converted to an audio format and played with speakers.
 
 {{< audio src="/images/creating-midi-music-with-perl/audio-1.mp3" type="audio/mpeg" >}}
 
