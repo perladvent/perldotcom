@@ -273,7 +273,7 @@ $score->write_score("$0.mid");
 
 {{< audio src="/images/creating-midi-music-with-perl/audio-7.mp3" type="audio/mpeg" >}}
 
-Advanced Neo-Riemannian operations can be used with the [Music::Chord::Progression::Transform]({{< mcpan "Music::Chord::Progression::Transform" >}}) module.
+Advanced [Neo-Riemannian](https://en.wikipedia.org/wiki/Neo-Riemannian_theory) operations can be used with the [Music::Chord::Progression::Transform]({{< mcpan "Music::Chord::Progression::Transform" >}}) module.
 
 To get chord inversions, use the [Music::Chord::Positions]({{< mcpan "Music::Chord::Positions" >}}) module. For instance, say we have a chord like C major (`C4-E4-G4`), and we want the first or second inversion. Sure, we could just rewrite it to be `E4-G4-C5` or `G4-C5-E5` - but that's not programming! The inversion of a chosen chord can be programmatically altered if deemed necessary.
 
