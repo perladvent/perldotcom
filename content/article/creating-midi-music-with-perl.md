@@ -27,7 +27,7 @@ Well, for our purposes, music is a combination of rhythm, melody, and harmony.
 
 Okay, what are these musical elements from the perspective of a programming language? And how do you create these elements with code? Enter: Perl.
 
-Setup, Play, Write
+Set Up, Play, Write
 ------------------
 
 Here is a basic algorithm that builds an ascending musical phrase two times:
