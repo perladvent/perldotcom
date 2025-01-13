@@ -160,7 +160,7 @@ sub treble {
 }
 ```
 
-For MIDI-Perl, the named note with octave `"C4"` and the MIDI number `"60"` are identical, as shown above.
+For MIDI-Perl, the named note with octave `"C4"` and the MIDI number `"60"` are identical, as shown above and in the tables on [this page](https://studiocode.dev/resources/midi-middle-c/).
 
 {{< audio src="/images/creating-midi-music-with-perl/audio-3.mp3" type="audio/mpeg" >}}
 
