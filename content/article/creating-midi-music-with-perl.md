@@ -154,6 +154,7 @@ What if we want the program to choose notes at random, to add to the score? Here
 
 ```perl
 sub treble {
+  my ($score) = @_;
   set_chan_patch($score, 1, 0);
 
   my @pitches = (60, 62, 64, 65, 67, 69, 71, 72);
@@ -177,6 +178,7 @@ use Music::Scales qw(get_scale_MIDI);
 # ...
 
 sub treble {
+  my ($score) = @_;
   set_chan_patch($score, 1, 0);
 
   my $octave = 4;
