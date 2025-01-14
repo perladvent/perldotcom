@@ -45,6 +45,7 @@ for (1 .. 2) {
 }
 
 $score->write_score("$0.mid");
+```
 
 {{< audio src="/images/creating-midi-music-with-perl/audio-1.mp3" type="audio/mpeg" >}}
 
