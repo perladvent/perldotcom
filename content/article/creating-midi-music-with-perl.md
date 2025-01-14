@@ -30,7 +30,7 @@ Okay, what are these musical elements from the perspective of a programming lang
 Set Up, Play, Write
 -------------------
 
-Here is a basic algorithm that builds an ascending musical phrase two times. It uses named notes with the octave (e.g. C<C4>):
+Here is a basic algorithm that builds an ascending musical phrase two times. It uses named notes with the octave (e.g. `C4`):
 
 ```perl
 use MIDI::Util qw(setup_score);
