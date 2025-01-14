@@ -111,9 +111,7 @@ $score->synch(
 Setting Channels, Patches, Volume, and Tempo
 --------------------------------------------
 
-Use the `MIDI::Util::set_chan_patch()` function to set the channel and the patch.
-
-To set the tempo in "beats per minute", give a `bpm` to the `setup_score()` function. To set an individual note volume, add `"v$num"` as an argument to the `$score->n()` method, where `$num` is an integer from 0 to 127. Here is code that sets these parameters:
+Use the `MIDI::Util::set_chan_patch()` function to set the channel and the patch. To set the tempo in "beats per minute", give a `bpm` to the `setup_score()` function. To set an individual note volume, add `"v$num"` as an argument to the `$score->n()` method, where `$num` is an integer from 0 to 127. Here is code that sets these parameters:
 
 ```perl
 use MIDI::Util qw(setup_score set_chan_patch);
@@ -168,7 +166,7 @@ sub treble {
 }
 ```
 
-For MIDI-Perl, the named note with octave `"C4"` and the MIDI number `"60"` are identical, as shown above and in the tables on [this page](https://studiocode.dev/resources/midi-middle-c/).
+For MIDI-Perl, the named note with octave `C4` and the MIDI number `60` are identical, as shown in the tables on [this page](https://studiocode.dev/resources/midi-middle-c/).
 
 {{< audio src="/images/creating-midi-music-with-perl/audio-3.mp3" type="audio/mpeg" >}}
 
