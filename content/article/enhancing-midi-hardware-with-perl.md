@@ -46,11 +46,7 @@ The other will replace any incoming note. Alongside the original note, these
 mappers are routed to FLEX with a Rhodes sample set loaded. It sounds like
 this (I'm playing just one or two keys at a time here):
 
-<audio controls>
-  <source src="/images/enhancing-midi-hardware-with-perl/Patcher_pedal_tone.mp3" type="audio/mpeg">
-  <source src="/images/enhancing-midi-hardware-with-perl/Patcher_pedal_tone.ogg" type="audio/ogg">
-  <a href="/images/enhancing-midi-hardware-with-perl/Patcher_pedal_tone.mp3">MP3 sample</a>
-</audio>
+{{< audio-with-link basename="/images/enhancing-midi-hardware-with-perl/Patcher_pedal_tone" >}}
 
 A similar method can be used to patch this in other modular environments. In
 VCV Rack, a pair of quantizers provide the fifth-note offset and pedal tone
@@ -439,11 +435,7 @@ That is, the same callback can continue to service both event types.
 
 With that change, playing a single key at a time sounds like this:
 
-<audio controls>
-  <source src="/images/enhancing-midi-hardware-with-perl/Rhodes_strummed_pedal_tone.mp3" type="audio/mpeg">
-  <source src="/images/enhancing-midi-hardware-with-perl/Rhodes_strummed_pedal_tone.ogg" type="audio/ogg">
-  <a href="/images/enhancing-midi-hardware-with-perl/Rhodes_strummed_pedal_tone.mp3">MP3 sample</a>
-</audio>
+{{< audio-with-link basename="/images/enhancing-midi-hardware-with-perl/Rhodes_strummed_pedal_tone" >}}
 
 ## Demo Patch
 
@@ -463,11 +455,7 @@ This is what it sounds like - we first hear the additive patch on channel 2,
 then the subtractive one on channel 3. Switching channels is as simple as
 pushing the respective pad on the controller:
 
-<audio controls>
-  <source src="/images/enhancing-midi-hardware-with-perl/VCV_channel_switch.mp3" type="audio/mpeg">
-  <source src="/images/enhancing-midi-hardware-with-perl/VCV_channel_switch.ogg" type="audio/ogg">
-  <a href="/images/enhancing-midi-hardware-with-perl/VCV_channel_switch.mp3">MP3 sample</a>
-</audio>
+{{< audio-with-link basename="/images/enhancing-midi-hardware-with-perl/VCV_channel_switch" >}}
 
 Not very exciting, I know — it's just to demonstrate the principle.
 
