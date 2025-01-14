@@ -288,7 +288,7 @@ To get chord inversions, use the [Music::Chord::Positions]({{< mcpan "Music::Cho
 Phrasing
 --------
 
-This bit requires creativity! But fortunately, there is also the [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}}) module. With it, rhythms can be generated and then applied to single-note, chord, or drum parts. This time, let's choose the pitches more musically:
+This bit requires creativity! But fortunately, there is also the [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}}) module. With it, rhythms can be generated and then applied to single-note, chord, or drum parts. This time, let's choose the pitches more musically with `Music::VoiceGen`:
 
 ```perl
 use MIDI::Util qw(setup_score);
@@ -322,6 +322,7 @@ for my $motif (@motifs) {
 
 for (1 .. 4) { # repeat the phrases 4 times
     for my $n (0 .. $#motifs) {
+        # add each motif with corresponding voices, to the score
         $mdp->add_to_score($score, $motifs[$n], $voices[$n]);
     }
 }
