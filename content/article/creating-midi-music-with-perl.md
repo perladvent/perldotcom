@@ -424,6 +424,8 @@ You too can make music with Perl! This can be comprised of single-note lines (me
 References
 ----------
 
+• [The example code](https://github.com/ology/Music/tree/master/cmmwp) for this article
+
 • [MIDI::Util]({{< mcpan "MIDI::Util" >}})
 
 • [Music::Scales]({{< mcpan "Music::Scales" >}})
