@@ -65,7 +65,7 @@ But wait! You can also generate and play MIDI in real-time with the [MIDI::RtMid
 Back to Creating Music!
 -----------------------
 
-So far, we have encountered the "Setup, Play, and Write" algorithm. Next we shall replace the "Play" bit with "Sync" and play the bass and treble parts simultaneously (and again, we use a named note plus octave number in each of the subroutines):
+So far, we have encountered the "Set up, Play, and Write" algorithm. Next we shall replace the "Play" bit with "Sync" and play the bass and treble parts simultaneously (and again, we use a named note plus octave number in each of the subroutines):
 
 ```perl
 use MIDI::Util qw(setup_score);
