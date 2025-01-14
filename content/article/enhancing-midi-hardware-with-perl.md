@@ -3,7 +3,7 @@ title: Enhancing MIDI Hardware with Perl
 date: 2025-01-10
 image: https://fuzzix.org/files/midicamel.png
 ---
-#### Introduction
+## Introduction
 
 These days, even modestly priced MIDI hardware comes stuffed with features.
 You should expect a budget device to provide at least some of clock, sequencer,
@@ -20,7 +20,7 @@ This post will walk through the implementation of a pair of features to augment
 those found in a MIDI keyboard — a M-Audio Oxygen Pro 61 in this case, though
 the principle should apply to any device.
 
-#### Feature 1 : Pedal Tone
+## Feature 1 : Pedal Tone
 
 A recent video by [Polarity Music opened with some exploration of using a pedal tone](https://youtu.be/Cu1FKGp6pKQ)
 in Bitwig to compose progressions. A pedal tone (or pedal note, or pedal point)
@@ -68,7 +68,7 @@ If we could coax our MIDI device into producing these additional notes,
 there would be no need for tricky patching plus we might end up with a more
 flexible result.
 
-##### Perl Tone
+### Perl Tone
 
 The approach described here will set up a new software-defined MIDI device
 which will proxy events from our hardware, while applying any number of
@@ -226,7 +226,7 @@ simply sleep and allow RtMidi's event loop to take over the routine.
 The final step is to await `_process_midi_events`, which should process events
 from the hardware until the program is terminated.
 
-##### Writing Callbacks
+### Writing Callbacks
 
 Callbacks are responsible for managing the stash, and sending filtered messages
 to the output device. A callback receives the MidiFilter instance and the
@@ -282,7 +282,7 @@ This filter is functionally equivalent to the FL Studio Patcher patch from
 earlier, with the added benefit of being DAW-agnostic. If recording a sequence
 from this setup, all notes will be shown in the piano roll.
 
-#### Feature 2 : Controller Banks
+## Feature 2 : Controller Banks
 
 The Oxygen Pro has four "banks" or sets of controls. Each bank can have
 different assignments or behaviour for the knobs, keys, sliders, and
@@ -371,7 +371,7 @@ $mf->add_filter( channel_after_touch => \&route_to_channel );
 We can now have different patches respond to different channels, and control
 each patch with the entire MIDI controller (except the pads, of course).
 
-##### Pickup
+### Pickup
 
 You may have spotted a problem with the bank feature. Imagine we are on bank 1
 and we set knob 1 to a low value. We then switch to bank 2, and turn knob 1 to
@@ -392,7 +392,7 @@ values by tweaking all controls on all channels before beginning a performance.
 Many DAWs and synths support pickup, and it is better handled there rather than
 implementing a half-baked and inconsistent solution here.
 
-#### Feature 1a: Strum
+## Feature 1a: Strum
 
 So far we have not taken complete advantage of our event loop. You might
 remember we implemented a `delay_send` method which accepts a delay time
@@ -439,7 +439,7 @@ With that change, playing a single key at a time sounds like this:
   <a href="https://fuzzix.org/files/Rhodes_strummed_pedal_tone.mp3">MP3 sample</a>
 </audio>
 
-#### Demo Patch
+## Demo Patch
 
 This VCV Rack patch should demonstrate the complete set of features built in
 this post. On the right is an additive voice which responds to MIDI channel 2.
@@ -465,18 +465,18 @@ pushing the respective pad on the controller:
 
 Not very exciting, I know — it's just to demonstrate the principle.
 
-#### Latency
+## Latency
 
 While I haven't measured latency of this project specifically, previous
 [experiments with async processing of MIDI events in Perl](https://fuzzix.org/perl-ioasync-and-the-rtmidi-event-loop)
 showed a latency of a fraction of a millisecond. I expect the system described
 in this post to have a similar profile.
 
-#### Source Code
+## Source Code
 
 There is a [gist with the complete source of the MidiFilter project](https://gist.github.com/jbarrett/ff611962349a1ce03f49fd9fdfc92119).
 
-#### Conclusion
+## Conclusion
 
 After describing some of the shortcomings of a given MIDI controller, and an
 approach for adding to a performance within a DAW, we walked
