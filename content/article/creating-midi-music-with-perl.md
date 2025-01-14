@@ -250,7 +250,7 @@ my $mcn = Music::Chord::Note->new;
 for my $c (qw(Cm7 F7 BbM7 EbM7 Adim7 D7 Gm)) {
   my @chord = $mcn->chord_with_octave($c, 4);
 
-  @chord = midi_format(@chord);
+  @chord = midi_format(@chord); # convert to MIDI-Perl notation
   print ddc(\@chord);
 
   $score->n('wn', @chord);
