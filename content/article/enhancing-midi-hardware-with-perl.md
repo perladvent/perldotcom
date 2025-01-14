@@ -10,8 +10,6 @@
     "categories"  : "data"
 }
 
-
-
 ## Introduction
 
 These days, even modestly priced MIDI hardware comes stuffed with features.
@@ -42,7 +40,7 @@ There are, of course, ways to achieve this effect in other DAW software. I was
 able to use Patcher within FL Studio to achieve a similar result with two
 instances of VFX Key Mapper:
 
-![FL Studio Patcher with MIDI input routed to FLEX and two instances of VFX Key Mapper](https://fuzzix.org/files/pedal_tone_fl.png)
+![FL Studio Patcher with MIDI input routed to FLEX and two instances of VFX Key Mapper](/images/enhancing-midi-hardware-with-perl/pedal_tone_fl.png)
 
 One instance of VFX Key Mapper transposes the incoming note by 7 semitones.
 The other will replace any incoming note. Alongside the original note, these
@@ -50,9 +48,9 @@ mappers are routed to FLEX with a Rhodes sample set loaded. It sounds like
 this (I'm playing just one or two keys at a time here):
 
 <audio controls>
-  <source src="https://fuzzix.org/files/Patcher_pedal_tone.mp3" type="audio/mpeg">
-  <source src="https://fuzzix.org/files/Patcher_pedal_tone.ogg" type="audio/ogg">
-  <a href="https://fuzzix.org/files/Patcher_pedal_tone.mp3">MP3 sample</a>
+  <source src="/images/enhancing-midi-hardware-with-perl/Patcher_pedal_tone.mp3" type="audio/mpeg">
+  <source src="/images/enhancing-midi-hardware-with-perl/Patcher_pedal_tone.ogg" type="audio/ogg">
+  <a href="/images/enhancing-midi-hardware-with-perl/Patcher_pedal_tone.mp3">MP3 sample</a>
 </audio>
 
 A similar method can be used to patch this in other modular environments. In
@@ -63,7 +61,7 @@ Voltage Controlled Oscillator (VCO).
 The gate signal from the keyboard triggers an envelope to open the
 Voltage Controlled Amplifier (VCA) and Voltage Controlled Filter (VCF).
 
-![VCV Rack with the patch described above](https://fuzzix.org/files/pedal_tone_rack.png)
+![VCV Rack with the patch described above](/images/enhancing-midi-hardware-with-perl/pedal_tone_rack.png)
 
 This patch is a little less flexible than the FL Studio version — further
 work is required to support playing multiple notes on the keyboard, for example.
@@ -443,9 +441,9 @@ That is, the same callback can continue to service both event types.
 With that change, playing a single key at a time sounds like this:
 
 <audio controls>
-  <source src="https://fuzzix.org/files/Rhodes_strummed_pedal_tone.mp3" type="audio/mpeg">
-  <source src="https://fuzzix.org/files/Rhodes_strummed_pedal_tone.ogg" type="audio/ogg">
-  <a href="https://fuzzix.org/files/Rhodes_strummed_pedal_tone.mp3">MP3 sample</a>
+  <source src="/images/enhancing-midi-hardware-with-perl/Rhodes_strummed_pedal_tone.mp3" type="audio/mpeg">
+  <source src="/images/enhancing-midi-hardware-with-perl/Rhodes_strummed_pedal_tone.ogg" type="audio/ogg">
+  <a href="/images/enhancing-midi-hardware-with-perl/Rhodes_strummed_pedal_tone.mp3">MP3 sample</a>
 </audio>
 
 ## Demo Patch
@@ -460,16 +458,16 @@ with an envelope controlling a VCA and VCF to shape incoming sawtooths.
 The mod wheel is patched to allow a Low-Frequency Oscillator (LFO)
 to frequency modulate the VCO for a vibrato effect.
 
-![VCV Rack patch with FM OP controlled by channel 2 and a subtractive patch controlled by channel 3](https://fuzzix.org/files/VCV_channel_switching_patch.png)
+![VCV Rack patch with FM OP controlled by channel 2 and a subtractive patch controlled by channel 3](/images/enhancing-midi-hardware-with-perl/VCV_channel_switching_patch.png)
 
 This is what it sounds like - we first hear the additive patch on channel 2,
 then the subtractive one on channel 3. Switching channels is as simple as
 pushing the respective pad on the controller:
 
 <audio controls>
-  <source src="https://fuzzix.org/files/VCV_channel_switch.mp3" type="audio/mpeg">
-  <source src="https://fuzzix.org/files/VCV_channel_switch.ogg" type="audio/ogg">
-  <a href="https://fuzzix.org/files/VCV_channel_switch.mp3">MP3 sample</a>
+  <source src="/images/enhancing-midi-hardware-with-perl/VCV_channel_switch.mp3" type="audio/mpeg">
+  <source src="/images/enhancing-midi-hardware-with-perl/VCV_channel_switch.ogg" type="audio/ogg">
+  <a href="/images/enhancing-midi-hardware-with-perl/VCV_channel_switch.mp3">MP3 sample</a>
 </audio>
 
 Not very exciting, I know — it's just to demonstrate the principle.
