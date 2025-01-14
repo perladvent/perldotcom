@@ -1,9 +1,9 @@
 {
     "title"       : "Enhancing your MIDI devices with Perl",
     "authors"     : ["john-barrett"],
-    "date"        : "2025-01-something",
-    "tags"        : ['midi','music'],
-    "draft"       : true,
+    "date"        : "2025-01-30",
+    "tags"        : ["midi","music"],
+    "draft"       : false,
     "image"       : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
     "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
     "description" : "Automating a hotel captive portal",
