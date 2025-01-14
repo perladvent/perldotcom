@@ -47,7 +47,7 @@ for (1 .. 2) {
 $score->write_score("$0.mid");
 ```
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-1.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-1.mp3" type="audio/mpeg" >}}
 
 Rendering Audio
 ---------------
@@ -106,7 +106,7 @@ $score->synch(
 ) for 1 .. 4;
 ```
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-2.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-2.mp3" type="audio/mpeg" >}}
 
 Setting Channels, Patches, Volume, and Tempo
 --------------------------------------------
@@ -169,7 +169,7 @@ sub treble {
 
 For MIDI-Perl, the named note with octave `C4` and the MIDI number `60` are identical, as shown in the tables on [this page](https://studiocode.dev/resources/midi-middle-c/).
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-3.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-3.mp3" type="audio/mpeg" >}}
 
 Another, more "music-theory way" is to select notes from a named scale (and this time, over two octaves):
 
@@ -196,7 +196,7 @@ sub treble {
 }
 ```
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-4.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-4.mp3" type="audio/mpeg" >}}
 
 Single Notes, Basslines, and "Melody"
 -------------------------------------
@@ -234,7 +234,7 @@ for my $i (1 .. 8) {
 $score->write_score("$0.mid");
 ```
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-5.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-5.mp3" type="audio/mpeg" >}}
 
 We can construct chord progressions by name:
 
@@ -259,7 +259,7 @@ for my $c (qw(Cm7 F7 BbM7 EbM7 Adim7 D7 Gm)) {
 $score->write_score("$0.mid");
 ```
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-6.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-6.mp3" type="audio/mpeg" >}}
 
 Chord progressions may be constructed algorithmically. Here is an example of a randomized state machine that selects chords from the major scale using the default settings of the [Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}}) module:
 
@@ -279,7 +279,7 @@ $score->n('wn', @$_) for @$chords;
 $score->write_score("$0.mid");
 ```
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-7.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-7.mp3" type="audio/mpeg" >}}
 
 Advanced [Neo-Riemannian](https://en.wikipedia.org/wiki/Neo-Riemannian_theory) operations can be used with the [Music::Chord::Progression::Transform]({{< mcpan "Music::Chord::Progression::Transform" >}}) module.
 
@@ -330,7 +330,7 @@ for (1 .. 4) { # repeat the group of phrases 4 times
 $score->write_score("$0.mid");
 ```
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-8.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-8.mp3" type="audio/mpeg" >}}
 
 **Sidebar**: Modulo arithmetic
 
@@ -393,19 +393,19 @@ $d->note(
 $d->write;
 ```
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-9.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-9.mp3" type="audio/mpeg" >}}
 
 With this module, you can craft unique grooves like John Bonham's "Fool in the Rain" ([code example](https://github.com/ology/MIDI-Drummer-Tiny/blob/master/eg/fool-in-the-rain)):
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-10.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-10.mp3" type="audio/mpeg" >}}
 
 With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}), you can make algorithmic drums ([code example](https://github.com/ology/Music/blob/master/euclidean-beats)):
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-11.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-11.mp3" type="audio/mpeg" >}}
 
 And how about random grooves ([code example](https://github.com/ology/Music/blob/master/random-beat))?
 
-{{< audio src="/images/creating-midi-music-with-perl/audio-12.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/creating-midi-music-with-perl/audio-12.mp3" type="audio/mpeg" >}}
 
 Please see the tutorials in the [MIDI-Drummer-Tiny](https://metacpan.org/dist/MIDI-Drummer-Tiny) distribution for details on how to implement beats in your program.
 
