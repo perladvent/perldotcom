@@ -288,7 +288,7 @@ To get chord inversions, use the [Music::Chord::Positions]({{< mcpan "Music::Cho
 Phrasing
 --------
 
-This bit requires creativity! But fortunately, there is also the [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}}) module. With it, rhythms can be generated and then applied to single-note, chord, or drum parts. This time, let's choose the pitches more musically with `Music::VoiceGen`:
+This bit requires creativity! But fortunately, there is also the [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}}) module. With it, rhythms can be generated and then applied to single-note, chord, or drum parts. This time, let's choose the pitches more musically with [Music::VoiceGen]({{< mcpan "Music::VoiceGen" >}}):
 
 ```perl
 use MIDI::Util qw(setup_score);
