@@ -1,8 +1,17 @@
----
-title: Enhancing MIDI Hardware with Perl
-date: 2025-01-10
-image: https://fuzzix.org/files/midicamel.png
----
+{
+    "title"       : "Enhancing your MIDI devices with Perl",
+    "authors"     : ["john-barrett"],
+    "date"        : "2025-01-something",
+    "tags"        : ['midi','music'],
+    "draft"       : true,
+    "image"       : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
+    "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
+    "description" : "Automating a hotel captive portal",
+    "categories"  : "data"
+}
+
+
+
 ## Introduction
 
 These days, even modestly priced MIDI hardware comes stuffed with features.
