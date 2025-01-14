@@ -95,7 +95,7 @@ sub treble {
 }
 ```
 
-This algorithm is not especially clever, but illustrates the basics.
+This code is not especially clever, but illustrates the basics.
 
 If we want to repeat the phrase, just add a `for` loop to the `synch`:
 
