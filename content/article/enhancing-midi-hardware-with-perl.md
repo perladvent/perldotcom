@@ -472,6 +472,12 @@ pushing the respective pad on the controller:
 
 Not very exciting, I know — it's just to demonstrate the principle.
 
+Keen eyes may have spotted an issue with the bank switching callback. When
+switching to channel 10, then played keyboard keys which overlap with those
+assigned to the pads may dump you unexpectedly onto a different channel!
+I will leave resolving this as an exercise for the reader — perhaps one of
+the pads could be [put to another use](https://metacpan.org/pod/MIDI::RtMidi::FFI::Device#panic).
+
 ## Latency
 
 While I haven't measured latency of this project specifically, previous
@@ -506,7 +512,7 @@ device.
 These simple examples served to demonstrate the principle, but the practical
 limit to this approach is your own imagination. My imagination is limited, but some
 next steps might be to add "humanising" random fluctuations to sequences, or
-perhaps extending the system to combine the inputs of multiple hardware into
+perhaps extending the system to combine the inputs of multiple hardware devices into
 one software-defined device with advanced and complex facilities. If your
 device has a DAW mode, you may be able to implement visual feedback for the
 actions and state of the virtual device.
