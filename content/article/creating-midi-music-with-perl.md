@@ -398,7 +398,7 @@ With combinatorial sequences from [Music::CreatingRhythms]({{< mcpan "Music::Cre
 
 {{< audio src="/images/creating-midi-music-with-perl/audio-11.mp3" type="audio/mpeg" >}}
 
-And how about random grooves ([code example](https://github.com/ology/Music/blob/master/random-beat))? Crazy!
+And how about random grooves ([code example](https://github.com/ology/Music/blob/master/random-beat))?
 
 {{< audio src="/images/creating-midi-music-with-perl/audio-12.mp3" type="audio/mpeg" >}}
 
