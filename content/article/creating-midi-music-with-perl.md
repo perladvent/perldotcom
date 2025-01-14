@@ -339,7 +339,9 @@ If we want to stay within a range, say the chromatic scale of all notes, use the
 ```perl
 use Data::Dumper::Compact qw(ddc);
 use Music::Scales qw(get_scale_notes);
+
 my @notes = get_scale_notes('C', 'chromatic');
+
 my %tritones = map { $notes[$_] => $notes[ ($_ + 6) % @notes ] } 0 .. $#notes;
 print ddc(\%tritones);
 ```
