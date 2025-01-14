@@ -213,7 +213,7 @@ Chords and Harmony
 We can construct chords at random - oof:
 
 ```perl
-use Data::Dumper::Compact 'ddc';
+use Data::Dumper::Compact qw(ddc);
 use MIDI::Util qw(setup_score);
 use Music::Scales qw(get_scale_MIDI);
 
@@ -239,7 +239,7 @@ $score->write_score("$0.mid");
 We can construct chord progressions by name:
 
 ```perl
-use Data::Dumper::Compact 'ddc';
+use Data::Dumper::Compact qw(ddc);
 use MIDI::Util qw(setup_score midi_format);
 use Music::Chord::Note;
 
@@ -264,7 +264,7 @@ $score->write_score("$0.mid");
 Chord progressions may be constructed algorithmically. Here is an example of a randomized state machine that selects chords from the major scale using the default settings of the [Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}}) module:
 
 ```perl
-use Data::Dumper::Compact 'ddc';
+use Data::Dumper::Compact qw(ddc;
 use MIDI::Util qw(setup_score);
 use Music::Chord::Progression;
 
