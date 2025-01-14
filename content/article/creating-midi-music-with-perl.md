@@ -300,8 +300,8 @@ my $score = setup_score();
 
 # get rhythmic phrases
 my $mdp = Music::Duration::Partition->new(
-    size => 4, # 1 measure in 4/4
-    pool => [qw(hn dqn qn en)],
+    size => 4,                  # 1 measure in 4/4
+    pool => [qw(hn dqn qn en)], # half, dotted-quarter, quarter, eighth notes
 );
 my @motifs = $mdp->motifs(4);
 
