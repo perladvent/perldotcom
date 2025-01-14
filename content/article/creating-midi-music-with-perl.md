@@ -419,30 +419,30 @@ You too can make music with Perl! This can be comprised of single-note lines (me
 References
 ----------
 
-My personal, non-algorithmic, hand-made music is available to stream at [Songwhip](https://songwhip.com/geneboggs)
+• [MIDI::Util]({{< mcpan "MIDI::Util" >}})
 
-[MIDI::Util]({{< mcpan "MIDI::Util" >}})
+• [Music::Scales]({{< mcpan "Music::Scales" >}})
 
-[Music::Scales]({{< mcpan "Music::Scales" >}})
+• [Music::VoiceGen]({{< mcpan "Music::VoiceGen" >}})
 
-[Music::VoiceGen]({{< mcpan "Music::VoiceGen" >}})
+• [Music::Voss]({{< mcpan "Music::Voss" >}})
 
-[Music::Voss]({{< mcpan "Music::Voss" >}})
+• [Music::Bassline::Generator]({{< mcpan "Music::Bassline::Generator" >}})
 
-[Music::Bassline::Generator]({{< mcpan "Music::Bassline::Generator" >}})
+• [Data::Dumper::Compact]({{< mcpan "Data::Dumper::Compact" >}})
 
-[Data::Dumper::Compact]({{< mcpan "Data::Dumper::Compact" >}})
+• [Music::Chord::Note]({{< mcpan "Music::Chord::Note" >}})
 
-[Music::Chord::Note]({{< mcpan "Music::Chord::Note" >}})
+• [Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}})
 
-[Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}})
+• [Music::Chord::Progression::Transform]({{< mcpan "Music::Chord::Progression::Transform" >}})
 
-[Music::Chord::Progression::Transform]({{< mcpan "Music::Chord::Progression::Transform" >}})
+• [MIDI::Drummer::Tiny]({{< mcpan "MIDI::Drummer::Tiny" >}})
 
-[MIDI::Drummer::Tiny]({{< mcpan "MIDI::Drummer::Tiny" >}})
+• [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}})
 
-[Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}})
+• [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}})
 
-[MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}})
+• [MIDI::RtMidi::ScorePlayer]({{< mcpan "MIDI::RtMidi::ScorePlayer" >}})
 
-[MIDI::RtMidi::ScorePlayer]({{< mcpan "MIDI::RtMidi::ScorePlayer" >}})
+• My personal, non-algorithmic, [hand-made music](https://songwhip.com/geneboggs) is available to stream on all platforms.
