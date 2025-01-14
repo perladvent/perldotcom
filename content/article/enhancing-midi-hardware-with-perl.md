@@ -5,7 +5,7 @@
     "tags"        : ["midi","music"],
     "draft"       : false,
     "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
-    "description" : "Automating a hotel captive portal",
+    "description" : "Add functions and features to MIDI devices by routing them via Perl",
     "categories"  : "data"
 }
 
