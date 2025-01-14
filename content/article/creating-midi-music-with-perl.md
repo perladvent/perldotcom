@@ -264,7 +264,7 @@ $score->write_score("$0.mid");
 Chord progressions may be constructed algorithmically. Here is an example of a randomized state machine that selects chords from the major scale using the default settings of the [Music::Chord::Progression]({{< mcpan "Music::Chord::Progression" >}}) module:
 
 ```perl
-use Data::Dumper::Compact qw(ddc;
+use Data::Dumper::Compact qw(ddc);
 use MIDI::Util qw(setup_score);
 use Music::Chord::Progression;
 
