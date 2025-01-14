@@ -1,7 +1,7 @@
 {
     "title"       : "Introducing DateTime::Format::RelativeTime",
     "authors"     : ["jacques-deguest"],
-    "date"        : "2025-01-04T12:29:19",
+    "date"        : "2025-01-14T14:45:00",
     "tags"        : ["datetime", "l10n", "unicode", "cldr"],
     "draft"       : false,
     "image"       : "/images/release-of-new-module-datetime-format-relativetime/perl-for-relative-time-formatting.jpg",
