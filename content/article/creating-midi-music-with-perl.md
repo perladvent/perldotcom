@@ -445,4 +445,4 @@ References
 
 • [MIDI::RtMidi::ScorePlayer]({{< mcpan "MIDI::RtMidi::ScorePlayer" >}})
 
-• My personal, non-algorithmic, [hand-made music](https://songwhip.com/geneboggs) is available to stream on all platforms.
+• [My personal music](https://songwhip.com/geneboggs) is available to stream on all platforms.
