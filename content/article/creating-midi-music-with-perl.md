@@ -320,7 +320,7 @@ for my $motif (@motifs) {
     push @voices, \@notes;
 }
 
-for (1 .. 4) { # repeat the phrases 4 times
+for (1 .. 4) { # repeat the group of phrases 4 times
     for my $n (0 .. $#motifs) {
         # add each motif with corresponding voices, to the score
         $mdp->add_to_score($score, $motifs[$n], $voices[$n]);
