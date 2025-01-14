@@ -504,7 +504,3 @@ one software-defined device with advanced and complex facilities. If your
 device has a DAW mode, you may be able to implement visual feedback for the
 actions and state of the virtual device.
 
-While this system was implemented in Perl,
-this could just as easily be achieved with Python, PHP, Pure Data, Pascal,
-and other programming languages beginning with 'P'.
-
