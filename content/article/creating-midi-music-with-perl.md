@@ -312,7 +312,7 @@ my @pitches = (
 );
 my $voice = Music::VoiceGen->new(
     pitches   => \@pitches,
-    intervals => [qw(-3 -2 -1 1 2 3)],
+    intervals => [qw(-3 -2 -1 1 2 3)], # allowed interval jumps
 );
 my @voices;
 for my $motif (@motifs) {
