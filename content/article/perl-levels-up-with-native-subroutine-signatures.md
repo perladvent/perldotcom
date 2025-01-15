@@ -64,7 +64,7 @@ sub echo ($message = 'Hello World!') {
 
 Now the value of $message will default to "Hello World!" when the subroutine is called without arguments.
 
-Subroutine signatures can also declare optional and slurpy parameters. If you'd like to see examples, check out the new subroutine signatures entry in Perl's [official documentation.](https://perldoc.perl.org/perlsub.html#Signatures)
+Subroutine signatures can also declare optional and slurpy parameters. If you'd like to see examples, check out the new subroutine signatures entry in Perl's [official documentation.]({{< perldoc "perlsub" "Signatures" >}})
 
 ### Argument checking
 

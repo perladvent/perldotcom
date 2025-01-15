@@ -31,7 +31,7 @@ sub process_quote_data {
     my $args = shift;
     my $dob = $args->{dob} || return 0;
     my $sex = $args->{sex} || return 0;
-    my $years_driving = 
+    my $years_driving =
         defined($args->{years_driving}) ? $args->{years_driving} : return 0;
 
     # do stuff
@@ -82,7 +82,7 @@ sub process_quote_data {
 
 Now if the $sex variable is undef, the process\_quote\_data subroutine will assign 'M' as it's value.
 
-You can read more about these operators and in the [perlop section](http://perldoc.perl.org/perlop.html#Logical-Defined-Or) of the official Perl documentation.
+You can read more about these operators and in the [perlop section]({{< perldoc "perlop" "Logical-Defined-Or" >}}) of the official Perl documentation.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

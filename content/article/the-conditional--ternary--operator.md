@@ -43,7 +43,7 @@ sub calculate_salary {
 }
 ```
 
-Hopefully this example shows how using the conditional operator can shorten and simplify Perl code. For further detail, check out the [official documentation](http://perldoc.perl.org/perlop.html#Conditional-Operator).
+Hopefully this example shows how using the conditional operator can shorten and simplify Perl code. For further detail, check out the [official documentation]({{< perldoc "perlop" "Conditional-Operator" >}}).
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

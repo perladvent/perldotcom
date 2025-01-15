@@ -16,7 +16,7 @@
 
 Welcome to part 2 in our contributing [series](/tags/contributing/)! The first [article]({{< relref "how-to-find-a-programming-topic-to-write-about.md" >}}) explained how to find a topic to write about. This article will show you how to submit your article to Perl.com for publication.
 
-Our source code is hosted on a public GitHub [repo](https://github.com/tpf/perldotcom), so the first thing you need to do is fork it so you have your own copy. Now clone your fork locally, and you should be ready to start making your changes.
+Our source code is hosted on a [public perldotcom GitHub repo](https://github.com/tpf/perldotcom), so the first thing you need to do is fork it so you have your own copy. Now clone your fork locally, and you should be ready to start making your changes.
 
 ### Create your author data
 
@@ -82,12 +82,12 @@ Article subheadings are size `h2`. So use the following construct:
 
 Create links to CPAN modules with the `mcpan` shortcode:
 
-    [Business::ISBN]({{</* mcpan "Business::ISBN" */>}})
+    [Business::ISBN]({{< mcpan "Business::ISBN" >}})
 
 Create links to the official Perl documentation with either `perldoc` or `perlfunc` shortcodes:
 
-    [perldelta]({{</* perldoc "perldelta" */>}})
-    [sort]({{</* perlfunc "sort" */>}})
+    [perldelta]({{< perldoc "perldelta" >}})
+    [sort]({{< perlfunc "sort" >}})
 
 Internal references to other articles can be created using [relref](https://gohugo.io/extras/crossreferences/). So to link to the article "save space with bit arrays":
 

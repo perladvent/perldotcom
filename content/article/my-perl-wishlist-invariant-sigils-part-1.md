@@ -36,10 +36,10 @@ The current situation
 ---------------------
 
 In Perl, the sigil tells you
-[how many things to expect](https://perldoc.perl.org/5.30.0/perlintro.html#Perl-variable-types).
+[how many things to expect]({{< perldoc "perlintro" "Perl-variable-types" >}}).
 Scalars such as `$foo` are single values.  Any single value in an array
 `@foo` or hash `%foo`, since it is only one thing,
-[also uses `$`](https://perldoc.perl.org/5.30.0/perldata.html#Variable-names),
+[also uses `$`]({{< perldoc "perldata" "Variable-names" >}}),
 so `$foo`, `@foo`, and `%foo` could all refer to different pieces of the
 same variable &mdash; or to different variables.
 This technique of "variant sigils" works, but confuses

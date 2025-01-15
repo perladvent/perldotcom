@@ -72,7 +72,7 @@ walkallops_filtered(
 
 So, what can we do with all this? The answer is, of course, "anything we want". If you can mess about with the op tree, then you have complete control over Perl's operation. Let's take an example.
 
-Damian Conway recently released the [Acme::Don't]({{<mcpan "Acme::Don't" >}}) module, which doesn't do anything:
+Damian Conway recently released the [Acme::Don't]({{<mcpan "Acme::Don::t" >}}) module, which doesn't do anything:
 
 ```
 don't { print "Something\n" }

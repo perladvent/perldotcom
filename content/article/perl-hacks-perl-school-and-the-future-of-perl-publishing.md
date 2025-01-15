@@ -70,13 +70,12 @@ rarely necessary (and hasn't been since Perl 5 was released).
 There's also [The Long Death of
 CGI.pm](https://perlhacks.com/2015/12/long-death-cgi-pm/) which
 investigated the effects that removing
-[CGI.pm](https://metacpan.org/pod/CGI) from the Perl core distribution
+[CGI.pm]({{< mcpan "CGI" >}}) from the Perl core distribution
 would have. I thought there was some nice detective work in there.
 
 The post that got the most response was called [You Must Hate Version
 Control
-Systems](https://perlhacks.com/2012/03/you-must-hate-version-control-
-systems/). The title was taken from a Perl job ad from a company that
+Systems](https://perlhacks.com/2012/03/you-must-hate-version-control-systems/). The title was taken from a Perl job ad from a company that
 no-one seemed to want to work for. The person who posted the ad turned
 up in the comments and tried to explain why he wrote that, but I don't
 think anyone was convinced. This was the one time that I regretted

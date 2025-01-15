@@ -26,7 +26,7 @@ By the way, if you haven't read my [introduction](http://perltricks.com/article/
 
 ### Developing the grammar
 
-In Perl 6 a grammar is a special type of class for parsing text. The idea is to declare a series of regexes using the `token` method, which are then used to parse input. For [Pod::Perl5::Grammar](https://github.com/dnmfarrell/Pod-Perl5/blob/master/lib/Pod/Perl5/Grammar.pm) I literally worked my way through [perlpod](http://perldoc.perl.org/perlpod.html), the Perl 5 pod specification, writing tokens as I went.
+In Perl 6 a grammar is a special type of class for parsing text. The idea is to declare a series of regexes using the `token` method, which are then used to parse input. For [Pod::Perl5::Grammar](https://github.com/dnmfarrell/Pod-Perl5/blob/master/lib/Pod/Perl5/Grammar.pm) I literally worked my way through [perlpod]({{< perldoc "perlpod" >}}), the Perl 5 pod specification, writing tokens as I went.
 
 There were a few challenges. First, consider how would you define a regex for lists? In pod, lists can contain lists, so can a definition include itself? The answer is yes, a recursive definition is fine, as long as it doesn't match a zero length string, which leads to an infinite loop. Here's the definition:
 

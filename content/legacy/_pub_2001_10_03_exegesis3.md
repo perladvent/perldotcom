@@ -609,7 +609,7 @@ respectively.
 
 ### <span id="that's not a number...now that's a number!"></span>That's not a number...now *that's* a number!
 
-One of the perennial problems with Perl 5 is how to read in a number. Or rather, how to read in a string...and then be sure that it contains a valid number. Currently, most people read in the string and then either just assume it's a number (optimism) or use the regexes found in [perlfaq4](https://perldoc.perl.org/perlfaq4.html#How_do_I_determine_whether_a_scalar_is_a_number_whole_integer_float_) or [Regexp::Common]({{<mcpan "Regexp::Common" >}}) to make sure (cynicism).
+One of the perennial problems with Perl 5 is how to read in a number. Or rather, how to read in a string...and then be sure that it contains a valid number. Currently, most people read in the string and then either just assume it's a number (optimism) or use the regexes found in [perlfaq4]({{< perldoc "perlfaq4" "How_do_I_determine_whether_a_scalar_is_a_number_whole_integer_float_" >}}) or [Regexp::Common]({{<mcpan "Regexp::Common" >}}) to make sure (cynicism).
 
 Perl 6 offers a simpler, built-in mechanism.
 

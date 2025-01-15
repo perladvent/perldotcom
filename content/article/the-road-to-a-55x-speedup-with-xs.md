@@ -159,7 +159,7 @@ If you'd like to learn more about XS, I'd strongly recommend this [series](http:
 
 Chapter 18 "Extending Perl: A First Course" in [Advanced Perl Programming](http://shop.oreilly.com/product/9781565922204.do) first edition has a good introduction to XS. It covers the most common macros for scalars, arrays and hashes which is useful (the second edition doesn't cover XS). [Extending and Embedding Perl](https://www.manning.com/books/extending-and-embedding-perl) goes further, with several tutorials on the different ways to call and receive data from XS. Both books are a bit dated but I found them valuable and an easier read than the official docs.
 
-The official Perl documentation has useful reference sources: [perlxs](http://perldoc.perl.org/perlxs.html), [perlapi](http://perldoc.perl.org/perlapi.html) and [perlguts](http://perldoc.perl.org/perlxs.html). There is also [perlxstut](http://perldoc.perl.org/perlxs.html) but I would skip that in favor of the above resources.
+The official Perl documentation has useful reference sources: [perlxs]({{< perldoc "perlxs" >}}), [perlapi]({{< perldoc "perlapi" >}}) and [perlguts]({{< perldoc "perlxs" >}}). There is also [perlxstut]({{< perldoc "perlxs" >}}) but I would skip that in favor of the above resources.
 
 Several times I've found XS macros used in Perl code that are not explained in any documentation (e.g. `dXSTARG`). In those cases it pays to have a copy of the Perl [source code](https://www.perl.org/get.html) - just grep the source and you'll find its definition with a comment (typically in `pp.h`).
 
