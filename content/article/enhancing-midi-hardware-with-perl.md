@@ -3,7 +3,7 @@
     "authors"     : ["john-barrett"],
     "date"        : "2025-01-30",
     "tags"        : ["midi","music"],
-    "draft"       : false,
+    "draft"       : true,
     "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
     "description" : "Add functions and features to MIDI devices by routing them via Perl",
     "categories"  : "data"
