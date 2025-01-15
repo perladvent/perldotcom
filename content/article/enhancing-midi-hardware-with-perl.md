@@ -209,7 +209,7 @@ The final pieces are the setup of MIDI devices and the communications channel:
     }
 
     ADJUST {
-        $self->_init_out || die "Unable to create output device";
+        $self->_init_out;
     }
 ```
 
