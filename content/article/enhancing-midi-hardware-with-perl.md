@@ -216,7 +216,7 @@ The final pieces are the setup of MIDI devices and the communications channel:
 The `_init_out` method takes care of some shortcomings in Windows MIDI, which
 does not support the creation of virtual ports. On this platform messages will
 be routed via [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html).
-On other platforms the virtual MIDI port "Mister Fancy Pants" is created.
+On other platforms the virtual MIDI port "RtMidi Output Client:Mister Fancy Pants" is created.
 The `ADJUST` block assures this is done during construction of the `MidiFilter`
 instance.
 
