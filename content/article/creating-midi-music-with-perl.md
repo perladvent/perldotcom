@@ -1,7 +1,7 @@
 {
    "title" : "Creating MIDI Music with Perl",
    "description" : "How to create MIDI music with Perl!",
-   "date" : "2025-01-01T20:40:29",
+   "date" : "2025-01-15T09:00:00",
    "categories" : "data",
    "authors" : [
       "gene-boggs"
