@@ -2,7 +2,7 @@
     "title"       : "Yet Another Perl-Powered Company: Geolytica",
     "url"         : "/geolytica-powered-by-perl",
     "authors"     : ["ervin-ruci"],
-    "date"        : "2024-12-31T12:00:00",
+    "date"        : "2025-01-16T09:00:00",
     "tags"        : ["geolytica", "geoparsing", "ai", "geocoding", "poi", "geodata"],
     "draft"       : false,
     "image"       : "/images/geolytica-powered-by-perl/camel.png",
@@ -11,59 +11,77 @@
     "categories"  : "perl"
 }
 
+Imagine you want to parse free-form address input and match it against a
+database representing the road network.
 
-## Who am I?
+### Example 1
 
-[Ervin Ruci](https://eruci.com). I've been using Perl since 1998, building
-student information systems at Mount Allison University, then building registry
-systems for cira.ca between 2000 and 2005 - the year I quit my day job and
-became a location independent entrepreneur.
+- **Input:** `"751 FAIR OKS AVENUE PASADNA CA"`
+- **Output:** `"751 N Fair Oaks AVE, Pasadena, CA 91103-3069 / 34.158874,-118.151053"`
+  [View example](https://geocoder.ca/?locate=751+FAiR+OKS+AVENUE+++PASADNA+CA&geoit=x)
 
-My current active companies listed at [Geolytica.com](https://geolytica.com)
-all use Perl in the majority of the codebase - some exclusively so. The problem
-I'm focusing on is location intelligence, based on various types of ground
-truth data - such as street addresses and Point of Interest (POI) data
-associated with geographic coordinates (latitude, longitude).
+### Example 2
 
-Most of my time is spent figuring out new ways to maintain and update vast
-amounts of address point data and POI data - which power the
-geocoding/geoparsing APIs at
-[geocode.xyz](https://geocode.xyz)/[geocoder.ca](https://geocoder.ca) as well
-as our customers' navigation/analytics/gaming/etc platforms.
+- **Input:** `"5 Adne Edle Street, London"`
+- **Output:** `"5 THREADNEEDLE STREET, LONDON, United Kingdom EC3V 3NG"`
+  [View example](https://geocode.xyz/5%20Adne%20Edle%20Street,%20London?region=UK)
 
-Some day in 2025 it will be 20 years since I founded Geolytica inc, and I'm
-still happily perl-ing away at large Perl codebases. (I can't remember the
-exact day in 2005 I wrote the first line of code for the geocoder.ca geocoding
-engine - wasn't using a versioning system back then - but I know that line of
-code is still there and it works in the modern Perl we are using, just like it
-did back then without any modifications.
+The database contains road names, shapes, numbers, zip/postal codes, city
+names, regions, neighborhood/district names, and more—billions of named
+location entities worldwide. Add another 100 million points of interest
+extracted from billions of webpages, and the problem becomes quite difficult.
+
+Two decades of Perl coding, starting in 2005, and this problem is (mostly)
+solved at Geolytica.
+
+---
 
 ![Geolytical logo](/images/geolytica-powered-by-perl/Geolyticacomlogo.png "Geolytica logo")
 
 ## Perl at Geolytica
 
-Geolytica is no longer a one person company, but Perl software I wrote decades
-ago is still powering mission critical processes and new Perl code is being
-added continuously on top of the old.
+At Geolytica, we harness Perl to manage and enhance vast geo-location datasets
+and build the application logic of the geocoding engines powering
+[geocoder.ca](https://geocoder.ca) and [geocode.xyz](https://geocode.xyz).
 
-The amazing thing about Perl is that it all works together despite the fact
-that various pieces of Perl code were written for vastly different versions of
-Perl.
+### Data Cleanup and Enhancement
 
-Unlike other languages we've also used over the years, upgrading the version of
-Perl on our system has not caused a single line of code to break, no matter how
-or when it was written.
+We continuously update and enhance our location entities database, because
+ground truth changes - at the speed of life. One standout example is our work
+with OpenStreetMap's POI data. A year ago, we utilized an in-house AI tool,
+(let's call it "PerlGPT,") to refine this dataset, correcting inconsistencies
+and enhancing data quality. The results were significant enough to share with
+the community at [Free POI Data](https://poidata.xyz/odbl).
 
-And not just for simple scripting stuff. Perl powers our spiders, parsing
-systems, and a myriad of AI processes thrown in to achieve greater automation.
-Exactly one year ago we used our in-house (let's call it PerlGPT) to enhance
-and cleanup the Openstreetmap POI data base and published the results here:
-[poidata.xyz](https://poidata.xyz/odbl)
+### Perl's Versatility and Stability
 
-Data cleanup and enhancement is a very tough problem, and Perl is the right
-tool for the job. It gets the job done quickly, and effectively.
+The beauty of Perl lies in its backward compatibility. Despite our codebase
+spanning over two decades, upgrading Perl across versions has never broken our
+code. In contrast, with other languages, we've observed issues like API changes
+causing extensive refactoring or even rewrites. Perl's design allows for
+seamless integration of old and new code, which is vital for our specific
+needs.
 
-## Final thoughts
+### Practical Implementation
 
-The best programming language for any job is the one you are most comfortable
-with - in my case Perl.
+At Geolytica, tasks like parsing location entities from text involve complex
+string manipulations. As shown in the examples above, these challenges would be
+difficult in any programming language, but Perl makes them easier than other
+options.
+
+---
+
+## Final Thoughts
+
+The best programming language for any job is the one that makes hard problems
+easy and impossible ones possible. For Geolytica, that language is Perl.
+
+---
+
+## About the Author
+
+**Ervin Ruci** has been immersed in Perl since 1998, initially building student
+information systems at Mount Allison University, then registry systems for CIRA
+from 2000 to 2005. In 2005, he became a location-independent entrepreneur,
+founding [Geolytica](https://geolytica.com) to tackle the location intelligence
+problem.
