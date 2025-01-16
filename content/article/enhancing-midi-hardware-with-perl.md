@@ -130,10 +130,10 @@ Let's add some methods for sending MIDI events:
         $midi_out->send_event( $event->@* );
     }
 
-    method delay_send( $dt, $event ) {
+    method delay_send( $delay_time, $event ) {
         $loop->add(
             IO::Async::Timer::Countdown->new(
-                delay => $dt,
+                delay => $delay_time,
                 on_expire => sub { $self->send( $event ) }
             )->start
         )
@@ -415,10 +415,10 @@ sub pedal_tone( $mf, $event ) {
 
     $mf->send( [ $ev, $channel, shift @notes, $vel ] );
 
-    my $dt = 0;
+    my $delay_time = 0;
     for my $note ( @notes ) {
-        $dt += STRUM_DELAY;
-        $mf->delay_send( $dt, [ $ev, $channel, $note, $vel ] );
+        $delay_time += STRUM_DELAY;
+        $mf->delay_send( $delay_time, [ $ev, $channel, $note, $vel ] );
     }
     true;
 }
