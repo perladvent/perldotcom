@@ -38,8 +38,8 @@ interval of the played note was added resulting in a three note chord for a
 single played note. This simple setup resulted in some dramatic progressions.
 
 There are, of course, ways to achieve this effect in other DAW software. I was
-able to use Patcher within FL Studio to achieve a similar result with two
-instances of VFX Key Mapper:
+able to use [FL Studio](https://www.image-line.com/fl-studio/)'s [Patcher](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/Patcher.htm)
+to achieve a similar result with two instances of [VFX Key Mapper](https://www.image-line.com/fl-studio-learning/fl-studio-online-manual/html/plugins/VFX%20Key%20Mapper.htm):
 
 ![FL Studio Patcher with MIDI input routed to FLEX and two instances of VFX Key Mapper](/images/enhancing-midi-hardware-with-perl/pedal_tone_fl.png)
 
@@ -51,8 +51,8 @@ this (I'm playing just one or two keys at a time here):
 {{< audio-with-link basename="/images/enhancing-midi-hardware-with-perl/Patcher_pedal_tone" >}}
 
 A similar method can be used to patch this in other modular environments. In
-VCV Rack, a pair of quantizers provide the fifth-note offset and pedal tone
-signals.
+[VCV Rack](https://vcvrack.com/Rack), a pair of quantizers provide the
+fifth-note offset and pedal tone signals.
 The original note, the fifth, and the pedal tone are merged and sent to the
 Voltage Controlled Oscillator (VCO).
 The gate signal from the keyboard triggers an envelope to open the
