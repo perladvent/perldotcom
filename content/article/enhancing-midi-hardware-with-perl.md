@@ -504,6 +504,7 @@ next steps might be to add "humanising" random fluctuations to sequences, or
 perhaps extending the system to combine the inputs of multiple hardware devices into
 one software-defined device with advanced and complex facilities. If your
 device has a DAW mode, you may be able to implement visual feedback for the
-actions and state of the virtual device. You could also coerce non-MIDI devices
-into sending MIDI messages, e.g. [Gamepads](https://metacpan.org/pod/Raylib::FFI).
+actions and state of the virtual device. You could also coerce non-MIDI devices,
+e.g. [Gamepads](https://metacpan.org/pod/Raylib::FFI),
+into sending MIDI messages.
 
