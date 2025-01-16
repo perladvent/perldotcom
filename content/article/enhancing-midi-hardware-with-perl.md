@@ -280,7 +280,7 @@ $ ./midi-filter.pl ^oxy
 
 Rather than specify a fully qualified device name, we can pass in a regex which
 should match any device whose name starts with "oxy" - there is only one match
-on my system.
+on my system, the Oxygen Pro.
 
 This filter is functionally equivalent to the FL Studio Patcher patch from
 earlier, with the added benefit of being DAW-agnostic. If recording a sequence
