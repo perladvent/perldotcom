@@ -28,10 +28,12 @@ the principle should apply to any device.
 
 ## Feature 1 : Pedal Tone
 
-A recent video by [Polarity Music opened with some exploration of using a pedal tone](https://youtu.be/Cu1FKGp6pKQ)
-in Bitwig to compose progressions. A pedal tone (or pedal note, or pedal point)
+A pedal tone (or pedal note, or pedal point)
 is a sustained single note, over which other potentially dissonant parts are
-played. In this case, the pedal tone was gated by the keyboard, and the fifth
+played.
+A recent video by [Polarity Music opened with some exploration of using a pedal tone](https://youtu.be/Cu1FKGp6pKQ)
+in [Bitwig Studio](https://www.bitwig.com/overview/) to compose progressions.
+In this case, the pedal tone was gated by the keyboard, and the fifth
 interval of the played note was added resulting in a three note chord for a
 single played note. This simple setup resulted in some dramatic progressions.
 
