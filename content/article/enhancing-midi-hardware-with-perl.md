@@ -12,9 +12,9 @@
 ## Introduction
 
 These days, even modestly priced MIDI hardware comes stuffed with features.
-You should expect a budget device to provide at least some of clock, sequencer,
+These fatures may include a clock, sequencer,
 arpeggiator, chord voicing, Digital Audio Workstation (DAW) integration, and
-transport control features.
+transport control.
 
 Fitting all
 this into a small device's form factor may result in some amount of compromise
