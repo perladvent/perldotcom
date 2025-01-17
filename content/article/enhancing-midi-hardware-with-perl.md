@@ -282,6 +282,9 @@ Rather than specify a fully qualified device name, we can pass in a regex which
 should match any device whose name starts with "oxy" - there is only one match
 on my system, the Oxygen Pro.
 
+The device "RtMidi Output Client:Mister Fancy Pants" or "loopMIDI", depending
+on your platform, can now be opened in the DAW to receive played notes routed
+through the pedal tone filter.
 This filter is functionally equivalent to the FL Studio Patcher patch from
 earlier, with the added benefit of being DAW-agnostic. If recording a sequence
 from this setup, all notes will be shown in the piano roll.
