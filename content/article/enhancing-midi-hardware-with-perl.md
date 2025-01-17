@@ -314,17 +314,12 @@ stashing the corresponding channel should be enough to allow other callbacks to
 route events appropriately:
 
 ```perl
-my $note_channel_map = {
-    40 => 0,
-    41 => 1,
-    ...
-    47 => 15,
-};
-
 sub set_channel( $mf, $event ) {
     my ( $ev, $channel, $note, $vel ) = $event->@*;
     return false unless $channel == 9;
-    $mf->stash( channel => $note_channel_map->{ $note } );
+
+    my $new_channel = $note - 36;
+    $mf->stash( channel => $new_channel );
     true;
 }
 
@@ -337,7 +332,8 @@ $mf->add_filter( note_off => \&pedal_tone );
 If the event channel sent to `set_channel` is not 10 (or rather 9, as we are
 working with zero-indexed values) we return false, allowing the filter to
 fall through to the next callback. Otherwise, the channel is stashed and we
-stop processing further callbacks.
+stop processing further callbacks. As the pad notes are numbered 36 to 51,
+the channel can be derived by subtracting 36 from the incoming note.
 
 This callback needs to be applied to both "note on" and "note off" events —
 remember, there is an existing "note off" callback which will erroneously
