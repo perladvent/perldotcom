@@ -15,7 +15,7 @@
 
 
 -   To get the last element in a list or array, use `$array[-1]` instead of `$array[$#array]`. The former works on both lists and arrays, but the latter does not.
--   Remember that `substr`, `index`, `rindex`, and `splice` also accept negative subscripts to count back from the end.
+-   Remember that `substr` and `splice` also accept negative subscripts to count back from the end.
 
             split(@array, -2);   # pop twice
 
