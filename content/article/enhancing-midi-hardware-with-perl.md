@@ -1,7 +1,7 @@
 {
     "title"       : "Enhancing your MIDI devices with Perl",
     "authors"     : ["john-barrett"],
-    "date"        : "2025-01-30",
+    "date"        : "2025-01-29",
     "tags"        : ["midi","music"],
     "draft"       : true,
     "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
