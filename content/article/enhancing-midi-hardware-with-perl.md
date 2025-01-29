@@ -481,6 +481,161 @@ in this post to have a similar profile.
 
 There is a [gist with the complete source of the MidiFilter project](https://gist.github.com/jbarrett/ff611962349a1ce03f49fd9fdfc92119).
 
+It's also included below:
+
+```perl
+#!/usr/bin/env perl
+
+# There is currently an issue with native callbacks and threaded perls, which leads to a crash.
+# As of Jan 2025, all the available pre-built perls I am aware of for Windows are threaded.
+# I was able to work around this by building an unthreaded perl with cygwin / perlbrew... but
+# you might want to just try this on Linux or Mac instead :)
+
+use v5.40;
+use experimental qw/ class /;
+
+class MidiFilter {
+    use IO::Async::Loop;
+    use IO::Async::Channel;
+    use IO::Async::Routine;
+    use IO::Async::Timer::Countdown;
+    use Future::AsyncAwait;
+    use MIDI::RtMidi::FFI::Device;
+
+    field $loop       = IO::Async::Loop->new;
+    field $midi_ch    = IO::Async::Channel->new;
+    field $midi_out   = RtMidiOut->new;
+    field $input_name = $ARGV[0];
+    field $filters    = {};
+    field $stash      = {};
+
+    method _init_out {
+        return $midi_out->open_port_by_name( qr/loopmidi/i )
+            if ( grep { $^O eq $_ } qw/ MSWin32 cygwin / );
+
+        $midi_out->open_virtual_port( 'Mister Fancy Pants' );
+    }
+
+    method add_filter( $event_type, $action ) {
+        push $filters->{ $event_type }->@*, $action;
+    }
+
+    method stash( $key, $value = undef ) {
+        $stash->{ $key } = $value if defined $value;
+        $stash->{ $key };
+    }
+
+    method send( $event ) {
+        $midi_out->send_event( $event->@* );
+    }
+
+    method delay_send( $dt, $event ) {
+        $loop->add(
+            IO::Async::Timer::Countdown->new(
+                delay => $dt,
+                on_expire => sub { $self->send( $event ) }
+            )->start
+        )
+    }
+
+    method _filter_and_forward( $event ) {
+        my $event_filters = $filters->{ $event->[0] } // [];
+
+        for my $filter ( $event_filters->@* ) {
+            return if $filter->( $self, $event );
+        }
+
+        $self->send( $event );
+    }
+
+    async method _process_midi_events {
+        while ( my $event = await $midi_ch->recv ) {
+            $self->_filter_and_forward( $event );
+        }
+    }
+
+    method go {
+        my $midi_rtn = IO::Async::Routine->new(
+            channels_out => [ $midi_ch ],
+            code => sub {
+                my $midi_in = RtMidiIn->new;
+                $midi_in->open_port_by_name( qr/$input_name/i ) ||
+                    die "Unable to open input device";
+
+                $midi_in->set_callback_decoded(
+                    sub( $ts, $msg, $event, $data ) {
+                        $midi_ch->send( $event );
+                    }
+                );
+
+                sleep;
+            }
+        );
+        $loop->add( $midi_rtn );
+        $loop->await( $self->_process_midi_events );
+    }
+
+    ADJUST {
+        $self->_init_out;
+    }
+}
+
+use constant PEDAL => 55; # G below middle C
+use constant STRUM_DELAY => 0.05; # seconds
+
+sub pedal_notes( $note ) {
+    ( PEDAL, $note, $note + 7 );
+}
+
+sub pedal_tone( $mf, $event ) {
+    my ( $ev, $channel, $note, $vel ) = $event->@*;
+    $channel = $mf->stash( 'channel' ) // $channel;
+    my @notes = pedal_notes( $note );
+
+    $mf->send( [ $ev, $channel, shift @notes, $vel ] );
+
+    my $dt = 0;
+    for my $note ( @notes ) {
+        $dt += STRUM_DELAY;
+        $mf->delay_send( $dt, [ $ev, $channel, $note, $vel ] );
+    }
+    true;
+}
+
+sub set_channel( $mf, $event ) {
+    my ( $ev, $channel, $note, $vel ) = $event->@*;
+    return false unless $channel == 9;
+
+    my $new_channel = $note - 36;
+    $mf->stash( channel => $new_channel );
+    true;
+}
+
+sub route_to_channel( $mf, $event ) {
+    my ( $ev, $channel, @params ) = $event->@*;
+    $channel = $mf->stash( 'channel' ) // $channel;
+    $mf->send( [ $ev, $channel, @params ] );
+    true;
+}
+
+my $mf = MidiFilter->new;
+
+$mf->add_filter( note_on  => \&set_channel );
+$mf->add_filter( note_on  => \&pedal_tone );
+$mf->add_filter( note_off => \&set_channel );
+$mf->add_filter( note_off => \&pedal_tone );
+
+$mf->add_filter( pitch_wheel_change  => \&route_to_channel );
+$mf->add_filter( control_change      => \&route_to_channel );
+$mf->add_filter( channel_after_touch => \&route_to_channel );
+
+$mf->go;
+
+BEGIN {
+    $ENV{PERL_FUTURE_DEBUG} = true;
+}
+```
+
 ## Conclusion
 
 After describing some of the shortcomings of a given MIDI controller, and an
