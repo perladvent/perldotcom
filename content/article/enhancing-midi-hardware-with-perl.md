@@ -16,7 +16,7 @@
 ## Introduction
 
 These days, even modestly priced MIDI hardware comes stuffed with features.
-These fatures may include a clock, sequencer,
+These features may include a clock, sequencer,
 arpeggiator, chord voicing, Digital Audio Workstation (DAW) integration, and
 transport control.
 
@@ -179,7 +179,7 @@ details the [lexical method feature](https://metacpan.org/pod/Object::Pad#method
 which allows for block scoped methods unavailable outside the class. The
 underscore technique will serve us for now.
 
-The `_process_midi_events` method awaits receving a message, passing each
+The `_process_midi_events` method awaits receiving a message, passing each
 message received to `_filter_and_forward`. The `_filter_and_forward` method
 retrieves callbacks for the current event type (The first element of the `$event` array)
 and delegates the event to the available callbacks. If no callbacks are
