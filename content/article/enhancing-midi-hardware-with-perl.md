@@ -3,11 +3,15 @@
     "authors"     : ["john-barrett"],
     "date"        : "2025-01-29",
     "tags"        : ["midi","music"],
-    "draft"       : true,
+    "draft"       : false,
     "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
     "description" : "Add functions and features to MIDI devices by routing them via Perl",
-    "categories"  : "data"
+    "categories"  : "data",
+    "canonicalURL": "https://fuzzix.org/enhancing-midi-hardware-with-perl"
 }
+
+*This article was originally published at
+[fuzzix.org](https://fuzzix.org/enhancing-midi-hardware-with-perl).*
 
 ## Introduction
 
