@@ -94,6 +94,9 @@ devices, and store some state to influence decision-making within filter
 callback functions. Let's start with those:
 
 ```perl
+use v5.40;
+use experimental qw/ class /;
+
 class MidiFilter {
     field $loop       = IO::Async::Loop->new;
     field $midi_ch    = IO::Async::Channel->new;
