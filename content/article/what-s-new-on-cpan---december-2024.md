@@ -1,7 +1,7 @@
 {
    "categories" : "cpan",
    "title" : "What's new on CPAN - December 2024",
-   "date" : "2025-02-02T00:42:58",
+   "date" : "2025-02-02T12:42:58",
    "image" : "/images/whats-new-on-cpan/green.svg",
    "authors" : [
       "mathew-korica"
