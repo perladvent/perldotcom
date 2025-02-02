@@ -1,0 +1,126 @@
+#!/usr/bin/env perl
+
+use 5.16.3;
+use autodie;
+use warnings;
+use Time::HiRes 'sleep';
+use Time::Piece;
+use Time::Seconds;
+use MetaCPAN::Client;
+use Data::Dump qw/dump/;
+use Getopt::Long 'GetOptions';
+use JSON;
+
+sub print_usage {
+    say STDERR "\nmake-cpan-article --start YYYY-MM-DD --end YYYY-MM-DD --dir DIRECTORY\n";
+    exit 0;
+}
+
+GetOptions(
+  'start=s' => \my $start,
+  'end=s'   => \my $end,
+  'dir=s'   => \my $dir,
+  'debug'   => \my $debug,
+) or die "error parsing options $@\n";
+
+print_usage() unless 2 == grep { $_ && /^\d\d\d\d-\d\d-\d\d$/ } $start, $end;
+
+my %categories = (
+  'APIs & Apps'       => [],
+  'Config & Devops'   => [],
+  'Data'              => [],
+  'Development & Version Control' => [],
+  'Hardware'          => [],
+  'Language & International' => [],
+  'Science & Mathematics' => [],
+  'Web' => [],
+  'Other' => [],
+);
+$dir ||= '../content/article';
+my $datetime = Time::Piece->strptime($start, '%Y-%m-%d');
+my $now = gmtime;
+my $article_file = sprintf("$dir/what-s-new-on-cpan---%s-%s.md", lc($datetime->fullmonth), $datetime->year);
+my $json = JSON->new;
+
+my $mc = MetaCPAN::Client->new;
+my $release_set = $mc->all(
+    'releases',
+    {
+        es_filter => {
+            and => [
+                { range => { date => { gte => $start . 'T00:00:00', lte => $end . 'T23:59:59' } } },
+                { term =>  { first => 1 } }
+            ]
+        },
+    }
+);
+
+while (my $release = $release_set->next) { #https://metacpan.org/pod/MetaCPAN::Client::Release
+    #say $release_set->total;
+    #$release->main_module, $release->version, $release->abstract, $release->author;
+    my %module;
+    # format the module description
+    $module{mcpan_link} = sprintf('[%s](https://metacpan.org/pod/%s) (%s)', $release->main_module, $release->main_module, $release->author);
+    my @descriptions = (
+        sprintf('%s with %s', $release->abstract, $module{mcpan_link}),
+        sprintf('%s using %s', $release->abstract, $module{mcpan_link}),
+        sprintf('%s %s', $module{mcpan_link}, $release->abstract),
+        sprintf('%s can %s', $module{mcpan_link}, $release->abstract),
+    );
+    $module{description} = $descriptions[ int rand @descriptions ];
+    local $_ = $release->main_module;
+    if (/^(?:API|App|WebService|Net::)/) { #XXX: ::Webhook
+        $module{category} = 'APIs & Apps';
+    }
+    elsif (/^(?:Alien|Badge|Bot|CPAN|Config|Shell|MetaCPAN|Log|Win32)/) {
+        $module{category} = 'Config & Devops';
+    }
+    elsif (/^(?:Data|DBI|DBIx|CSV|HTML|DBD|Hash|Array|File|Sereal|XML)/) {
+        $module{category} = 'Data';
+    }
+    elsif (/^(?:AnyEvent|Devel|Dist|List|POE|MooseX|Scalar|Test|Tie|Git|MooX|Date)/) {
+        $module{category} = 'Development & Version Control';
+    }
+    elsif (/^(?:Device)/) {
+        $module{category} = 'Hardware';
+    }
+    elsif (/^(?:Text|Lingua|MarpaX|Pod|Locale)/) {
+        $module{category} = 'Language & International';
+    }
+    elsif (/^(?:Algorithm|Bio|Compress|Crypt|Digest|Math|Astro)/) {
+        $module{category} = 'Science & Mathematics';
+    }
+    elsif (/^(?:Catalyst|Mojo|Dancer|CGI|WWW|FCGI|Plack|Email|LWP)/) {
+        $module{category} = 'Web';
+    }
+    else {
+        $module{category} = 'Other';
+    }
+    my @categories;
+    push @{$categories{$module{category}}}, \%module;
+}
+
+#Output to file
+open my $md_fh, '>:utf8', $article_file;
+my $metadata = {
+    title       => sprintf('What\'s new on CPAN - %s %s', $datetime->fullmonth, $datetime->year),
+    description => sprintf('A curated look at %s\'s new CPAN uploads', $datetime->fullmonth),
+    authors     => ['mathew-korica'],
+    tags        => ['new'],
+    categories  => 'cpan',
+    draft       => JSON::false,
+    date        => $now->datetime,
+    image       => "/images/whats-new-on-cpan/green.svg",
+    thumbnail   => "/images/whats-new-on-cpan/green.svg",
+};
+say $md_fh $json->pretty->encode($metadata);
+say $md_fh "\nWelcome to \"What's new on CPAN\", a curated look at last month's new CPAN uploads for your reading and programming pleasure. Enjoy!\n";
+for (sort keys %categories) {
+    next unless scalar @{$categories{$_}};
+    my $underscore = '-' x length $_;
+    say $md_fh "$_\n$underscore";
+    for (@{$categories{$_}}) {
+        say $md_fh "* $_->{description}";
+    }
+    say $md_fh "\n";
+}
