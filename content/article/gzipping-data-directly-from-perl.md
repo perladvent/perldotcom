@@ -99,7 +99,7 @@ The I/O layer is faster than the module, but the PerlIO documentation notes that
 I can also directly write gzipped data to a file. It's similar my previous examples with the filehandles moved around. This one uses the I/O layer:
 
 ```perl
-open my $fh, '>:gzip' $filename 
+open my $fh, '>:gzip', $filename 
     or die "Could not write to $filename: $!";
 
 while(  ) {
