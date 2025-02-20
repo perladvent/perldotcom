@@ -1,5 +1,5 @@
 {
-   "description" : "A curated look at January's new CPAN uploads",
+   "description": "A curated selection of new CPAN uploads including regex-powered which command, mocking tools, and domain parsing utilities.",
    "date" : "2025-02-20",
    "title" : "What's new on CPAN - January 2025",
    "authors" : [
