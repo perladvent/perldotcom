@@ -2,11 +2,11 @@
    "categories" : "cpan",
    "title" : "What's new on CPAN - December 2024",
    "date" : "2025-02-02T12:42:58",
-   "image" : "/images/whats-new-on-cpan/green.svg",
+   "image" : "/images/whats-new-on-cpan/black.svg",
    "authors" : [
       "mathew-korica"
    ],
-   "thumbnail" : "/images/whats-new-on-cpan/green.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/black.svg",
    "description" : "A curated look at December's new CPAN uploads",
    "tags" : [
       "new"

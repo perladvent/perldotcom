@@ -1,10 +1,10 @@
 {
    "title" : "What's new on CPAN - September 2024",
-   "image" : "/images/whats-new-on-cpan/red.svg",
+   "image" : "/images/whats-new-on-cpan/blue.svg",
    "draft" : false,
    "description" : "A curated look at September's new CPAN uploads",
    "categories" : "cpan",
-   "thumbnail" : "/images/whats-new-on-cpan/red.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/blue.svg",
    "date" : "2024-10-14T02:07:42",
    "tags" : [
       "new"
