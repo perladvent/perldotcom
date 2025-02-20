@@ -1,5 +1,5 @@
 {
-   "image" : "/images/whats-new-on-cpan/green.svg",
+   "image" : "/images/whats-new-on-cpan/gray.svg",
    "draft" : false,
    "description" : "A curated look at July's new CPAN uploads",
    "date" : "2024-08-26T22:00:00",
@@ -7,7 +7,7 @@
       "mathew-korica"
    ],
    "categories" : "cpan",
-   "thumbnail" : "/images/whats-new-on-cpan/green.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/gray.svg",
    "tags" : [
       "new"
    ],
