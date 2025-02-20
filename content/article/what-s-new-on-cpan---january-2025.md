@@ -1,6 +1,6 @@
 {
    "description" : "A curated look at January's new CPAN uploads",
-   "date" : "2025-02-18T22:01:46",
+   "date" : "2025-02-20",
    "title" : "What's new on CPAN - January 2025",
    "authors" : [
       "mathew-korica"
@@ -20,7 +20,7 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 APIs & Apps
 -----------
 * [App::rhich](https://metacpan.org/pod/App::rhich) (BRIANDFOY) is like the `which` Unix command, but takes a regex as argument
-* Extract the URL's in a web page with [App::grepurl](https://metacpan.org/pod/App::grepurl) (BRIANDFOY)
+* Extract the URLs in a web page with [App::grepurl](https://metacpan.org/pod/App::grepurl) (BRIANDFOY)
 * Control a [VirtualBox](https://www.virtualbox.org) with [App::VirtualBoxUtils](https://metacpan.org/pod/App::VirtualBoxUtils) (PERLANCAR)
 * Monitor the progress of your module through the PAUSE process using [PAUSEx::Log](https://metacpan.org/pod/PAUSEx::Log) (BDFOY)
 * Authenticate over the [OpenID Connect](https://openid.net/developers/how-connect-works) protocol with [OIDC::Client](https://metacpan.org/pod/OIDC::Client) (SMOURLHOU)
@@ -29,7 +29,7 @@ APIs & Apps
 
 Config & Devops
 ---------------
-* Read configuation files from various sources with [Advanced::Config](https://metacpan.org/pod/Advanced::Config) (CLEACH)
+* Read configuration files from various sources with [Advanced::Config](https://metacpan.org/pod/Advanced::Config) (CLEACH)
 * [Getopt::EX::Config](https://metacpan.org/pod/Getopt::EX::Config) (UTASHIRO) provides another way to define configuration information for [Getopt::EX](https://metacpan.org/pod/Getopt::EX) modules
 
 
@@ -64,5 +64,3 @@ Other
 * [Colouring::In::XS](https://metacpan.org/pod/Colouring::In::XS) (LNATION) implements [Colouring::In](https://metacpan.org/pod/Colouring::In) color conversion routines in C
 * Decode aviation-related weather code strings into English using [Geo::METARTAF](https://metacpan.org/pod/Geo::METARTAF) (PCARTER)
 * Map IP addresses to country and city names with [Geo::Location::IP](https://metacpan.org/pod/Geo::Location::IP) (VOEGELAS), an object-oriented wrapper for [IP::Geolocation::MMDB](https://metacpan.org/pod/IP::Geolocation::MMDB)
-
-
