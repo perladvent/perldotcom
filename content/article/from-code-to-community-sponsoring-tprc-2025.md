@@ -5,13 +5,11 @@
     "date"        : "2025-02-02T17:27:34",
     "tags"        : [],
     "draft"       : false,
-    "image"       : "/images/from-code-to-community-sponsoring-tprc-2025/crowd-surf.jpg",
-    "thumbnail"   : "/images/from-code-to-community-sponsoring-tprc-2025/crowd-surf-thumb.jpg",
+    "image"       : "/images/from-code-to-community-sponsoring-tprc-2025/tib-at-lpw.jpg",
+    "thumbnail"   : "/images/from-code-to-community-sponsoring-tprc-2025/tib-at-lpw-thumb.jpg",
     "description" : "Support the Perl and Raku communities by sponsoring our 2025 conference. Help foster open source development while connecting with talented developers.",
     "categories"  : "community"
   }
-
-*"Do Not Crowd Surf" by secretlondon123 is licensed under CC BY-SA 2.0. To view a copy of this license, visit <https://creativecommons.org/licenses/by-sa/2.0/?ref=openverse>.*
 
 The North American Perl and Raku Conference will soon be upon us, and that
 means now is a great time to show your support for this very special event.
