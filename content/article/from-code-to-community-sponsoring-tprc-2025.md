@@ -2,7 +2,7 @@
   {
     "title"       : "From Code to Community: Sponsoring TPRC 2025",
     "authors"     : ["olaf-alders"],
-    "date"        : "2025-02-02T17:27:34",
+    "date"        : "2025-03-02T17:27:34",
     "tags"        : [],
     "draft"       : false,
     "image"       : "/images/from-code-to-community-sponsoring-tprc-2025/tib-at-lpw.jpg",
