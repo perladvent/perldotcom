@@ -19,7 +19,7 @@ for your organization to support the conference.
 ### About the Conference
 
 [The Perl and Raku Conference
-2025](http://localhost:1313/article/get-ready-for-the-2025-perl-and-raku-conference/)
+2025](https://www.perl.com/article/get-ready-for-the-2025-perl-and-raku-conference/)
 is a community-led gathering of developers, enthusiasts, and industry
 professionals. Taking place June 27-29, 2025, in Greenville/Spartanburg, South
 Carolina, the conference features technical talks, training sessions, and
