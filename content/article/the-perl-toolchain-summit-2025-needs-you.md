@@ -83,6 +83,7 @@ following year, as is our tradition since 2011.
 
 * [CosmoShop](https://www.cosmoshop.de/)
 * [Datensegler](https://datensegler.at/)
+* [SUSE](https://www.suse.com/)
 
 #### Bronze sponsors
 
@@ -106,7 +107,6 @@ wouldn't be possible without them.
 
 * [Grant Street Group](https://www.grantstreet.com/)
 * [Fastmail](https://www.fastmail.com/)
-* [SUSE](https://www.suse.com/)
 * [shift2](https://en.shift2.nl/)
 * [Zoopla](https://www.zoopla.co.uk/)
 * [Oleeo](https://www.oleeo.com/)
