@@ -160,8 +160,6 @@ Methods for filtering incoming MIDI events are as follows:
         for my $filter ( $event_filters->@* ) {
             return if $filter->( $self, $event );
         }
-
-        $self->send( $event );
     }
 
     async method _process_midi_events {
@@ -547,8 +545,6 @@ class MidiFilter {
         for my $filter ( $event_filters->@* ) {
             return if $filter->( $self, $event );
         }
-
-        $self->send( $event );
     }
 
     async method _process_midi_events {
