@@ -84,6 +84,7 @@ following year, as is our tradition since 2011.
 * [CosmoShop](https://www.cosmoshop.de/)
 * [Datensegler](https://datensegler.at/)
 * [SUSE](https://www.suse.com/)
+* [OpenCage](https://opencagedata.com)
 
 #### Bronze sponsors
 
