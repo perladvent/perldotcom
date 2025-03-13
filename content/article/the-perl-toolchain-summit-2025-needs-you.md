@@ -87,9 +87,9 @@ following year, as is our tradition since 2011.
 
 #### Bronze sponsors
 
-* [Simplelists Ltd](https://www.simplelists.com/),
-* [Ctrl O Ltd](https://www.ctrlo.com/),
-* one invidual who wishes to remain anonymous
+* [Simplelists Ltd](https://www.simplelists.com/)
+* [Ctrl O Ltd](https://www.ctrlo.com/)
+* one individual who wishes to remain anonymous
 * [Findus Internet-OPAC](https://www.findus-internet-opac.de/)
 
 ### In-Kind Sponsors
