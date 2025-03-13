@@ -58,6 +58,67 @@ target, as well as the amount we expect to pay directly to various
 suppliers. The rest is covered by in-kind sponsors or the attendees
 themslves.
 
+## What will *this* PTS achieve?
+
+In this section, we'll present two important projects some of the
+participants intend to work on this year.
+
+### CPAN Testers
+
+The [CPAN Testers](http://www.cpantesters.org/) is a system that collects
+all test reports sent by individual testers for all modules published on
+CPAN, on a wide collection of systems. This infrastructure has collected
+millions of test reports over the years, and provides an invaluable
+service to the community.
+
+It makes those reports available to the module authors so that they can
+figure out failures on systems they don't have access to, and
+[other](https://metacpan.org/) [services](http://matrix.cpantesters.org/)
+depend on it to provide test-related data. Perl core development also
+depends on it, via a system we call
+[Blead Breaks CPAN](https://github.com/Perl/perl5/issues?q=is%3Aissue%20%20label%3ABBC%20)
+where development versions of Perl are used to test CPAN distributions,
+to ensure backwards compatibility.
+
+Every company that depends on even a single CPAN module benefits from
+CPAN Testers.
+
+The service has been running in a "degraded state" (as indicated on its
+home page) for several months now. One of the issues is that it has had
+a single person maintaining it for several years.
+
+That person, as well as several volunteers willing to help them, will
+be attending the summit. The goal is not to just work together for 4
+days to bring things back up, but to come up with a long term solution,
+and increase the size of the maintainer pool.
+
+These volunteers are in the US, Brazil and France, to name a few.
+
+### Secure PAUSE uploads
+
+[PAUSE](https://pause.perl.org/) is the Perl Authors Upload SErvice. This
+is where CPAN authors uploads the tarballs for the distributions that
+end up on CPAN. That service took its first upload on August 26, 1995.
+
+Accounts and uploads are only protected by passwords. As some people
+move away from Perl and CPAN, they stop using their accounts, making
+them targets for attackers. This is a very real supply chain attack
+vector. The PAUSE admins are very vigilant, but quickly reacting to
+issues is not a sustainable solution.
+
+One of the topic that keeps coming up is protecting the accounts using
+SSH keys or Two Factor Authentication. This is not a trivial task, which
+involves dealing with very legacy code. Other avenues of improvement
+involve the expiration of accounts or permissions.
+
+Over the years, in addition to fixing bugs and adding features, the
+maintainers attending the PTS have been able to port the server to a new
+web stack, made it possible to build the entire service on Docker for
+isolated testing, etc. The topic of 2FA came up in the past, but so far
+hasn't been fully tackled yet. This will be on the agenda this year.
+
+The PAUSE maintainers come from Austria, the US, and Japan.
+
 ## Our sponsors
 
 Here's our current list of confirmed sponsors for the Perl Toolchain
