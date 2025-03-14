@@ -73,6 +73,8 @@ And I have started the `fluidsynth` program with:
 
     fluidsynth -a coreaudio -m coremidi -g 2.0 ~/Music/soundfont/FluidR3_GM.sf2
 
+Currently, I'm on my Mac, so this command tells `fluidsynth` that I'm using `coreaudio` for the audio driver, `coremidi` for the midi driver, `2.0` for the gain (because rendered MIDI playback is quiet), and finally my soundfont file.
+
 So what if I don't want to write filters?
 --------------------------------------
 
@@ -101,8 +103,8 @@ $rtc->run;
 
 This "pedal_tone" routine is the same as the previous, above.
 
-What if I want to create my own filters?
-----------------------------------------
+What if I do want to create my own filters?
+-------------------------------------------
 
 If you would like to craft your own musical or control filters, use [MIDI::RtController::Filter::Math]({{< mcpan "MIDI::RtController::Filter::Math" >}}) for a spring-board, point-of-reference example. This is a single filter module that implements a "stair-step" filter. Here is the example of that in action:
 
@@ -130,15 +132,20 @@ $rtc->add_filter('stair', [qw(note_on note_off)], $rtf->curry::stair_step);
 $rtc->run;
 ```
 
-Ok, let's look at how that is made.
+And here's what that sounds like:
+
+{{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-2.mp3" type="audio/mpeg" >}}
+
+Ok, let's look at how that is made
+----------------------------------
 
 First-up is that [MIDI::RtController::Filter::Math]() is a [Moo]() module, but any OO will do the job. Second is that attributes are defined for all the parameters our filter routine(s) will need, like `feedback` for instance:
 
 ```perl
 has feedback => (
-    is      => 'rw', # changable on-the-fly
-    isa     => Num,  # as defined by a Types::* module
-    default => sub { 1 },
+    is      => 'rw',      # changable on-the-fly
+    isa     => Num,       # as defined by a Types::* module
+    default => sub { 1 }, # single echo default
 );
 ```
 
@@ -179,10 +186,6 @@ sub _stair_step_notes ($self, $note) {
     return @notes;
 }
 ```
-
-And here's what that sounds like:
-
-{{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-2.mp3" type="audio/mpeg" >}}
 
 ~
 
