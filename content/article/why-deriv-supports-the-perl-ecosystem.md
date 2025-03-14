@@ -2,7 +2,7 @@
   {
     "title"       : "Why Deriv Supports the Perl Ecosystem",
     "authors"     : ["chris-horn"],
-    "date"        : "2025-03-02T14:35:06",
+    "date"        : "2025-03-14T06:00:00",
     "tags"        : [],
     "draft"       : false,
     "image"       : "/images/deriv/deriv-25-resized.png",
