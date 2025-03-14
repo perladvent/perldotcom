@@ -7,7 +7,7 @@
     "draft"       : false,
     "image"       : "/images/deriv/deriv-25-resized.png",
     "thumbnail"   : "/images/deriv/deriv-25-resized.png",
-    "description" : "",
+    "description" : "Deriv, an online trading company processing millions of transactions daily, continues to support the Perl ecosystem after 25 years of utilizing the language in their operations. Their core systems still run on Perl's stable architecture, while they actively maintain support for MetaCPAN and CPAN resources that benefit developers worldwide.",
     "categories"  : "community"
   }
 
