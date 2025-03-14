@@ -43,7 +43,7 @@ different technical approaches, we actively maintain:
 
 * Support for [MetaCPAN's](https://metacpan.org/) essential developer resources
 * Participation in community-driven knowledge sharing
-* Commitment to [CPAN's](https://www.cpan.org/
+* Commitment to [CPAN's](https://www.cpan.org/) maintenance standards
 
 "Great technologies create lasting value," says Chris Horn, Head of
 Engineering. "Our support for Perl's ecosystem honours its foundational role in
