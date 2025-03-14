@@ -25,33 +25,35 @@ Also, because it can operate asynchronously, we have an [IO::Async::Loop]({{< mc
 
 The module's public interface has four methods: `add_filter`, `send_it`, `delay_send`, and `run`. So how about an example of it in action?
 
-    #!/usr/bin/env perl
-    use v5.36;
-    use Future::IO::Impl::IOAsync;
-    use MIDI::RtController;
+```perl
+#!/usr/bin/env perl
+use v5.36;
+use Future::IO::Impl::IOAsync;
+use MIDI::RtController;
 
-    my $in  = $ARGV[0] || 'oxy'; # part of the name of the MIDI controller device
-    my $out = $ARGV[1] || 'gs';  # part of the name of the MIDI output device
+my $in  = $ARGV[0] || 'oxy'; # part of the name of the MIDI controller device
+my $out = $ARGV[1] || 'gs';  # part of the name of the MIDI output device
 
-    my $rtc = MIDI::RtController->new(input => $in, output => $out);
+my $rtc = MIDI::RtController->new(input => $in, output => $out);
 
-    $rtc->add_filter('pedal', [qw(note_on note_off)], \&pedal_tone);
+$rtc->add_filter('pedal', [qw(note_on note_off)], \&pedal_tone);
 
-    $rtc->run;
+$rtc->run;
 
-    sub pedal_notes ($note) {
-        return 55, $note, $note + 7; # 55 = G below middle-C
+sub pedal_notes ($note) {
+    return 55, $note, $note + 7; # 55 = G below middle-C
+}
+sub pedal_tone ($dt, $event) {
+    my ($ev, $chan, $note, $vel) = $event->@*;
+    my @notes = pedal_notes($note);
+    my $delay_time = 0;
+    for my $n (@notes) {
+        $delay_time += $delay;
+        $rtc->delay_send($delay_time, [ $ev, $channel, $n, $vel ]);
     }
-    sub pedal_tone ($dt, $event) {
-        my ($ev, $chan, $note, $vel) = $event->@*;
-        my @notes = pedal_notes($note);
-        my $delay_time = 0;
-        for my $n (@notes) {
-            $delay_time += $delay;
-            $rtc->delay_send($delay_time, [ $ev, $channel, $n, $vel ]);
-        }
-        return 0;
-    }
+    return 0;
+}
+```
 
 And here's what that sounds like:
 
@@ -67,24 +69,26 @@ What if I don't want to write filters?
 
 You are in luck! There are currently tonal and percussion filters on [CPAN](https://metacpan.org/). As mentioned above, these are: [MIDI::RtController::Filter::Tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), and [MIDI::RtController::Filter::Drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}). Each includes example programs ([tonal](https://github.com/ology/MIDI-RtController-Filter-Tonal/blob/main/eg/tester.pl) and [drums](https://github.com/ology/MIDI-RtController-Filter-Drums/blob/main/eg/tester.pl) respectively). Here is the example of one of the simpler tonal filters:
 
-    #!/usr/bin/env perl
-    use curry;
-    use MIDI::RtController ();
-    use MIDI::RtController::Filter::Tonal ();
+```perl
+#!/usr/bin/env perl
+use curry;
+use MIDI::RtController ();
+use MIDI::RtController::Filter::Tonal ();
 
-    my $input_name  = shift || 'tempopad'; # midi controller device
-    my $output_name = shift || 'fluid';    # fluidsynth
+my $input_name  = shift || 'tempopad'; # midi controller device
+my $output_name = shift || 'fluid';    # fluidsynth
 
-    my $rtc = MIDI::RtController->new(
-        input  => $input_name,
-        output => $output_name,
-    );
+my $rtc = MIDI::RtController->new(
+    input  => $input_name,
+    output => $output_name,
+);
 
-    my $rtf = MIDI::RtController::Filter::Tonal->new(rtc => $rtc);
+my $rtf = MIDI::RtController::Filter::Tonal->new(rtc => $rtc);
 
-    $rtc->add_filter('pedal', [qw(note_on note_off)], $rtf->curry::pedal_tone);
+$rtc->add_filter('pedal', [qw(note_on note_off)], $rtf->curry::pedal_tone);
 
-    $rtc->run;
+$rtc->run;
+```
 
 This "pedal_tone" routine is the same as the previous, above.
 
@@ -93,31 +97,35 @@ What if I want to create my own filters?
 
 If you would like to craft your own musical or control filters, use [MIDI::RtController::Filter::Math]({{< mcpan "MIDI::RtController::Filter::Math" >}}) for a spring-board, point-of-reference example. This is a single filter module that implements a "stair-step" filter. Here is the example of that in action:
 
-    #!/usr/bin/env perl
-    use curry;
-    use MIDI::RtController ();
-    use MIDI::RtController::Filter::Math ();
+```perl
+#!/usr/bin/env perl
+use curry;
+use MIDI::RtController ();
+use MIDI::RtController::Filter::Math ();
 
-    my $input_name  = shift || 'tempopad'; # midi controller device
-    my $output_name = shift || 'fluid';    # fluidsynth
+my $input_name  = shift || 'tempopad'; # midi controller device
+my $output_name = shift || 'fluid';    # fluidsynth
 
-    my $rtc = MIDI::RtController->new(
-        input  => $input_name,
-        output => $output_name,
-    );
+my $rtc = MIDI::RtController->new(
+    input  => $input_name,
+    output => $output_name,
+);
 
-    my $rtf = MIDI::RtController::Filter::Math->new(rtc => $rtc);
+my $rtf = MIDI::RtController::Filter::Math->new(rtc => $rtc);
 
-    $rtf->delay(0.15); # slow down the delay time
-    $rtf->feedback(6); # increase the number of steps
+$rtf->delay(0.15); # slow down the delay time
+$rtf->feedback(6); # increase the number of steps
 
-    $rtc->add_filter('stair', [qw(note_on note_off)], $rtf->curry::stair_step);
+$rtc->add_filter('stair', [qw(note_on note_off)], $rtf->curry::stair_step);
 
-    $rtc->run;
+$rtc->run;
+```
 
 And here's what that sounds like:
 
 {{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-1.mp3" type="audio/mpeg" >}}
+
+Ok, let's look at how that is made. ***TBD***
 
 For a more complete, real-world example (that is also a work-in-progress), please see the code in my program, [rtmidi-callback.pl](https://github.com/ology/Music/blob/master/rtmidi-callback.pl). (It also includes a filter for record/playback that is not yet complete... More to come!)
 
