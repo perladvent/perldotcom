@@ -17,11 +17,11 @@ As we discovered [previously](https://www.perl.com/article/enhancing-midi-hardwa
 
 Being a serial module creator, I bundled these concepts and more into a few handy [CPAN](https://metacpan.org/) packages that allow you to control your devices with minimal lines of code. So far, these are: [MIDI::RtController]({{< mcpan "MIDI::RtController" >}}), [MIDI::RtController::Filter::Tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), and [MIDI::RtController::Filter::Drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}).
 
-With the first, you can do everything needed to enhance your MIDI device with filters (special subroutines) that you create. These routines are then executed in real-time when a key or pad is pressed on your MIDI device. But first, out of curiosity, let's inspect the module itself.
+With these, you can do everything needed to enhance your MIDI device with filters (special subroutines) that you create. These routines are then executed in real-time when a key or pad is pressed on your MIDI device. But first, out of curiosity, let's inspect the module itself.
 
 Crucially, it has required `input` and `output` attributes that are turned into instances of [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}). The first is your controller. The second is your MIDI output, like `fluidsynth`, `timidity`, virtual port, your DAW ("digital audio workstation"), etc.
 
-Also, because it can operate asynchronously, we have an [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. These will come into play in our example, below. But within the module, they operate as the MIDI in and outs. One is listened to (in) and the other is sent MIDI messages (out). These messages from the input device are processed by the known filters, before being sent out.
+Also, because RtController can operate asynchronously, it uses [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. Within the module, the last two operate as MIDI in and outs. One is listened to (in) and the other is sent MIDI messages (out). These messages from the input device are processed by the known filters, before being sent out.
 
 The module's public interface has four methods: `add_filter`, `send_it`, `delay_send`, and `run`. So how about an example of it in action?
 
@@ -64,10 +64,19 @@ How do I see what MIDI devices known to my system?
 
 You can use this [example program](https://metacpan.org/release/JBARRETT/MIDI-RtMidi-FFI-0.08/source/examples/list_devices.pl) in the [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) distribution. Also, you can install and use the cross-platform program [ReceiveMIDI](https://github.com/gbevin/ReceiveMIDI), which is useful for many things.
 
-What if I don't want to write filters?
+Right now on my system, executing `receivemidi list` returns:
+
+    IAC Driver Bus 1
+    Synido TempoPAD Z-1
+
+And I have started the `fluidsynth` program with:
+
+    fluidsynth -a coreaudio -m coremidi -g 2.0 ~/Music/soundfont/FluidR3_GM.sf2
+
+So what if I don't want to write filters?
 --------------------------------------
 
-You are in luck! There are currently tonal and percussion filters on [CPAN](https://metacpan.org/). As mentioned above, these are: [MIDI::RtController::Filter::Tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), and [MIDI::RtController::Filter::Drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}). Each includes example programs ([tonal](https://github.com/ology/MIDI-RtController-Filter-Tonal/blob/main/eg/tester.pl) and [drums](https://github.com/ology/MIDI-RtController-Filter-Drums/blob/main/eg/tester.pl) respectively). Here is the example of one of the simpler tonal filters:
+You are in luck! There are currently tonal and percussion filters on [CPAN](https://metacpan.org/). As mentioned above, these are: [MIDI::RtController::Filter::Tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), and [MIDI::RtController::Filter::Drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}). Each includes example programs ([tonal](https://github.com/ology/MIDI-RtController-Filter-Tonal/blob/main/eg/tester.pl) and [drums](https://github.com/ology/MIDI-RtController-Filter-Drums/blob/main/eg/tester.pl) respectively). Here is an example of one of the simpler tonal filters:
 
 ```perl
 #!/usr/bin/env perl
@@ -121,11 +130,61 @@ $rtc->add_filter('stair', [qw(note_on note_off)], $rtf->curry::stair_step);
 $rtc->run;
 ```
 
+Ok, let's look at how that is made.
+
+First-up is that [MIDI::RtController::Filter::Math]() is a [Moo]() module, but any OO will do the job. Second is that attributes are defined for all the parameters our filter routine(s) will need, like `feedback` for instance:
+
+```perl
+has feedback => (
+    is      => 'rw', # changable on-the-fly
+    isa     => Num,  # as defined by a Types::* module
+    default => sub { 1 },
+);
+```
+
+Please see the source for these.
+
+Last is our single public object oriented routine, `stair_step` which uses a private `_stair_step_notes` local method and the `delay_send` RtController method. The first decides what notes we will play. The second sends a MIDI event to the MIDI output device, with a number of seconds to delay output. So we gather the notes (more on this in a bit), then play them one at a time with a steadily incrementing delay time. Lastly we return `false` AKA `0` (zero), so that RtController knows to continue processing other filters.
+
+```perl
+sub stair_step ($self, $dt, $event) {
+    my ($ev, $chan, $note, $vel) = $event->@*;
+    my @notes = $self->_stair_step_notes($note);
+    my $delay_time = 0;
+    for my $n (@notes) {
+        $delay_time += $self->delay;
+        $self->rtc->delay_send($delay_time, [ $ev, $self->channel, $n, $vel ]);
+    }
+    return 0;
+}
+```
+
+For this particular "stair-step" filter, notes are played from the beginning event note, given the `up` and `down` attributes. Each note is first incremented by the `up` value, then the next note is decremented by the value of `down`. The value of `feedback` determines how many steps will be made like this.
+
+```perl
+sub _stair_step_notes ($self, $note) {
+    my @notes;
+    my $factor;
+    my $current = $note;
+    for my $i (1 .. $self->feedback) {
+        if ($i % 2 == 0) {
+            $factor = ($i - 1) * $self->down;
+        }
+        else {
+            $factor = $i * $self->up;
+        }
+        $current += $factor;
+        push @notes, $current;
+    }
+    return @notes;
+}
+```
+
 And here's what that sounds like:
 
-{{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-1.mp3" type="audio/mpeg" >}}
+{{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-2.mp3" type="audio/mpeg" >}}
 
-Ok, let's look at how that is made. ***TBD***
+~
 
 For a more complete, real-world example (that is also a work-in-progress), please see the code in my program, [rtmidi-callback.pl](https://github.com/ology/Music/blob/master/rtmidi-callback.pl). (It also includes a filter for record/playback that is not yet complete... More to come!)
 
