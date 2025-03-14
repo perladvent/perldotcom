@@ -55,7 +55,11 @@ sub pedal_tone ($dt, $event) {
 }
 ```
 
-And here's what that sounds like:
+First, let's hear the unprocessed sound, to have a point of reference:
+
+{{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-0.mp3" type="audio/mpeg" >}}
+
+Ok. Here's what the pedal-tone filter sounds like with the same phrase:
 
 {{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-1.mp3" type="audio/mpeg" >}}
 
