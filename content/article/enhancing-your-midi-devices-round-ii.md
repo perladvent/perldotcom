@@ -128,15 +128,15 @@ my $rtc = MIDI::RtController->new(
 
 my $rtf = MIDI::RtController::Filter::Math->new(rtc => $rtc);
 
-$rtf->delay(0.15); # slow down the delay time
-$rtf->feedback(6); # increase the number of steps
+# $rtf->delay(0.15); # slow down the delay time
+# $rtf->feedback(6); # increase the number of steps
 
 $rtc->add_filter('stair', [qw(note_on note_off)], $rtf->curry::stair_step);
 
 $rtc->run;
 ```
 
-By the way, `curry` allows us to refer to an object-oriented method as a CODE reference in a smooth way. (MST++)
+By the way, `curry` allows us to refer to an object-oriented method as a CODE reference in a smooth way.
 
 And here's what that sounds like:
 
