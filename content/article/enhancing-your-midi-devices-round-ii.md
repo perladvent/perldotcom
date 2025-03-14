@@ -132,6 +132,8 @@ $rtc->add_filter('stair', [qw(note_on note_off)], $rtf->curry::stair_step);
 $rtc->run;
 ```
 
+By the way, `curry` allows us to refer to an object-oriented method as a CODE reference in a smooth way. (MST++)
+
 And here's what that sounds like:
 
 {{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-2.mp3" type="audio/mpeg" >}}
