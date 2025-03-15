@@ -21,7 +21,7 @@ With these, you can do everything needed to enhance your MIDI device with filter
 
 Crucially, it has required `input` and `output` attributes that are turned into instances of [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}). The first is your controller. The second is your MIDI output, like `fluidsynth`, `timidity`, virtual port, your DAW ("digital audio workstation"), etc.
 
-Also, because RtController can operate asynchronously, it uses [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. Within the module, the last two operate as MIDI in and outs. One is listened to (in) and the other is sent MIDI messages (out). These messages from the input device are processed by the known filters, before being sent out.
+Also, because RtController can operate asynchronously, it uses [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. Within the module, the last serves as MIDI in and outs. One is listened to (in) and the other is sent MIDI messages (out). These messages from the input device are processed by the known filters, before being sent out.
 
 The module's public interface has four methods: `add_filter`, `send_it`, `delay_send`, and `run`. So how about an example of it in action?
 
