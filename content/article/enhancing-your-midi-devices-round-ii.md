@@ -109,6 +109,8 @@ $rtc->add_filter('pedal', [qw(note_on note_off)], $rtf->curry::pedal_tone);
 $rtc->run;
 ```
 
+By the way, `curry` allows us to refer to an object-oriented method as a CODE reference in a smooth way.
+
 And yes, this `pedal_tone` routine is the same as the previous, above - just OO now.
 
 What if I do want to create my own filters?
@@ -139,8 +141,6 @@ $rtc->add_filter('stair', [qw(note_on note_off)], $rtf->curry::stair_step);
 
 $rtc->run;
 ```
-
-By the way, `curry` allows us to refer to an object-oriented method as a CODE reference in a smooth way.
 
 And here's what that sounds like:
 
