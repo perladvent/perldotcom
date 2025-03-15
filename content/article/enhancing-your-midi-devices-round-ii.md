@@ -73,6 +73,7 @@ Right now on my system, executing `receivemidi list` returns:
 
     IAC Driver Bus 1
     Synido TempoPAD Z-1
+    Logic Pro Virtual Out
 
 And I have started the `fluidsynth` program with:
 
