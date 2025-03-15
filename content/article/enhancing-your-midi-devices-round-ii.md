@@ -75,7 +75,7 @@ Right now on my system, executing `receivemidi list` returns:
     Synido TempoPAD Z-1
     Logic Pro Virtual Out
 
-And I have started the `fluidsynth` program with:
+And I start the `fluidsynth` program with:
 
     fluidsynth -a coreaudio -m coremidi -g 2.0 ~/Music/soundfont/FluidR3_GM.sf2
 
