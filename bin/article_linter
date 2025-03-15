@@ -1,0 +1,44 @@
+#!/usr/bin/env perl
+use v5.24.0;
+use warnings;
+
+use feature qw(signatures);
+no warnings qw(experimental::signatures);
+
+use File::Find::Rule;
+use JSON::XS 'decode_json';
+
+my $Errors = 0;
+
+unless( @ARGV ) {
+  @ARGV = File::Find::Rule->file->name('*.md')->in('content')
+}
+
+say "Processing " . @ARGV . " files";
+foreach my $filename ( @ARGV ) {
+  open my $fh, '<:utf8', $filename;
+  my $data = do { local $/; <$fh> };
+
+  # kludge much?
+  my( $json, $sep, $article ) = split /(})\s*$/m, $data;
+  $json .= $sep;
+
+  open my $sfh, '>:utf8', \my $string;
+  print {$sfh} $json;
+  close $sfh;
+
+  $Errors += grep { $_ }
+  	check_json( $string, $filename );
+
+}
+
+exit $Errors;
+
+sub check_json ( $json, $filename ) {
+  my $data = eval { decode_json($json) };
+  if( $@ ) {
+    warn "$filename JSON did not parse correctly: $@";
+    return 1;
+  }
+  return 0;
+}
