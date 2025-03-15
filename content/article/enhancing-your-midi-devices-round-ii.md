@@ -28,7 +28,6 @@ The module's public interface has four methods: `add_filter`, `send_it`, `delay_
 ```perl
 #!/usr/bin/env perl
 use v5.36;
-use Future::IO::Impl::IOAsync;
 use MIDI::RtController;
 
 my $in  = $ARGV[0] || 'oxy'; # part of the name of the MIDI controller device
