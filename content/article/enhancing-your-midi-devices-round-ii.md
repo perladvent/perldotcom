@@ -49,7 +49,7 @@ sub pedal_tone ($dt, $event) {
     my $delay_time = 0;
     for my $n (@notes) {
         $delay_time += $delay;
-        $rtc->delay_send($delay_time, [ $ev, $channel, $n, $vel ]);
+        $rtc->delay_send($delay_time, [ $ev, $chan, $n, $vel ]);
     }
     return 0;
 }
@@ -172,7 +172,7 @@ sub stair_step ($self, $dt, $event) {
 }
 ```
 
-For this particular "stair-step" filter, notes are played from the beginning event note, given the `up` and `down` attributes. Each note is first incremented by the `up` value, then the next note is decremented by the value of `down`. The value of `feedback` determines how many steps will be made like this.
+For this particular "stair-step" filter, notes are played from the beginning event note, given the `up` and `down` attributes. Each note is first incremented by the `up` value, then the next note is decremented by the value of `down`. The value of `feedback` determines how many steps will be made. (You may notice that the object `channel` is used instead of the event `$chan`. This is done in order to change channels regardless of the MIDI input device channel setting.)
 
 ```perl
 sub _stair_step_notes ($self, $note) {
