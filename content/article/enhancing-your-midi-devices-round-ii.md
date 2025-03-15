@@ -199,7 +199,7 @@ sub _stair_step_notes ($self, $note) {
 
 ~
 
-For a more complete, real-world example (that is also a work-in-progress), please see the code in my program, [rtmidi-callback.pl](https://github.com/ology/Music/blob/master/rtmidi-callback.pl). (It also includes a filter for record/playback that is not yet complete... More to come!)
+For a more complete, real-world example (that is a work-in-progress), please see the code in my program, [rtmidi-callback.pl](https://github.com/ology/Music/blob/master/rtmidi-callback.pl). (It also includes a filter for record/playback that is not yet complete... More to come!)
 
 Happy controlling! :D
 
