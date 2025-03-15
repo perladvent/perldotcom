@@ -21,7 +21,7 @@ With these, you can do lots of cool things to enhance your MIDI device with filt
 
 Crucially, it has required `input` and `output` attributes that are turned into instances of [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}). The first is your controller. The second is your MIDI output, like `fluidsynth`, `timidity`, virtual port, your DAW ("digital audio workstation"), etc.
 
-Also, because RtController can operate asynchronously, it uses [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. Within the module, the last serves as MIDI in and outs. One is listened to (in) and the other is sent MIDI messages (out). These messages from the input device are processed by the known filters, before being sent out.
+Also, because RtController can operate asynchronously, it uses [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. Within the module, the last serves as MIDI in and out. One is listened to (in) and the other is sent MIDI messages (out). Messages from the input device are processed by the known filters, before being sent out.
 
 The module's public interface has four methods: `add_filter`, `send_it`, `delay_send`, and `run`. So how about an example of it in action?
 
@@ -54,7 +54,7 @@ sub pedal_tone ($dt, $event) {
 }
 ```
 
-A filter subroutine (i.e. "pedal_tone") is called with a "delta-time (`$dt`) and the MIDI event (`$event`). The event is first broken into its 4 parts and the `$note` is used to compute and return the `pedal_notes`. Next the notes are played, with a delay (but can be played simultanously with the `send_it` method, too).
+A filter subroutine (i.e. "pedal_tone") is called with a "delta-time (`$dt`) and the MIDI event (`$event`). The event is first broken into its 4 parts and the `$note` is used to compute and return the `pedal_notes`. Next the notes are played, with a delay (but could be played simultanously with the `send_it` method, instead).
 
 First, let's hear the unprocessed sound, to have a point of reference:
 
@@ -63,6 +63,8 @@ First, let's hear the unprocessed sound, to have a point of reference:
 Ok. Here's what the pedal-tone filter sounds like with roughly the same phrase:
 
 {{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-1.mp3" type="audio/mpeg" >}}
+
+Pretty different!
 
 How do I see the MIDI devices known to my system?
 -------------------------------------------------
@@ -143,6 +145,8 @@ By the way, `curry` allows us to refer to an object-oriented method as a CODE re
 And here's what that sounds like:
 
 {{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-2.mp3" type="audio/mpeg" >}}
+
+Wacky!
 
 Ok, let's look at how a filter is made
 --------------------------------------
