@@ -64,8 +64,8 @@ Ok. Here's what the pedal-tone filter sounds like with roughly the same phrase:
 
 {{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-1.mp3" type="audio/mpeg" >}}
 
-How do I see what MIDI devices known to my system?
---------------------------------------------------
+How do I see the MIDI devices known to my system?
+-------------------------------------------------
 
 You can use this [example program](https://metacpan.org/release/JBARRETT/MIDI-RtMidi-FFI-0.08/source/examples/list_devices.pl) in the [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) distribution. Also, you can install and use the cross-platform program [ReceiveMIDI](https://github.com/gbevin/ReceiveMIDI), which is useful for many things.
 
