@@ -112,7 +112,7 @@ And yes, this `pedal_tone` routine is the same as the previous, above - just OO 
 What if I do want to create my own filters?
 -------------------------------------------
 
-If you would like to craft your own musical or control filters, use [MIDI::RtController::Filter::Math]({{< mcpan "MIDI::RtController::Filter::Math" >}}) for a spring-board, point-of-reference example. This is a single filter module that implements a "stair-step" filter. Here is the example of that in action:
+If you would like to craft your own musical or control filters, you can use [MIDI::RtController::Filter::Math]({{< mcpan "MIDI::RtController::Filter::Math" >}}) as a spring-board, point-of-reference example. This implements a "stair-step" filter (detailed below). Here is the example of that in action:
 
 ```perl
 #!/usr/bin/env perl
