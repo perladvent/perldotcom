@@ -84,7 +84,7 @@ Currently, I'm on my Mac, so this command tells `fluidsynth` that I'm using `cor
 So what if I don't want to write filters?
 --------------------------------------
 
-You are in luck! There are currently tonal and percussion filters on [CPAN](https://metacpan.org/). As mentioned above, these are: [MIDI::RtController::Filter::Tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), and [MIDI::RtController::Filter::Drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}). Each includes example programs ([tonal](https://github.com/ology/MIDI-RtController-Filter-Tonal/blob/main/eg/tester.pl) and [drums](https://github.com/ology/MIDI-RtController-Filter-Drums/blob/main/eg/tester.pl) respectively). Here is an example of one of the simpler tonal filters:
+You are in luck! There are currently [tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}) and [percussion]({{< mcpan "MIDI::RtController::Filter::Drums" >}}) filters on [CPAN](https://metacpan.org/). Each includes example programs ([tonal](https://github.com/ology/MIDI-RtController-Filter-Tonal/blob/main/eg/tester.pl) and [drums](https://github.com/ology/MIDI-RtController-Filter-Drums/blob/main/eg/tester.pl) respectively). Here is an example of one of the simpler tonal filters:
 
 ```perl
 #!/usr/bin/env perl
