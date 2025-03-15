@@ -112,7 +112,7 @@ And yes, this `pedal_tone` routine is the same as the previous, above - just OO 
 What if I do want to create my own filters?
 -------------------------------------------
 
-If you would like to craft your own musical or control filters, you can use [MIDI::RtController::Filter::Math]({{< mcpan "MIDI::RtController::Filter::Math" >}}) as a spring-board, point-of-reference example. This implements a "stair-step" filter (detailed below). Here is the example of that in action:
+If you would like to craft your own musical or control filters, you can use [MIDI::RtController::Filter::Math]({{< mcpan "MIDI::RtController::Filter::Math" >}}) as a spring-board, point-of-reference example. This implements a "stair-step" filter (detailed below). Here is an example of that in action:
 
 ```perl
 #!/usr/bin/env perl
@@ -144,8 +144,8 @@ And here's what that sounds like:
 
 {{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-2.mp3" type="audio/mpeg" >}}
 
-Ok, let's look at how that is made
-----------------------------------
+Ok, let's look at how a filter is made
+--------------------------------------
 
 First-up is that [MIDI::RtController::Filter::Math]() is a [Moo]() module, but any OO will do the job. Second is that attributes are defined for all the parameters our filter routine(s) will need, like `feedback` for instance:
 
@@ -159,7 +159,7 @@ has feedback => (
 
 Please see the source for these.
 
-Last is our single public object oriented routine, `stair_step` which uses a private `_stair_step_notes` local method and the `delay_send` RtController method. The first decides what notes we will play. The second sends a MIDI event to the MIDI output device, with a number of seconds to delay output. So we gather the notes (more on this in a bit), then play them one at a time with a steadily incrementing delay time. Lastly we return `false` AKA `0` (zero), so that RtController knows to continue processing other filters.
+Our single public object oriented routine, `stair_step` uses a private `_stair_step_notes` local method and the `delay_send` RtController method. The first decides what notes we will play, and the second sends a MIDI event to the MIDI output device, with a number of (usually frational) seconds to delay output. So we gather the notes (more on this in a bit), then play them one at a time with a steadily incrementing delay time. Lastly we return `false` AKA `0` (zero), so that RtController knows to continue processing other filters.
 
 ```perl
 sub stair_step ($self, $dt, $event) {
@@ -174,7 +174,9 @@ sub stair_step ($self, $dt, $event) {
 }
 ```
 
-For this particular "stair-step" filter, notes are played from the beginning event note, given the `up` and `down` attributes. Each note is first incremented by the `up` value, then the next note is decremented by the value of `down`. The value of `feedback` determines how many steps will be made. (You may notice that the object `channel` is used instead of the event `$chan`. This is done in order to change channels regardless of the MIDI input device channel setting.)
+For this particular "stair-step" filter, notes are played from the beginning event note, given the `up` and `down` attributes. Each note is first incremented by the `up` value, then the next note is decremented by the value of `down` - rinse, repeat. The value of `feedback` determines how many steps will be made. (You may notice that the object `channel` is used instead of the event `$chan`. This is done in order to change channels regardless of the MIDI input device channel setting.)
+
+Lastly, here is the subroutine that computes the notes to play:
 
 ```perl
 sub _stair_step_notes ($self, $note) {
