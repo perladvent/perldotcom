@@ -107,7 +107,7 @@ $rtc->add_filter('pedal', [qw(note_on note_off)], $rtf->curry::pedal_tone);
 $rtc->run;
 ```
 
-And yes, this "pedal_tone" routine is the same as the previous, above - just OO now.
+And yes, this `pedal_tone` routine is the same as the previous, above - just OO now.
 
 What if I do want to create my own filters?
 -------------------------------------------
