@@ -55,6 +55,8 @@ sub pedal_tone ($dt, $event) {
 }
 ```
 
+A filter subroutine (i.e. "pedal_tone") is called with a "delta-time (`$dt`) and the MIDI event (`$event`). The event is first broken into its 4 parts and the `$note` is used to compute and return the `pedal_notes`. Next the notes are played, with a delay, but can be played simultanously with the `sent_it` method, too.
+
 First, let's hear the unprocessed sound, to have a point of reference:
 
 {{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-0.mp3" type="audio/mpeg" >}}
