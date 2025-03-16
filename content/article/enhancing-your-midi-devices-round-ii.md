@@ -207,9 +207,9 @@ sub _stair_step_notes ($self, $note) {
 Conclusion
 ----------
 
-You can soup-up your MIDI controller with this code, without much ado.
+You can soup-up your MIDI controller with this code, to fabulous effect and without much ado. :D
 
 And for a more complete, real-world example (that is a work-in-progress), please see the code in, [rtmidi-callback.pl](https://github.com/ology/Music/blob/master/rtmidi-callback.pl).
 
-Happy controlling! :D
+Happy controlling!
 
