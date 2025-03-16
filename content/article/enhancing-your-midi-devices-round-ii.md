@@ -23,7 +23,10 @@ Crucially, it has required `input` and `output` attributes that are turned into 
 
 Also, because RtController can operate asynchronously, it uses [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. Within the module, the last serves as MIDI in and out. One is listened to (in) and the other is sent MIDI messages (out). Messages from the input device are processed by the known filters, before being sent out.
 
-The module's public interface has four methods: `add_filter`, `send_it`, `delay_send`, and `run`. So how about an example of it in action?
+How about an example of this in action?
+---------------------------------------
+
+The module's public interface has four methods: `add_filter`, `send_it`, `delay_send`, and `run`.
 
 ```perl
 #!/usr/bin/env perl
