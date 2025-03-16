@@ -17,7 +17,7 @@ As we discovered [previously](https://www.perl.com/article/enhancing-midi-hardwa
 
 Being a serial module creator, and with the help of the author John, I bundled these concepts and more into a few handy [CPAN](https://metacpan.org/) packages that allow you to control your devices with minimal lines of code. So far, these are: [MIDI::RtController]({{< mcpan "MIDI::RtController" >}}), [MIDI::RtController::Filter::Tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), and [MIDI::RtController::Filter::Drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}).
 
-With these, you can do lots of cool things to enhance your MIDI device with filters (special subroutines) that you create. These routines are then executed in real-time when a key or pad is pressed on your MIDI device.
+With these, you can do lots of cool things to enhance your MIDI device with filters (special subroutines). These routines are then executed in real-time when a key or pad is pressed on your MIDI device.
 
 First, let's inspect the module [MIDI::RtController]({{< mcpan "MIDI::RtController" >}}) itself.
 
