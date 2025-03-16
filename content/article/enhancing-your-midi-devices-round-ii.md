@@ -149,7 +149,7 @@ And here's what that sounds like:
 
 {{< audio src="/media/enhancing-your-midi-devices-round-ii/audio-2.mp3" type="audio/mpeg" >}}
 
-Wacky!
+Wacky! It's like you're Liberace, but crazier.
 
 Ok, let's look at how a filter is made
 --------------------------------------
