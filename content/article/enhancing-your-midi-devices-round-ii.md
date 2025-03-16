@@ -209,7 +209,7 @@ Conclusion
 
 You can soup-up your MIDI controller with this code, without much ado.
 
-And for a more complete, real-world example (that is a work-in-progress), please see the code in, [rtmidi-callback.pl](https://github.com/ology/Music/blob/master/rtmidi-callback.pl). (It also includes a filter for record/playback that is not yet complete... More to come!)
+And for a more complete, real-world example (that is a work-in-progress), please see the code in, [rtmidi-callback.pl](https://github.com/ology/Music/blob/master/rtmidi-callback.pl).
 
 Happy controlling! :D
 
