@@ -168,7 +168,7 @@ has feedback => (
 
 Please see [the source](https://metacpan.org/dist/MIDI-RtController-Filter-Tonal/source/lib/MIDI/RtController/Filter/Math.pm) for these.
 
-Our single public object oriented routine, `stair_step` uses a private `_stair_step_notes` local method and the `delay_send` RtController method. The first decides what notes we will play, and the second sends a MIDI event to the MIDI output device, with a number of (usually fractional) seconds to delay output. So we gather the notes (more on this in a bit), then play them one at a time with a steadily incrementing delay time. Lastly we return `false` AKA `0` (zero), so that RtController knows to continue processing other filters.
+The public object oriented routine, `stair_step` uses a private `_stair_step_notes` local method and the `delay_send` RtController method. The first decides what notes we will play, and the second sends a MIDI event to the MIDI output device, with a number of (usually fractional) seconds to delay output. So we gather the notes (more on this in a bit), then play them one at a time with a steadily incrementing delay time. Lastly we return `false` AKA `0` (zero), so that RtController knows to continue processing other filters.
 
 ```perl
 sub stair_step ($self, $dt, $event) {
