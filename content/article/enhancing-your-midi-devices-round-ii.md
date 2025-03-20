@@ -23,7 +23,7 @@ First, let's inspect the module [MIDI::RtController]({{< mcpan "MIDI::RtControll
 
 Crucially, it has required `input` and `output` attributes that are turned into instances of [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}). The first is your controller. The second is your MIDI output, like `fluidsynth`, `timidity`, virtual port, your DAW ("digital audio workstation"), etc.
 
-Also, because RtController can operate asynchronously, it uses [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. Within the module, the last serves as MIDI in and out. One is listened to (in) and the other is sent MIDI messages (out). Messages from the input device are processed by the known filters, before being sent out.
+Also, because RtController can operate asynchronously, it uses [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. Within the module, the latter serves as MIDI in and out. One is listened to (in) and the other is sent MIDI messages (out). Messages from the input device are processed by the known filters, before being sent out.
 
 How about an example of this in action?
 ---------------------------------------
@@ -59,7 +59,7 @@ sub pedal_tone ($dt, $event) {
 }
 ```
 
-A filter subroutine (i.e. "pedal_tone") is called with a "delta-time (`$dt`) and the MIDI event (`$event`). The event is first broken into its 4 parts and the `$note` is used to compute and return the `pedal_notes`. Next the notes are played, with a delay (but could be played simultanously with the `send_it` method, instead).
+The filter subroutine, "pedal_tone", is called with a "delta-time (`$dt`) and the MIDI event (`$event`). The event is first broken into its 4 parts and the `$note` is used to compute and return the `pedal_notes`. Next the notes are played, with a delay (but could be played simultanously with the `send_it` method, instead).
 
 First, let's hear the unprocessed sound, to have a point of reference:
 
