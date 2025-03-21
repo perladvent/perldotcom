@@ -23,7 +23,7 @@ First, let's inspect the module [MIDI::RtController]({{< mcpan "MIDI::RtControll
 
 Crucially, it has required `input` and `output` attributes that are turned into instances of [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}). The first is your controller. The second is your MIDI output, like `fluidsynth`, `timidity`, virtual port, your DAW ("digital audio workstation"), etc.
 
-Also, because RtController can operate asynchronously, it uses [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. Within the module, the latter serves as MIDI in and out. One is listened to (in) and the other is sent MIDI messages (out). Messages from the input device are processed by the known filters, before being sent out.
+Also, because RtController can operate asynchronously, it uses [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) and [IO::Async::Channel]({{< mcpan "IO::Async::Channel" >}})s. Within the module, the latter serves as MIDI in. This channel is listened to, and messages from the input device are processed by the known filters, before being sent out.
 
 How about an example of this in action?
 ---------------------------------------
