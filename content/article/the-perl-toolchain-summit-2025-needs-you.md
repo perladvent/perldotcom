@@ -136,6 +136,10 @@ return), and expect the organizers to spend it on PTS expenses
 Any money left over is used to kickstart the budget for the event the
 following year, as is our tradition since 2011.
 
+#### Diamond Sponsors
+
+* [Booking.com](https://www.booking.com/)
+
 #### Gold Sponsors
 
 * [WebPros](https://www.webpros.com/)
