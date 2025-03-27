@@ -138,7 +138,7 @@ following year, as is our tradition since 2011.
 
 #### Gold Sponsors
 
-* [cPanel, Inc](https://cpanel.net/)
+* [WebPros](https://www.webpros.com/)
 
 #### Silver sponsors
 
