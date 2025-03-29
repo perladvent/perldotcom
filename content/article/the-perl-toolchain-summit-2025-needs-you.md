@@ -56,7 +56,48 @@ sponsors).
 Our budget for 2025 is of 25,000 €: that is our financial sponsoring
 target, as well as the amount we expect to pay directly to various
 suppliers. The rest is covered by in-kind sponsors or the attendees
-themslves.
+themselves.
+
+## What did the PTS produce?
+
+Here are a few examples of some of the many results of past Perl Toolchain Summits:
+* during the first edition, in 2008 in Oslo, a number of QA and
+  toolchain authors, maintainers and experts came together to agree on
+  some common standards and practices. This became known as "[The Oslo
+  Consensus](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/oslo-consensus.md)".
+* in 2013 in Lancaster, a similar brain trust came together to address
+  new issues requiring consensus (e.g. minimum Perl version supported by
+  he toolchain) This became known as "[The Lancaster
+  concensus](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/lancaster-consensus.md)"
+* in 2015 in Berlin, another group assembled to address new issues, with
+  a particular focus on toolchain governance and recommended standards
+  of care for CPAN authors. This led to the "[river
+  analogy](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/berlin-consensus.md#the-river-analogy)",
+  now widely used all around CPAN.
+* in 2023 in Lyon, the minimum Perl version supported by the toolchain
+  was [amended](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/lyon-amendment.md) to a rolling window of ten years
+* also in 2023, the [CPAN Security
+  Group](https://security.metacpan.org/) was created. It assembled again
+  in 2024 in Lisbon, and met with the [Perl Steering
+  Council](https://perldoc.perl.org/perlgov#The-Steering-Council). It
+  recently published its [retrospective for
+  2024](https://security.metacpan.org/cpansec/update/2025/03/12/CPANSec-Retrospective-2024.html)
+* the [PAUSE Operating
+  Model](https://github.com/andk/pause/blob/master/doc/operating-model.md)
+  (a document which defines the permissions model for PAUSE and the
+  community rules for how we manage them) came out of a discussion at
+  the 2017 event, and built on discussions at earlier events.
+* numerous improvements to multiple toolchain modules
+  ([Test2](https://metacpan.org/pod/Test2),
+  [Devel::Cover](https://metacpan.org/pod/Devel::Cover),
+  [PPI](https://metacpan.org/pod/PPI)), CPAN clients
+  ([CPAN](https://metacpan.org/pod/CPAN),
+  [cpanminus](https://metacpan.org/pod/App::cpanminus),
+  [cpm](ihttps://metacpan.org/dist/App-cpm/view/script/cpm)) and
+  services ([MetaCPAN](https://metacpan.org/),
+  [PAUSE](https://pause.perl.org/), [CPAN
+  Testers](http://www.cpantesters.org/)) have been discussed and
+  implemented at PTS events
 
 ## What will *this* PTS achieve?
 
