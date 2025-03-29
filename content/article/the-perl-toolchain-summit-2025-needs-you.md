@@ -45,8 +45,8 @@ Let's do a quick back-of-the-enveloppe calculation, assuming:
 We're expecting about 35 people coming (out of 44 invitations sent), 22
 from Europe, and 13 from outside Europe.
 
-That brings us to a grand total of 53,100 €, almost all costs
-considered, which I'll round up to **55,000€**. That's a lot of money.
+That brings us to a total estimate of 53,100 €, almost all costs
+considered. That's a lot of money.
 
 The organizers never actually spend that amount, because many of our
 attendees pay for themselves, or have their expenses covered by their
