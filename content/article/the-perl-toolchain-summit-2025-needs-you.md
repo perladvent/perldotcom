@@ -61,33 +61,33 @@ themselves.
 ## What did the PTS produce?
 
 Here are a few examples of some of the many results of past Perl Toolchain Summits:
-* during the first edition, in 2008 in Oslo, a number of QA and
+* During the first edition, in 2008 in Oslo, a number of QA and
   toolchain authors, maintainers and experts came together to agree on
   some common standards and practices. This became known as "[The Oslo
   Consensus](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/oslo-consensus.md)".
-* in 2013 in Lancaster, a similar brain trust came together to address
+* In 2013 in Lancaster, a similar brain trust came together to address
   new issues requiring consensus (e.g. minimum Perl version supported by
   he toolchain) This became known as "[The Lancaster
-  concensus](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/lancaster-consensus.md)"
-* in 2015 in Berlin, another group assembled to address new issues, with
+  concensus](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/lancaster-consensus.md)".
+* In 2015 in Berlin, another group assembled to address new issues, with
   a particular focus on toolchain governance and recommended standards
   of care for CPAN authors. This led to the "[river
   analogy](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/berlin-consensus.md#the-river-analogy)",
   now widely used all around CPAN.
-* in 2023 in Lyon, the minimum Perl version supported by the toolchain
-  was [amended](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/lyon-amendment.md) to a rolling window of ten years
-* also in 2023, the [CPAN Security
+* In 2023 in Lyon, the minimum Perl version supported by the toolchain
+  was [amended](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/lyon-amendment.md) to a rolling window of ten years.
+* Also in 2023, the [CPAN Security
   Group](https://security.metacpan.org/) was created. It assembled again
   in 2024 in Lisbon, and met with the [Perl Steering
   Council](https://perldoc.perl.org/perlgov#The-Steering-Council). It
   recently published its [retrospective for
-  2024](https://security.metacpan.org/cpansec/update/2025/03/12/CPANSec-Retrospective-2024.html)
-* the [PAUSE Operating
+  2024](https://security.metacpan.org/cpansec/update/2025/03/12/CPANSec-Retrospective-2024.html).
+* The [PAUSE Operating
   Model](https://github.com/andk/pause/blob/master/doc/operating-model.md)
   (a document which defines the permissions model for PAUSE and the
   community rules for how we manage them) came out of a discussion at
   the 2017 event, and built on discussions at earlier events.
-* numerous improvements to multiple toolchain modules
+* Numerous improvements to multiple toolchain modules
   ([Test2](https://metacpan.org/pod/Test2),
   [Devel::Cover](https://metacpan.org/pod/Devel::Cover),
   [PPI](https://metacpan.org/pod/PPI)), CPAN clients
@@ -97,7 +97,7 @@ Here are a few examples of some of the many results of past Perl Toolchain Summi
   services ([MetaCPAN](https://metacpan.org/),
   [PAUSE](https://pause.perl.org/), [CPAN
   Testers](http://www.cpantesters.org/)) have been discussed and
-  implemented at PTS events
+  implemented at PTS events.
 
 ## What will *this* PTS achieve?
 
@@ -233,10 +233,10 @@ Now that you're conviced, here's how you can help:
 
 * as a company, you can get in touch with us and pick one of our
   sponsoring levels on our [Sponsor
-  Prospectus](http://perltoolchainsummit.org/pts2025/PTS2025-Sponsor-Prospectus.pdf)
+  Prospectus](http://perltoolchainsummit.org/pts2025/PTS2025-Sponsor-Prospectus.pdf);
 * as an individual, you can get on our [donation
   page](http://perltoolchainsummit.org/pts2025/donate.html) hit the
-  PayPal button, and chip in directly
+  PayPal button, and chip in directly.
 
 On behalf of everyone who depends on Perl and CPAN, thank you in advance
 for your support!
