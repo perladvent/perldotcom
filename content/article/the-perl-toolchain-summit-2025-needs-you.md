@@ -34,7 +34,7 @@ In others words, by you.
 
 ## How much does a PTS cost, by the way?
 
-Let's do a quick back-of-the-enveloppe calculation, assuming:
+Let's do a quick back-of-the-envelope calculation, assuming:
 * hotel: 100€/night (most people are staying 5 nights, arriving the
   day before and leaving the day after),
 * travel to Leipzig from Europe: 500€ round-trip,
