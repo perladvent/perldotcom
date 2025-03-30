@@ -28,9 +28,9 @@ Toolchain.
 
 **This is bad for Perl and CPAN.**
 
-Perl is not like Java or Go: it doesn't have a large corporation behind
-it. It's entirely supported by the community and its corporate sponsors.
-In others words, by you.
+Perl differs from other programming languages which have large corporations
+funding their development: it's entirely supported by the community and its
+sponsors. In other words, by you.
 
 ## How much does a PTS cost, by the way?
 
