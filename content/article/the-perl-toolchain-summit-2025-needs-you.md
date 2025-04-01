@@ -71,8 +71,8 @@ Here are a few examples of some of the many results of past Perl Toolchain Summi
   concensus](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/lancaster-consensus.md)".
 * In 2015 in Berlin, another group assembled to address new issues, with
   a particular focus on toolchain governance and recommended standards
-  of care for CPAN authors. This led to the "[river
-  analogy](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/berlin-consensus.md#the-river-analogy)",
+  of care for CPAN authors. This led to the "[river](http://neilb.org/2015/04/20/river-of-cpan.html)
+  [analogy](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/berlin-consensus.md#the-river-analogy)",
   now widely used all around CPAN.
 * In 2023 in Lyon, the minimum Perl version supported by the toolchain
   was [amended](https://github.com/Perl-Toolchain-Gang/toolchain-site/blob/master/lyon-amendment.md) to a rolling window of ten years.
