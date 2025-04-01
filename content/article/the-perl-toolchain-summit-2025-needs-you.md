@@ -93,7 +93,7 @@ Here are a few examples of some of the many results of past Perl Toolchain Summi
   [PPI](https://metacpan.org/pod/PPI)), CPAN clients
   ([CPAN](https://metacpan.org/pod/CPAN),
   [cpanminus](https://metacpan.org/pod/App::cpanminus),
-  [cpm](ihttps://metacpan.org/dist/App-cpm/view/script/cpm)) and
+  [cpm](https://metacpan.org/dist/App-cpm/view/script/cpm)) and
   services ([MetaCPAN](https://metacpan.org/),
   [PAUSE](https://pause.perl.org/), [CPAN
   Testers](http://www.cpantesters.org/)) have been discussed and
