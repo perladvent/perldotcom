@@ -215,7 +215,6 @@ wouldn't be possible without them.
 * [Grant Street Group](https://www.grantstreet.com/)
 * [Fastmail](https://www.fastmail.com/)
 * [shift2](https://en.shift2.nl/)
-* [Zoopla](https://www.zoopla.co.uk/)
 * [Oleeo](https://www.oleeo.com/)
 * [Ferenc Erki](https://ferki.it/)
 
