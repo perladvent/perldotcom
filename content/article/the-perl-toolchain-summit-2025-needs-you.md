@@ -1,4 +1,16 @@
-# The Perl Toolchain Summit 2025 needs you
+  {
+    "title"       : "The Perl Toolchain Summit 2025 Needs You",
+    "authors"     : ["philippe-bruhat"],
+    "date"        : "2025-04-04T06:00:00",
+    "tags"        : [],
+    "draft"       : false,
+    "image"       : "/images/5-reasons-to-sponsor-the-perl-toolchain-summit/summit-group.jpeg",
+    "thumbnail"   : "/images/5-reasons-to-sponsor-the-perl-toolchain-summit/summit-group.jpeg",
+    "description" : "The Perl Toolchain Summit 2025 needs financial support to bring together essential contributors who maintain Perl's critical infrastructure. Unlike languages backed by large corporations, Perl relies entirely on community support. The summit will focus on revitalizing CPAN Testers and implementing secure authentication for PAUSE uploads, both vital for Perl's ecosystem security and health. Current sponsors include Booking.com, WebPros, and several others, but more funding is needed to reach the €25,000 target.",
+    "categories"  : "community"
+  }
+
+Photo © Salve J. Nilsen, 2023, CC-BY-NC-4.0
 
 This year in particular,
 [the organizers](https://blogs.perl.org/users/book/2025/02/announcing-the-perl-toolchain-summit-2025.html)
