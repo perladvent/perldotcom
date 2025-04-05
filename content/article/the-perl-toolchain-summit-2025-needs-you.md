@@ -18,6 +18,7 @@ have had difficulty reaching our fundraising targets for the
 [Perl Toolchain Summit](https://perltoolchainsummit.org/pts2025/).
 
 [In the words of Ricardo Signes](https://rjbs.cloud/blog/2024/05/pts-2024-lisbon/):
+
 > The Perl Toolchain Summit is one of the most important events in the
 > year for Perl. A lot of key projects have folks get together to get
 > things done.
