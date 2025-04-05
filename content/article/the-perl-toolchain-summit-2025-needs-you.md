@@ -47,6 +47,7 @@ sponsors. In other words, by you.
 ## How much does a PTS cost, by the way?
 
 Let's do a quick back-of-the-envelope calculation, assuming:
+
 * hotel: 100€/night (most people are staying 5 nights, arriving the
   day before and leaving the day after),
 * travel to Leipzig from Europe: 500€ round-trip,
@@ -73,6 +74,7 @@ themselves.
 ## What did the PTS produce?
 
 Here are a few examples of some of the many results of past Perl Toolchain Summits:
+
 * During the first edition, in 2008 in Oslo, a number of QA and
   toolchain authors, maintainers and experts came together to agree on
   some common standards and practices. This became known as "[The Oslo
