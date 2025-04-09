@@ -1,7 +1,7 @@
 {
   "title"       : "Enhancing Your MIDI Devices: Round II",
   "authors"     : ["gene-boggs"],
-  "date"        : "2025-03-14T11:49:46",
+  "date"        : "2025-04-09T18:00:00",
   "tags"        : ["MIDI", "music"],
   "draft"       : false,
   "image"       : "",
