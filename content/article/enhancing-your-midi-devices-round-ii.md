@@ -15,7 +15,7 @@ Control Your MIDI Controllers!
 
 As we discovered [previously](https://www.perl.com/article/enhancing-midi-hardware-with-perl/), your MIDI devices can be enhanced to function in different ways besides just triggering a single note per key (or pad) press.
 
-Being a serial module creator, and with the help of the author John, I bundled these concepts and more into a few handy [CPAN](https://metacpan.org/) packages that allow you to control your devices with minimal lines of code. So far, these are: [MIDI::RtController]({{< mcpan "MIDI::RtController" >}}), [MIDI::RtController::Filter::Tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), [MIDI::RtController::Filter::Drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}), and [MIDI::RtController::Filter::CC]({{< mcpan "MIDI::RtController::Filter::CC" >}}.
+Being a serial module creator, and with the help of the author John, I bundled these concepts and more into a few handy [CPAN](https://metacpan.org/) packages that allow you to control your devices with minimal lines of code. So far, these are: [MIDI::RtController]({{< mcpan "MIDI::RtController" >}}), [MIDI::RtController::Filter::Tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), [MIDI::RtController::Filter::Drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}), and [MIDI::RtController::Filter::CC]({{< mcpan "MIDI::RtController::Filter::CC" >}}).
 
 With these, you can do lots of cool things to enhance your MIDI device with filters (special subroutines). These routines are then executed in real-time when a key or pad is pressed on your MIDI device.
 
