@@ -47,7 +47,7 @@ $rtc->run;
 sub pedal_notes ($note) {
     return 55, $note, $note + 7; # 55 = G below middle-C
 }
-sub pedal_tone ($dt, $event) {
+sub pedal_tone ($port, $dt, $event) {
     my ($ev, $chan, $note, $vel) = $event->@*;
     my @notes = pedal_notes($note);
     my $delay_time = 0;
@@ -59,7 +59,7 @@ sub pedal_tone ($dt, $event) {
 }
 ```
 
-The filter subroutine, "pedal_tone", is called with a "delta-time (`$dt`) and the MIDI event (`$event`). The event is first broken into its 4 parts and the `$note` is used to compute and return the `pedal_notes`. Next the notes are played, with a delay (but could be played simultanously with the `send_it` method, instead).
+The filter subroutine, "pedal_tone", is called with a "delta-time" (`$dt`) and the MIDI event (`$event`). The event is first broken into its 4 parts and the `$note` is used to compute and return the `pedal_notes`. Next the notes are played, with a delay (but could be played simultanously with the `send_it` method, instead).
 
 First, let's hear the unprocessed sound, to have a point of reference:
 
