@@ -15,7 +15,7 @@ Control Your MIDI Controllers!
 
 As we discovered [previously](https://www.perl.com/article/enhancing-midi-hardware-with-perl/), your MIDI devices can be enhanced to function in different ways besides just triggering a single note per key (or pad) press.
 
-Being a serial module creator, and with the help of the author John, I bundled these concepts and more into a few handy [CPAN](https://metacpan.org/) packages that allow you to control your devices with minimal lines of code. So far, these are: [MIDI::RtController]({{< mcpan "MIDI::RtController" >}}), [MIDI::RtController::Filter::Tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), [MIDI::RtController::Filter::Drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}), and [MIDI::RtController::Filter::CC]({{< mcpan "MIDI::RtController::Filter::CC" >}}).
+Being a serial module creator, and with the help of that article's author [John](https://metacpan.org/author/JBARRETT), I bundled these concepts and more into a few handy [CPAN](https://metacpan.org/) packages that allow you to control your devices with minimal lines of code. So far, these are: [MIDI::RtController]({{< mcpan "MIDI::RtController" >}}), [MIDI::RtController::Filter::Tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), [MIDI::RtController::Filter::Drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}), and [MIDI::RtController::Filter::CC]({{< mcpan "MIDI::RtController::Filter::CC" >}}).
 
 With these, you can do lots of cool things to enhance your MIDI device with filters (special subroutines). These routines are then executed in real-time when a key or pad is pressed on your MIDI device.
 
@@ -59,7 +59,7 @@ sub pedal_tone ($port, $dt, $event) {
 }
 ```
 
-The filter subroutine, "pedal_tone", is called with a "delta-time" (`$dt`) and the MIDI event (`$event`). The event is first broken into its 4 parts and the `$note` is used to compute and return the `pedal_notes`. Next the notes are played, with a delay (but could be played simultanously with the `send_it` method, instead).
+The filter subroutine, "pedal_tone", is called with the MIDI input port, a "delta-time" (`$dt`) and the MIDI event (`$event`). The event is first broken into its 4 parts and the `$note` is used to compute and return the `pedal_notes`. Next the notes are played, with a delay (but could be played simultanously with the `send_it` method, instead).
 
 First, let's hear the unprocessed sound, to have a point of reference:
 
@@ -91,7 +91,7 @@ Currently, I'm on my Mac, so this command tells `fluidsynth` that I'm using `cor
 So what if I don't want to write filters?
 --------------------------------------
 
-You are in luck! There are currently [tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}) and [drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}) filters on [CPAN](https://metacpan.org/). Each includes example programs ([tonal](https://github.com/ology/MIDI-RtController-Filter-Tonal/blob/main/eg/tester.pl) and [drums](https://github.com/ology/MIDI-RtController-Filter-Drums/blob/main/eg/tester.pl) respectively). Here is an example of one of the simpler tonal filters:
+You are in luck! There are currently [tonal]({{< mcpan "MIDI::RtController::Filter::Tonal" >}}), [drums]({{< mcpan "MIDI::RtController::Filter::Drums" >}}), and [control-change]({{< mcpan "MIDI::RtController::Filter::CC" >}}) filters on [CPAN](https://metacpan.org/). Each includes example programs ([tonal](https://github.com/ology/MIDI-RtController-Filter-Tonal/blob/main/eg/tester.pl) and [drums](https://github.com/ology/MIDI-RtController-Filter-Drums/blob/main/eg/tester.pl) respectively). Here is an example of one of the simpler tonal filters:
 
 ```perl
 #!/usr/bin/env perl
