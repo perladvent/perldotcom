@@ -42,4 +42,17 @@ subtest extract => sub {
 	isa_ok $metadata->augmented, ref {}, "augmented section is there";
 	};
 
+subtest dates => sub {
+	my $metadata = $class->new_from_file( $test_file );
+
+	$metadata->{date} = '2016-05-04T20:37:57';
+	is $metadata->_date_to_epoch, 1462394277, "epoch correct for date without timezone";
+
+	$metadata->{date} = '2012-12-31T06:00:01-08:00';
+	is $metadata->_date_to_epoch, 1356962401, "epoch correct for date with timezone";
+
+	$metadata->{date} = '2025-01-29';
+	is $metadata->_date_to_epoch, 1738152000, "epoch correct for date without time info";
+};
+
 done_testing();

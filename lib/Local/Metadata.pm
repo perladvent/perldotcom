@@ -284,7 +284,14 @@ Returns an integer version of the publication date.
 # 2016-05-04T20:37:57
 sub _date_to_epoch ( $self ) {
 	my $date = $self->{date};
- 	$date .= 'Z' unless $date =~ /[+-]\d\d:?\d\d\z/;
+        # handle dates without any time info
+        if ($date =~ /\A\d{4}-\d{2}-\d{2}\z/) {
+            $date .= 'T12Z';
+        }
+        # handle dates without timezone info
+        elsif ($date !~ /[+-]\d\d:?\d\d\z/) {
+            $date .= 'Z';
+        }
 	my $epoch = eval {
 		Time::Moment->from_string( $date )->epoch
 		};
