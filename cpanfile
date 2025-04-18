@@ -9,7 +9,7 @@ requires 'I18N::Langinfo';
 requires 'IO::Interactive';
 requires 'IPC::Run';
 requires 'Imager';
-requires 'JSON::MaybeXS.pm';
+requires 'JSON::MaybeXS';
 requires 'JSON::XS';
 requires 'List::Util';
 requires 'Mojolicious', '9.34';
