@@ -2,7 +2,7 @@
   {
     "title"       : "Building Map::Tube::<*> maps, a HOWTO: first steps",
     "authors"     : ["paul-cochrane"],
-    "date"        : "2025-04-16T10:48:27",
+    "date"        : "2025-04-21T10:48:27",
     "tags"        : [],
     "draft"       : false,
     "image"       : "/images/building-map-tube-maps-a-howto-first-steps/hannover-tram-langenhagen-cover.png",
