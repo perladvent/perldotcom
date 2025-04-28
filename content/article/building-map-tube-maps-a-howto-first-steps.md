@@ -5,8 +5,8 @@
     "date"        : "2025-04-21T10:48:27",
     "tags"        : [],
     "draft"       : false,
-    "image"       : "/images/building-map-tube-maps-a-howto-first-steps/hannover-tram-langenhagen-cover.png",
-    "thumbnail"   : "/images/building-map-tube-maps-a-howto-first-steps/Swiss-Cottage-Underground-Station-Jubilee-Line_Hugh-Llewelyn_flickr-To-Trains.jpg",
+    "image"       : "/images/building-map-tube-maps-a-howto/hannover-tram-langenhagen-cover.png",
+    "thumbnail"   : "/images/building-map-tube-maps-a-howto/Swiss-Cottage-Underground-Station-Jubilee-Line_Hugh-Llewelyn_flickr-To-Trains.jpg",
     "description" : "First steps at how to build your own Map::Tube::<*> map",
     "categories"  : "tutorials",
     "canonicalURL": "https://peateasea.de/building-map-tube-whatever-maps-a-howto-first-steps/"
