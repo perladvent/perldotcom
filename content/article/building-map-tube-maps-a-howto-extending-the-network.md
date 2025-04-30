@@ -2,7 +2,7 @@
   {
     "title"       : "Building Map::Tube::<*> maps, a HOWTO: extending the network",
     "authors"     : ["paul-cochrane"],
-    "date"        : "2025-04-28T12:15:09",
+    "date"        : "2025-04-30T12:00:09",
     "tags"        : [],
     "draft"       : false,
     "image"       : "/images/building-map-tube-maps-a-howto/tram-network-langenhagen-hannover-sarstedt-cover.png",
