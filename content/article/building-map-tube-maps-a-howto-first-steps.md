@@ -964,13 +964,15 @@ hash.  Open `Makefile.PL` and extend `TEST_REQUIRES` to look like this:
 ```perl
     TEST_REQUIRES => {
         'Test::More'      => '0',
-        'Test::Map::Tube' => '0',
+        'Test::Map::Tube' => '4.03',
     },
 ```
 
 Note that the `Test::More` requirement was already present.  We've specified
-the version number for `Test::Map::Tube` to be `'0'` because this will give
-us the latest version.
+the version number for `Test::Map::Tube` to be `'4.03'` because this is the
+version I used when writing this HOWTO.  If you're following along at home,
+I recommend checking what the current version is and using that number
+instead.
 
 The remaining dependencies are "prerequisite Perl modules", hence we need to
 set the `PREREQ_PM` hash key in `%WriteMakefileArgs`.  Change the initial
@@ -988,17 +990,19 @@ to
 ```perl
     PREREQ_PM => {
         'File::Share' => '0',
-        'Map::Tube'   => '0',
+        'Map::Tube'   => '4.03',
         'Moo'         => '0',
     },
 ```
 
-where we've again chosen to select the most recent versions of the
-respective modules by setting their version number to `'0'`.  Technically,
-we don't need to add the `Map::Tube` dependency because it's pulled in by
-`Test::Map::Tube`.  Still, it's a good idea to add this dependency
-explicitly as this ends up in the project metadata, informing your users and
-any tools such as [MetaCPAN](https://metacpan.org/),
+where I've again chosen to select the specific `Map::Tube` version being
+used for this HOWTO.  I've set the other modules to use version `'0'`
+because [any version should be sufficient for our
+purposes](https://metacpan.org/pod/CPAN::Meta::Spec#Version-Ranges).
+Technically, we don't need to add the `Map::Tube` dependency because it's
+pulled in by `Test::Map::Tube`.  Still, it's a good idea to add this
+dependency explicitly as this ends up in the project metadata, informing
+your users and any tools such as [MetaCPAN](https://metacpan.org/),
 [CPANTS](https://cpants.cpanauthors.org/) and [CPAN
 testers](https://cpantesters.org) what is required to build and run the
 module.  Also, I've listed the prerequisites alphabetically so that it's
@@ -1018,13 +1022,13 @@ index b889368..22afd9a 100644
      TEST_REQUIRES => {
 -        'Test::More' => '0',
 +        'Test::More'      => '0',
-+        'Test::Map::Tube' => '0',
++        'Test::Map::Tube' => '4.03',
      },
      PREREQ_PM => {
 -        #'ABC'              => '1.6',
 -        #'Foo::Bar::Module' => '5.0401',
 +        'File::Share' => '0',
-+        'Map::Tube'   => '0',
++        'Map::Tube'   => '4.03',
 +        'Moo'         => '0',
      },
      dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
