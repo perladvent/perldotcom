@@ -27,7 +27,8 @@ Conventions
 - Code should be formatted inline as `code` or in:
 
     code blocks
-
+- Only use "example.com", internal IP addresses and `-555-` numbers in your examples
+- don't wrap your example.com urls in `<>` or `[]()`. Instead wrap them in `` to avoid autolinkification.
 - Use header 2 for subtitles, with the dash style:
 
 ```
@@ -36,6 +37,7 @@ Foo Bar
 ```
 
 This is nicer to read and edit than the leading pound symbols (`## Foo Bar`). Older articles use header 3, but we intend to substitute those to use header 2.
+
 
 Tips
 ----
