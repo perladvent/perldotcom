@@ -7,17 +7,20 @@ stone - **great writing should always prevail**.
 
 Goal
 ----
+
 We aim for reasoned, insightful, professional writing with a lighthearted
 bent.
 
 Politics / Tone
 ---------------
+
 - We are pro: Perl, Open Source and free software
 - No rants or "hit pieces"
 - Reasoned criticism is fine
 
 Language
 --------
+
 - American English
 - Approximately 300-1,000 words per article
 - Simple English (use [hemingway](http://www.hemingwayapp.com/) to help)
@@ -25,6 +28,7 @@ Language
 
 Conventions
 -----------
+
 - When mentioning Perl modules for the first time, provide a link to the
   module on [metacpan](https://metacpan.org/); thereafter refer to them in
   plaintext. Do not quote them (e.g. Data::Dumper).
@@ -49,6 +53,7 @@ header 2.
 
 Tips
 ----
+
 These are things I've learned along the way that have improved my writing.
 Older articles on our website don't necessarily follow these but would be
 better off if they did.
