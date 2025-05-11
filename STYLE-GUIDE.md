@@ -47,7 +47,6 @@ This is nicer to read and edit than the leading pound symbols (`## Foo
 Bar`). Older articles use header 3, but we intend to substitute those to use
 header 2.
 
-
 Tips
 ----
 These are things I've learned along the way that have improved my writing.
