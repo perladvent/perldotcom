@@ -2,7 +2,7 @@
   {
     "title"       : "Building Map::Tube::<*> maps, a HOWTO: routing relative reality",
     "authors"     : ["paul-cochrane"],
-    "date"        : "2025-05-11T10:13:12",
+    "date"        : "2025-05-24T10:13:12",
     "tags"        : [],
     "draft"       : false,
     "image"       : "/images/building-map-tube-maps-a-howto/tram-network-hannover-linie1-linie4-linie7-cover.png",
