@@ -32,8 +32,6 @@ then lets Hugo build a site into the I<tpf/perl.com-staging> directory.
 
 =cut
 
-my $hugo_image = 'ghcr.io/gohugoio/hugo:v0.147.5';
-
 my $perldotcom_repo   = dirname($Bin);
 my $perldotcom_parent = dirname($perldotcom_repo);
 
@@ -62,58 +60,13 @@ else {
     git( 'pull', '--rebase', 'origin', 'master' );
 }
 
-# check that we have the same version of Hugo that last generated
-# the site. If we don't, we shouldn't charge ahead automatically.
-# Different versions do different things with the HTML.
-my $hugo_generated = do {
-    my $index = catfile( $dest_dir, 'index.html' );
-    open my $fh, '<:encoding(UTF-8)', $index;
-    my $last_version;
-    while (<$fh>) {
-        next unless /<meta name="generator" content="(.*?)"/;
-        my ( $name, $version ) = split /\s+/, $1;
-        $last_version = $version;
-        last;
-    }
-    $last_version;
-};
-
-my @command    = ( 'hugo', '-v', '-d', $dest_dir );
-my $use_docker = 0;
-
-my ($hugo_installed) = `hugo version` =~ m/(?:hugo|Generator) v(\d\.\d+\.\d+)-/;
-if ( !$hugo_installed ) {
-    my $version_command
-        = "docker run --rm -it '$hugo_image' version";
-    print "About to run $version_command\n";
-    ($hugo_installed)
-        = `docker run --rm -it '$hugo_image' version`
-        =~ m/(?:hugo|Generator) v(\d\.\d+\.\d+)-/;
-    my $cwd = getcwd();
-    @command
-        = qq(docker run --rm -it -v $cwd:/src -v $cwd/target:/target -p 1313:1313 '$hugo_image' -v);
-    $use_docker = 1;
-}
-
-say <<~"HERE";
-    ====================================
-    Hugo installed:    $hugo_installed
-    Hugo generated:    $hugo_generated
-    bin dir:           $Bin
-    perldotcom dir:    $perldotcom_repo
-    perldotcom parent: $perldotcom_parent
-    ------------------------------------
-    staging github:    $staging_github
-    staging dir:       $staging_repo
-    staging clone:     $staging_clone
-    dest dir:          $dest_dir
-    ------------------------------------
-    HERE
-
-unless ( $hugo_generated eq $hugo_installed ) {
-    die
-        "Hugo version mismatch. Generated: $hugo_generated Installed: $hugo_installed\n";
-}
+my @command = (
+    'docker', 'run', '--rm',
+    '-v',     "$perldotcom_repo:/src",
+    '-v',     "$staging_clone:/src/public",
+    'hugomods/hugo:debian-reg-exts-non-root-0.147.5',
+    'build',
+);
 
 # start in the tpf/perldotcom directory so the external commands
 # start from the right place
@@ -152,10 +105,8 @@ chomp( my $perldotcom_commit = `git rev-parse HEAD` );
 
 # still in the tpf/perldotcom directory, and make the website in
 # the staging directory
-system(@command);
-if ($use_docker) {
-    `cp -R target/* $dest_dir`;
-}
+say 'About to run ' . join q{ }, @command;
+die "Hugo build failed with status: $?\n" if system(@command);
 
 # now work inside the staging dir
 die "Could not change to <$staging_clone>: $!\n"
