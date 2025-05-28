@@ -17,10 +17,9 @@ through the questions to set up your initial article template:
     % make new
 
 You can then check your article by starting a local server using [Hugo
-](https://gohugo.io/). Note that v0.59 of Hugo was previously recommended,
-however the repo here is confirmed to be working with versions as recent as
-v0.126 and deployment is using a pinned version. You may want to confirm your
-updates with v0.59 to be sure.
+](https://gohugo.io/). Note that version 0.147.5 is used for deployment, so
+that is best to use, but for _articles_ rather than layout work on the site,
+the latest available version is probably fine.
 
 To start the server run:
 
