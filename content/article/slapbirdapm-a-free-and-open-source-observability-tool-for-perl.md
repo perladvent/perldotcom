@@ -1,7 +1,7 @@
 {
    "image" : "/images/slapbirdapm-a-free-and-open-source-observability-tool-for-perl/logo.png",
-   "thumbnail" : "/images/whats-new-on-cpan/green.svg",
-   "description" : "A curated look at May's new CPAN uploads",
+   "thumbnail" : "/images/slapbirdapm-a-free-and-open-source-observability-tool-for-perl/logo.png",
+   "description" : "SlapbirdAPM is a free and open-source observability platform for Perl web applications, this post covers how to use it with Plack applications.",
    "title" : "SlapbirdAPM, a Free and Open-Source Observability Tool for Perl Web Applications",
    "tags" : [
       "observability",
