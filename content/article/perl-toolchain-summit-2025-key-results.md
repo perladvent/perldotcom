@@ -1,3 +1,15 @@
+  {
+    "title": "The Perl Toolchain Summit 2025: Security, Testing, and Community Collaboration",
+    "authors": ["breno-g-de-oliveira"],
+    "tags": [],
+    "date": "2025-05-28T22:00:00",
+    "draft": false,
+    "image": "/images/perl-toolchain-summit-2025-key-results/pts-2025-group-photo.jpg",
+    "thumbnail": "/images/perl-toolchain-summit-2025-key-results/pts-2025-group-photo.jpg",
+    "description": "33 Perl ecosystem maintainers gathered in Leipzig for four days of intensive collaboration, delivering major security tooling improvements, testing infrastructure updates, and core performance enhancements that benefit the entire Perl community.",
+    "categories": "community"
+  }
+
 # The Perl Toolchain Summit 2025
 
 ![](pts-2025-group-photo.jpg)
@@ -47,10 +59,10 @@ The continued support of our sponsors ensures that the Perl Toolchain Summit rem
 
 ### Monetary Sponsors
 
-[Booking.com](https://www.booking.com/), [WebPros](https://www.webpros.com/), 
-[CosmoShop](https://www.cosmoshop.de/), [Datensegler](https://datensegler.at/), 
-[OpenCage](https://opencagedata.com), [SUSE](https://www.suse.com/), 
-[Simplelists Ltd](https://www.simplelists.com/), [Ctrl O Ltd](https://www.ctrlo.com/), 
+[Booking.com](https://www.booking.com/), [WebPros](https://www.webpros.com/),
+[CosmoShop](https://www.cosmoshop.de/), [Datensegler](https://datensegler.at/),
+[OpenCage](https://opencagedata.com), [SUSE](https://www.suse.com/),
+[Simplelists Ltd](https://www.simplelists.com/), [Ctrl O Ltd](https://www.ctrlo.com/),
 [Findus Internet-OPAC](https://www.findus-internet-opac.de/), [plusW GmbH](https://www.plusw.de/).
 
 ### In-kind sponsors
