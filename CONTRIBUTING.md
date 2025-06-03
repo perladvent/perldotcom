@@ -13,8 +13,10 @@ issue](https://github.com/perladvent/perldotcom/issues), or simply send up a pul
 request. Inside the repo, you can run the `make new` target and you'll be led
 through the questions to set up your initial article template:
 
-    % cpm install -g --cpanfile cpanfile
-    % make new
+```
+% cpm install -g --cpanfile cpanfile
+% make new
+```
 
 You can then check your article by starting a local server using [Hugo
 ](https://gohugo.io/). Note that version 0.147.5 is used for deployment, so
@@ -23,12 +25,16 @@ the latest available version is probably fine.
 
 To start the server run:
 
-    % make start
+```
+% make start
+```
 
 If you'd rather use the pinned version of Hugo which will be used for deploy
 (and you have Docker installed), run:
 
-    % make legacy-start
+```
+% make legacy-start
+```
 
 Once you submit your article, an editor will help guide it to its final form.
 
