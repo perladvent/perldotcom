@@ -1,7 +1,5 @@
 SITE=https://www.perl.com
 
-HUGO=hugo
-
 JSON_DIRNAME=json
 JSON_LOCAL_DIR=static/$(JSON_DIRNAME)
 
