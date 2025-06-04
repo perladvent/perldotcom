@@ -7,7 +7,7 @@
     "draft"       : false,
     "image"       : "/images/building-map-tube-maps-a-howto/tram-network-langenhagen-hannover-sarstedt-cover.png",
     "thumbnail"   : "/images/building-map-tube-maps-a-howto/Swiss-Cottage-Underground-Station-Jubilee-Line_Hugh-Llewelyn_flickr-To-Trains.jpg",
-    "description" : "Extending the network of a Map::Tube::<*> map",
+    "description" : "Extending the network of a Map::Tube::<*> map.",
     "categories"  : "tutorials",
     "canonicalURL": "https://peateasea.de/building-map-tube-whatever-maps-a-howto-extending-the-network/"
   }
