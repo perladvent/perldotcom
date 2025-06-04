@@ -7,7 +7,7 @@
     "draft"       : false,
     "image"       : "/images/building-map-tube-maps-a-howto/tram-network-hannover-linie1-linie4-linie7-cover.png",
     "thumbnail"   : "/images/building-map-tube-maps-a-howto/Swiss-Cottage-Underground-Station-Jubilee-Line_Hugh-Llewelyn_flickr-To-Trains.jpg",
-    "description" : "",
+    "description" : "Finding routes between stations in a Map::Tube::<*> map.",
     "categories"  : "tutorials",
     "canonicalURL": "https://peateasea.de/building-map-tube-whatever-maps-a-howto-routing-relative-reality/"
   }
