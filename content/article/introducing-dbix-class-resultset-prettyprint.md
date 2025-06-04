@@ -7,7 +7,7 @@
     "draft"       : false,
     "image"       : "/images/introducing-dbix-class-resultset-prettyprint/dbic-resultset-prettyprint-synopsis-cover.png",
     "thumbnail"   : "",
-    "description" : "",
+    "description" : "An answer on StackOverflow about pretty printing `DBIx::Class` result sets led to the creation of `DBIx::Class::ResultSet::PrettyPrint`.  This article describes what the module does and shows an example of its use.",
     "categories"  : "cpan",
     "canonicalURL": "https://peateasea.de/introducing-dbix-class-resultset-prettyprint/"
   }
