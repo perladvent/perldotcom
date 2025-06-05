@@ -2,7 +2,7 @@
   {
     "title"       : "Building Map::Tube::<*> maps, a HOWTO: alternative connections",
     "authors"     : ["paul-cochrane"],
-    "date"        : "2025-06-03T13:09:47",
+    "date"        : "2025-06-05T09:09:47",
     "tags"        : [],
     "draft"       : false,
     "image"       : "/images/building-map-tube-maps-a-howto/tram-network-hannover-linie1-linie4-linie7-linie10-cover.png",
