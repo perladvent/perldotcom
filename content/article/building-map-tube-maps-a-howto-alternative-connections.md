@@ -137,24 +137,24 @@ Again, we expected this as this line doesn't have any stations yet.  Let's
 add them to the map file.
 
 ```json
-            {
-                "id" : "H15",
-                "name" : "Ahlem",
-                "line" : "L10",
-                "link" : "H16"
-            },
-            {
-                "id" : "H16",
-                "name" : "Leinaustraße",
-                "line" : "L10",
-                "link" : "H15,H17"
-            },
-            {
-                "id" : "H17",
-                "name" : "Hauptbahnhof/ZOB",
-                "line" : "L10",
-                "link" : "H16"
-            }
+{
+    "id" : "H15",
+    "name" : "Ahlem",
+    "line" : "L10",
+    "link" : "H16"
+},
+{
+    "id" : "H16",
+    "name" : "Leinaustraße",
+    "line" : "L10",
+    "link" : "H15,H17"
+},
+{
+    "id" : "H17",
+    "name" : "Hauptbahnhof/ZOB",
+    "line" : "L10",
+    "link" : "H16"
+}
 ```
 
 This time, we expect the tests to tell us that this line isn't connected to
@@ -185,13 +185,13 @@ To fix this, let's change the entry for `Hauptbahnhof/ZOB` to use the
 `other_link` attribute and see if that helps:
 
 ```json
-            {
-                "id" : "H17",
-                "name" : "Hauptbahnhof/ZOB",
-                "line" : "L10",
-                "link" : "H16",
-                "other_link" : "Street:H3"
-            }
+{
+    "id" : "H17",
+    "name" : "Hauptbahnhof/ZOB",
+    "line" : "L10",
+    "link" : "H16",
+    "other_link" : "Street:H3"
+}
 ```
 
 Oddly, the tests still raise an error:
@@ -218,13 +218,13 @@ and can call on experience instead.
 We can fix the problem by updating the entry for `Hauptbahnhof` like so:
 
 ```json
-            {
-                "id" : "H3",
-                "name" : "Hauptbahnhof",
-                "line" : "L1,L7",
-                "link" : "H2,H8,H12",
-                "other_link" : "Street:H17"
-            },
+{
+    "id" : "H3",
+    "name" : "Hauptbahnhof",
+    "line" : "L1,L7",
+    "link" : "H2,H8,H12",
+    "other_link" : "Street:H17"
+},
 ```
 
 Now the tests still fail, even though we thought we'd fixed everything:
@@ -245,12 +245,12 @@ Let's replace ß with the equivalent "double-s" for the `Leinaustraße`
 station.  First in the map file:
 
 ```json
-            {
-                "id" : "H16",
-                "name" : "Leinaustrasse",
-                "line" : "L10",
-                "link" : "H15,H17"
-            },
+{
+    "id" : "H16",
+    "name" : "Leinaustrasse",
+    "line" : "L10",
+    "link" : "H15,H17"
+},
 ```
 
 and then in the routes tests:
