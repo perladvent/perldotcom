@@ -2,7 +2,7 @@
   {
     "title"       : "Introducing DBIx::Class::ResultSet::PrettyPrint",
     "authors"     : ["paul-cochrane"],
-    "date"        : "2025-06-03T14:03:48",
+    "date"        : "2025-06-06T11:03:48",
     "tags"        : [],
     "draft"       : false,
     "image"       : "/images/introducing-dbix-class-resultset-prettyprint/dbic-resultset-prettyprint-synopsis-cover.png",
