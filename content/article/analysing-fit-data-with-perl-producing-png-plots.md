@@ -7,7 +7,7 @@
     "draft"       : false,
     "image"       : "/images/analysing-fit-data-with-perl/plot-with-perl-logos-and-cyclist-cover.png",
     "thumbnail"   : "/images/analysing-fit-data-with-perl/plot-with-perl-logos-and-cyclist.png",
-    "description" : "",
+    "description" : "Plotting data extracted from Garmin FIT files with Perl",
     "categories"  : "data",
     "canonicalURL": "https://peateasea.de/analysing-fit-data-with-perl-producing-png-plots/"
   }
