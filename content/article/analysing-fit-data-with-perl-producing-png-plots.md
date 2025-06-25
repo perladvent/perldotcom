@@ -2,7 +2,7 @@
   {
     "title"       : "Analysing FIT data with Perl: producing PNG plots",
     "authors"     : ["paul-cochrane"],
-    "date"        : "2025-06-19T12:14:08",
+    "date"        : "2025-06-25T10:10:08",
     "tags"        : ["science", "sport", "cycling"],
     "draft"       : false,
     "image"       : "/images/analysing-fit-data-with-perl/plot-with-perl-logos-and-cyclist-cover.png",
