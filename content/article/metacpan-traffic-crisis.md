@@ -22,17 +22,17 @@ against an army of misbehaving bots and hostile traffic.
 ## The Problem Emerges
 
 MetaCPAN began experiencing multiple 503 service errors daily, disrupting access
-for legitimate Perl developers worldwide. Traditional monitoring fails to
+for legitimate Perl developers worldwide. Traditional monitoring failed to
 identify the root cause of traffic spikes overwhelming the infrastructure.
 
 ## Initial Investigation Phase
 
-The team implements basic monitoring and takes preliminary defensive measures:
+The team implemented basic monitoring and took preliminary defensive measures:
 
-- Deploy uWSGI stats monitoring to track application performance
-- Update robots.txt to explicitly list bots and specify crawling restrictions
-- Begin manual IP blocking of obvious bad actors
-- Attempt to deploy Anubis rate limiting (ultimately failed and rolled back)
+- Deployed uWSGI stats monitoring tools to track application performance
+- Updated robots.txt to explicitly list bots and specify crawling restrictions
+- Began manual IP blocking of obvious bad actors
+- Attempted to deploy Anubis rate limiting (ultimately failed and was rolled back)
 
 ## The Datadog Breakthrough
 
@@ -41,28 +41,28 @@ The team implements basic monitoring and takes preliminary defensive measures:
   <img src="/images/metacpan-traffic-crisis/fastlyLogo-red-SVG.svg" alt="Fastly logo" style="width: 40%;">
 </div>
 
-Partnership with Datadog transforms visibility into the problem:
+Partnership with Datadog transformed visibility into the problem:
 
-- Establish comprehensive logging pipeline sending Fastly CDN logs for both web
+- Established comprehensive logging pipeline sending Fastly CDN logs for both web
   and API services to Datadog
-- Deploy Kubernetes Datadog agent to cluster
-- Create public dashboard showing real-time traffic metrics
-- Build private dashboard specifically to identify problematic IPs and user
+- Deployed Kubernetes Datadog agent to cluster
+- Created public dashboard showing real-time traffic metrics
+- Built private dashboard specifically to identify problematic IPs and user
   agents
 
 **Result:** Finally able to see the enemy—specific IP ranges (particularly from
 Alibaba.com) and user agents generating massive request volumes. However, manual
-blocking proves unsustainable, requiring constant vigilance and rapid response.
+blocking proved unsustainable, requiring constant vigilance and rapid response.
 
 ## Escalating Defences
 
-Team implements more sophisticated blocking:
+The team implemented more sophisticated blocking:
 
-- Deploy VCL snippets in Fastly to block based on user agents (later replaced
+- Deployed VCL snippets in Fastly to block based on user agents (later replaced
   with Next Gen WAF)
-- Block extensive IP ranges using Fastly's IP Block list feature
-- Implement additional request rate limiting
-- Partner with Fastly for free enterprise services including DDoS protection
+- Blocked extensive IP ranges using Fastly's IP Block list feature
+- Implemented additional request rate limiting
+- Partnered with Fastly for free enterprise services including DDoS protection
 
 **Limitation:** Manual processes couldn't keep pace with evolving attack
 patterns.
@@ -71,19 +71,19 @@ patterns.
 
 Deployment of Fastly's Web Application and API Protection:
 
-- Enable next-gen WAF to automatically identify and block suspect bots
-- Implement categorical blocking for known bad traffic types
-- Reduce manual intervention requirements significantly
+- Enabled next-gen WAF to automatically identify and block suspect bots
+- Implemented categorical blocking for known bad traffic types
+- Reduced manual intervention requirements significantly
 
 **Progress:** Noticeable improvement, but sophisticated attacks still
 overwhelmed the service during peak periods.
 
 ## The Dynamic Challenge Solution
 
-Final defensive layer activated:
+Final defensive layer was activated:
 
-- Deploy Fastly's Dynamic Challenge WAF feature
-- Intelligent challenge system filters automated bots whilst allowing legitimate
+- Deployed Fastly's Dynamic Challenge WAF feature
+- Intelligent challenge system filtered automated bots whilst allowing legitimate
   users through
 - Dramatic reduction in successful attacks reaching MetaCPAN infrastructure
 
@@ -99,12 +99,12 @@ tells the success story in real-time metrics:
 
 In the last week the number of requests handled broke down as follows:
 
-- 5,190,000 million bad bot requests (this includes AI scrapers) blocked
+- 5,190,000 bad bot requests (this includes AI scrapers) blocked
 - 3,290,000 challenges issued
 - 579,000 requests rate limited
-- 1,720,000 million legit requests served (much of this from Fastly's CDN cache)
-  and the rest of which then makes it to the origin servers and successfully
-  served back to end users.
+- 1,720,000 legitimate requests served (much of this from Fastly's CDN cache),
+  with the remainder reaching the origin servers and being successfully served
+  to end users.
 
 So about 80% of all traffic is now blocked.
 
