@@ -1,99 +1,105 @@
 #!/usr/bin/env perl
-use v5.10;
+use v5.12;
 use autodie;
 use open qw(:std :utf8);
 
-use Cwd;
-use Encode;
-use ExtUtils::MakeMaker qw(prompt);
-use File::Basename qw(basename);
-use File::Spec::Functions qw(catfile);
-use Getopt::Long 'GetOptions';
-use I18N::Langinfo qw(langinfo CODESET);
-use IO::Interactive qw(is_interactive);
-use Time::Piece;
+use Cwd                   qw( cwd );
+use Encode                qw( decode );
+use ExtUtils::MakeMaker   qw( prompt );
+use File::Basename        qw( basename );
+use File::Spec::Functions qw( catfile );
+use Getopt::Long          qw( GetOptions );
+use I18N::Langinfo        qw( CODESET langinfo );
+use IO::Interactive       qw(is_interactive);
+use Time::Piece           qw( localtime );
+use TOML::Tiny            qw( to_toml );
 
 # check we're in perldotcom
 my $cwd = cwd();
-chomp $cwd; # for Mac OS?
+chomp $cwd;    # for Mac OS?
 die "$0 must be run from the root project directory!\n"
-  unless basename($cwd) eq 'perldotcom';
+    unless basename($cwd) eq 'perldotcom';
 
 my @categories = get_categories();
 
 GetOptions(
-  'title=s'       => \my $title,
-  'category=s'    => \my $category,
-  'description=s' => \(my $description),
-  'author=s'      => \(my $author = $ENV{PERLDOTCOM_AUTHOR}),
-  'help'          => \&usage,
-  'open'          => \my $open_in_editor,
-  'editor'        => \(my $editor = $ENV{EDITOR}),
+    'title=s'       => \my $title,
+    'category=s'    => \my $category,
+    'description=s' => \( my $description ),
+    'author=s'      => \( my $author = $ENV{PERLDOTCOM_AUTHOR} ),
+    'help'          => \&usage,
+    'open'          => \my $open_in_editor,
+    'editor'        => \( my $editor = $ENV{EDITOR} ),
 ) or usage();
 
-if( is_interactive ) {
-  $title  //= prompt( "What's the title of your article?" );
-  die "Article needs a title!\n" unless $title;
+if (is_interactive) {
+    $title //= prompt("What's the title of your article?");
+    die "Article needs a title!\n" unless $title;
 
-  $author //= prompt( "What's your author name?" );
-  die "Article needs an author! (See $0 --help)\n" unless $title;
+    $author //= prompt("What's your author name?");
+    die "Article needs an author! (See $0 --help)\n" unless $title;
 
-  unless( $category ) {
-    say "==== Choose a category from\n@categories\n-----";
-    $category //= prompt( "Choose a category:" );
-    die "Invalid category [$category]! (See $0 --help)"
-      unless grep $_ eq $category, @categories;
-  }
+    unless ($category) {
+        say "==== Choose a category from\n@categories\n-----";
+        $category //= prompt("Choose a category:");
+        die "Invalid category [$category]! (See $0 --help)"
+            unless grep $_ eq $category, @categories;
+    }
 }
 
-usage() unless $title && $author && $category && (grep $_ eq $category, @categories);
+usage()
+    unless $title
+    && $author
+    && $category
+    && ( grep $_ eq $category, @categories );
 
 # don't assume that the command line is a particular encoding. See what
 # CODESET is and decode it into a Perl string.
-( $title, $description, $author, $category ) = map { decode( langinfo(CODESET), $_ ) }
-	( $title, $description, $author, $category );
+( $title, $description, $author, $category )
+    = map { decode( langinfo(CODESET), $_ ) }
+    ( $title, $description, $author, $category );
 
 # prepare the file
 my $filename = lc $title;
 $filename =~ s/\W+/-/g;
 $filename = catfile( qw/content article/, "$filename.md" );
-die "$filename.md already exists!\n" if -e $filename;
-open my $fh, '>:utf8', $filename;
+open my $fh, '>:encoding(UTF-8)', $filename;
 
-my $dt = localtime;
+my $dt   = localtime;
 my $date = $dt->datetime;
 
-print $fh qq(
-  {
-    "title"        : "$title",
-    "authors"      : ["$author"],
-    "date"         : "$date",
-    "tags"         : [],
-    "draft"        : false,
-    "image"        : "",
-    "thumbnail"    : "",
-    "description"  : "$description",
-    "categories"   : "$category",
-    "canonicalUrl" : ""
-  }
+my %frontmatter = (
+    title        => $title,
+    authors      => [$author],
+    date         => $date,
+    tags         => [],
+    draft        => \0,
+    image        => "",
+    thumbnail    => "",
+    description  => $description // "",
+    categories   => $category,
+    canonicalUrl => ""
+);
 
-The article body goes here. Don't forget to delete this stuff!
+say $fh "+++";
+say $fh to_toml( \%frontmatter );
+say $fh "+++\n";
+print $fh qq(The article body goes here. Don't forget to delete this stuff!
 
 Other resources:
 
 * [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/)
 * [How to write your first article for Perl.com](/article/how-to-write-your-first-article-for-perl-com/)
 * [How to find a programming topic to write about](/article/how-to-find-a-programming-topic-to-write-about/)
-
 );
 
 print "$filename created\n.";
 system $editor, $filename if $open_in_editor;
 
 sub usage {
-  my $categories = join ', ', @categories;
-  print "\n$0 [OPTIONS]\n\n";
-  print "Options
+    my $categories = join ', ', @categories;
+    print "\n$0 [OPTIONS]\n\n";
+    print "Options
   --title, -t        Article title (required)
   --category, -c     One of: $categories
   --description, -d  Description (subtitle)
@@ -102,9 +108,11 @@ sub usage {
   --open, -o         Open in editor (defaults to \$EDITOR environment variable)
   --editor, -e       Editor to use (defaults to \$EDITOR environment variable)
   \n";
-  exit 0;
+    exit 0;
 }
 
 sub get_categories {
-  return map { chomp; length $_ ? $_ : () } `$^X bin/q --sql 'select distinct categories from article order by 1'`;
+    return
+        map { chomp; length $_ ? $_ : () }
+        `$^X bin/q --sql 'select distinct categories from article order by 1'`;
 }

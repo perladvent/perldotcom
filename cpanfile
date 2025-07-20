@@ -17,3 +17,4 @@ requires 'Path::Tiny';
 requires 'Term::ANSIColor';
 requires 'Text::CSV';
 requires 'Time::Moment';
+requires 'TOML::Tiny';
