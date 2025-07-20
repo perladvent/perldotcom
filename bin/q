@@ -2,58 +2,64 @@
 use v5.16.0;
 use warnings;
 use autodie;
-use DBI;
-use File::Find::Rule;
-use Getopt::Long;
-use JSON::XS 'decode_json';
+use DBI              ();
+use File::Find::Rule ();
+use Getopt::Long     qw( GetOptions );
+use JSON::XS         qw( decode_json );
 
-GetOptions (
-   'sql=s'    => \my $sql,
-   'format=s' => \(my $format = 'join "\t", map $r{$_}||"", sort keys %r'),
+GetOptions(
+    'sql=s'    => \my $sql,
+    'format=s' => \( my $format = 'join "\t", map $r{$_}||"", sort keys %r' ),
 ) or die("Error in command line arguments\n");
 
 die 'requires --sql argument' unless $sql;
 
 my @metadata = qw(
-  article_id categories date description draft filename image slug thumbnail title
+    article_id categories date description draft filename image slug thumbnail title
 );
 my $metadata = join ',', @metadata;
 
-my $dbh = DBI->connect('dbi:SQLite::memory:', { RaiseError => 1 });
+my $dbh = DBI->connect( 'dbi:SQLite::memory:', { RaiseError => 1 } );
 $dbh->do("CREATE TABLE article ($metadata)");
 $dbh->do("CREATE TABLE author (article_id, author)");
 $dbh->do("CREATE TABLE tag (article_id, tag)");
 
 my $article_id = 0;
-for my $filename (File::Find::Rule->file->name('*.md')->in('content')) {
-  my $json;
-  open my $fh, '<', $filename;
-  while (<$fh>) {
-    $json .= $_ if /^\s*{/ .. 0;
-    last if /}\s*$/;
-  }
-  my $data = decode_json($json);
-  $data->{article_id} = ++$article_id;
-  $data->{filename} = $filename;
+for my $filename ( File::Find::Rule->file->name('*.md')->in('content') ) {
+    my $json;
+    open my $fh, '<', $filename;
+    while (<$fh>) {
+        $json .= $_ if /^\s*{/ .. 0;
+        last        if /}\s*$/;
+    }
+    my $data = decode_json($json);
+    $data->{article_id} = ++$article_id;
+    $data->{filename}   = $filename;
 
-  my @values = map { $data->{$_} } @metadata;
-  $dbh->do("INSERT INTO article ($metadata) VALUES (?,?,?,?,?,?,?,?,?,?)",
-    undef, @values);
+    my @values = map { $data->{$_} } @metadata;
+    $dbh->do(
+        "INSERT INTO article ($metadata) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        undef, @values
+    );
 
-  for my $author (@{$data->{authors}}) {
-    $dbh->do("INSERT INTO author (article_id, author) VALUES (?,?)",
-      undef, $data->{article_id}, $author);
-  }
-  for my $tag (@{$data->{tags}}) {
-    $dbh->do("INSERT INTO tag (article_id, tag) VALUES (?,?)",
-      undef, $data->{article_id}, $tag);
-  }
+    for my $author ( @{ $data->{authors} } ) {
+        $dbh->do(
+            "INSERT INTO author (article_id, author) VALUES (?,?)",
+            undef, $data->{article_id}, $author
+        );
+    }
+    for my $tag ( @{ $data->{tags} } ) {
+        $dbh->do(
+            "INSERT INTO tag (article_id, tag) VALUES (?,?)",
+            undef, $data->{article_id}, $tag
+        );
+    }
 }
 
 my $sth = $dbh->prepare($sql);
 $sth->execute();
 
-my $formatter = sub { my %r = %{$_[0]}; eval $format };
-for my $row (@{$sth->fetchall_arrayref({})}) {
-  say $formatter->($row);
+my $formatter = sub { my %r = %{ $_[0] }; eval $format };
+for my $row ( @{ $sth->fetchall_arrayref( {} ) } ) {
+    say $formatter->($row);
 }
