@@ -7,12 +7,11 @@ description = ""
 draft = false
 image = "/images/metacpan-traffic-crisis/amelias-sad-face.jpg"
 tags = []
-thumbnail = ""
+thumbnail = "/images/metacpan-traffic-crisis/amelias-sad-face.jpg"
 title = "MetaCPAN's Traffic Crisis: An Eventual Success Story"
 +++
 
 <p class="attribution">"<a rel="noopener noreferrer" href="https://www.flickr.com/photos/11946169@N00/9436653177">Amelia&#039;s Sad Face</a>" by <a rel="noopener noreferrer" href="https://www.flickr.com/photos/11946169@N00">donnierayjones</a> is licensed under <a rel="noopener noreferrer" href="https://creativecommons.org/licenses/by/2.0/?ref=openverse">CC BY 2.0 <img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" style="height: 1em; margin-right: 0.125em; display: inline;" /><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" style="height: 1em; margin-right: 0.125em; display: inline;" /></a>.</p>
-
 
 [MetaCPAN.org](https://metacpan.org), the essential search engine for Perl's
 CPAN repository, has faced months of severe traffic issues that brought the
@@ -32,7 +31,8 @@ The team implemented basic monitoring and took preliminary defensive measures:
 - Deployed uWSGI stats monitoring tools to track application performance
 - Updated robots.txt to explicitly list bots and specify crawling restrictions
 - Began manual IP blocking of obvious bad actors
-- Attempted to deploy Anubis rate limiting (ultimately failed and was rolled back)
+- Attempted to deploy Anubis rate limiting (ultimately failed and was rolled
+  back)
 
 ## The Datadog Breakthrough
 
@@ -43,8 +43,8 @@ The team implemented basic monitoring and took preliminary defensive measures:
 
 Partnership with Datadog transformed visibility into the problem:
 
-- Established comprehensive logging pipeline sending Fastly CDN logs for both web
-  and API services to Datadog
+- Established comprehensive logging pipeline sending Fastly CDN logs for both
+  web and API services to Datadog
 - Deployed Kubernetes Datadog agent to cluster
 - Created public dashboard showing real-time traffic metrics
 - Built private dashboard specifically to identify problematic IPs and user
@@ -83,14 +83,14 @@ overwhelmed the service during peak periods.
 Final defensive layer was activated:
 
 - Deployed Fastly's Dynamic Challenge WAF feature
-- Intelligent challenge system filtered automated bots whilst allowing legitimate
-  users through
+- Intelligent challenge system filtered automated bots whilst allowing
+  legitimate users through
 - Dramatic reduction in successful attacks reaching MetaCPAN infrastructure
 
 ## Current State: Victory Through Data
 
-![Bad bots traffic visualization](/images/metacpan-traffic-crisis/badbots.png)
----
+## ![Bad bots traffic visualization](/images/metacpan-traffic-crisis/badbots.png)
+
 ![Traffic challenges chart](/images/metacpan-traffic-crisis/challenges.png)
 
 Today's
@@ -114,7 +114,7 @@ effectiveness of the layered defence strategy.
 We have RSS feeds and a dedicated API which can be easily accessed through
 [MetaCPAN::Client](https://metacpan.org/pod/MetaCPAN::Client) for anyone who
 wants to get data from us without scraping the site. We do ask that people
-register XXXXX FIX ME XXXXXX their user agent.
+[register their user agent](https://github.com/metacpan/metacpan-api/wiki/fastapi-Consumers).
 
 ## Community Heroes
 
@@ -128,9 +128,9 @@ deserve particular recognition for donating enterprise-grade services. Without
 these contributions, MetaCPAN couldn't operate at the required scale and
 reliability.
 
-**Additional sponsors** listed at <https://metacpan.org/about/sponsors>
-continue supporting this vital community resource, though operational costs
-remain significant.
+**Additional sponsors** listed at <https://metacpan.org/about/sponsors> continue
+supporting this vital community resource, though operational costs remain
+significant.
 
 **How to help:** The Perl community can support MetaCPAN's ongoing operations
 through <https://opencollective.com/metacpan-core>, ensuring this essential
