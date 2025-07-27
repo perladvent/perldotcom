@@ -2,7 +2,7 @@
   {
     "title"       : "Analysing FIT data with Perl: interactive data analysis",
     "authors"     : ["paul-cochrane"],
-    "date"        : "2025-07-10T11:46:04",
+    "date"        : "2025-07-27T11:46:04",
     "tags"        : ["science", "sport", "cycling"],
     "draft"       : false,
     "image"       : "/images/analysing-fit-data-with-perl/plot-with-perl-logos-and-cyclist-cover.png",
