@@ -20,10 +20,10 @@ contribution bolsters the Perl 5 Core Maintenance Fund and demonstrates SUSE's
 commitment to the open-source ecosystem.
 
 This donation from SUSE is actually made up of two parts. $10,000 is being
-donated by SUSE LLC and an additional $1,500 is being provided by The SUSE Open
-Source Network, to support the development and sustainability of Perl. This
-aligns with the network's mission to empower and support open source
-communities.
+donated by SUSE LLC and an additional $1,500 is being provided by [The SUSE
+Open Source Network](https://www.suse.com/sustainability/), to support the
+development and sustainability of Perl. This aligns with the network's mission
+to empower and support open source communities.
 
 ## Perl is a Fundamental Component of the SUSE Ecosystem
 
