@@ -29,7 +29,7 @@ My recommendation is to use a git pre-commit hook that runs [Perl::Critic]({{< m
 
 Set Up Perl::Critic and Perl::Tidy
 ------------------
-You can install [Perl::Critic]({{< mcpan "Perl::Critic" >}}) and [Perl::Tidy](<{{ mcpan "Perl::Tidy" >}}) from CPAN or they might be available on your package manager. Once installed, you'll need to configure them.
+You can install [Perl::Critic]({{< mcpan "Perl::Critic" >}}) and [Perl::Tidy]({{< mcpan "Perl::Tidy" >}}) from CPAN or they might be available on your package manager. Once installed, you'll need to configure them.
 
 For `.perlcriticrc` my suggestion is to start with the following configuration:
 ```
