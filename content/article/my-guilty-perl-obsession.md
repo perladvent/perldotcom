@@ -107,3 +107,9 @@ Now, 30 years later, I often encounter code & comments, decades old.<br>
 The feeling I get from seeing a line that's now older than the me who wrote it...<br>
 I used to feel alone.<br>
 I now feel that thanks to the perl community, I was never alone.<br>
+
+---
+
+***Holophrastic is proud to be the first sponsor of the 2026 Perl and Raku Conference.***
+
+---
