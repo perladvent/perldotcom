@@ -6,7 +6,7 @@
   "tags"        : ["git","perlcritic","perltidy"],
   "draft"       : false,
   "image"       : "",
-  "thumbnail"   : "",
+  "thumbnail"   : "/images/site/perl-camel.png",
   "description" : "Some tips for improving consistency in shared Perl codebases",
   "categories"  : "development"
 }
