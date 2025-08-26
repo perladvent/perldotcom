@@ -1,7 +1,7 @@
 +++
 canonicalUrl=""
 categories="community"
-date=2025-08-05T09:09:09
+date=2025-08-26T11:09:09
 description="Perl came for free.  How much have I contributed in return?  Absolutely nothing."
 draft=false
 image="/images/my-guilty-perl-obsession/holophrastic-black.png"
