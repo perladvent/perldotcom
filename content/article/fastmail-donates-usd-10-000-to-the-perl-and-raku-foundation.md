@@ -4,11 +4,11 @@ categories="community"
 date=2025-07-27T18:45:55
 description=""
 draft=false
-image=""
+image="/images/fastmail-donates-usd-10-000-to-the-perl-and-raku-foundation/FM-Logo-RGB.png"
 thumbnail="/images/fastmail-donates-usd-10-000-to-the-perl-and-raku-foundation/FM-Icon-RGB.png"
 title=" Fastmail Donates USD 10,000 to The Perl and Raku Foundation"
 authors=[
-  "olaf-alder",
+  "olaf-alders",
 ]
 tags=[]
 +++
