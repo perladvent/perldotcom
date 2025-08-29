@@ -13,6 +13,20 @@ authors=[
 tags=[]
 +++
 
+> Fastmail is the future of email.  Devoted to contributing to a better
+> internet through the use and development of open-source software and
+> standards, Fastmail makes email better for users, developers, and network
+> operators.
+>
+> Fastmail puts its customers in control of their data. Customizable and packed
+> with productivity features, Fastmail lets you reclaim time by providing one
+> efficient place to handle your email, calendar, and contacts.  Its support is
+> second to none, with a team of in-house experts ready to assist you when you
+> need it.
+>
+> Trusted by customers for over 20 years, Fastmail is the perfect, private,
+> productive way to make email yours!
+
 The article body goes here. Don't forget to delete this stuff!
 
 Other resources:
