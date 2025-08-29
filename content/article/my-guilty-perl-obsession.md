@@ -88,7 +88,7 @@ Custom Business Web Development<br>
 I work as what I'd call an inside-contractor.<br>
 I'm a speed-dial (is that still a thing?) phone call away.<br>
 Occasionally, a client will call me a dozen times in a day.<br>
-I'm closer than their coleague in the next office.<br>
+I'm closer than their colleague in the next office.<br>
 
 It usually starts with "a website"<br>
 the typical sales- or marketing-oriented something-pretty<br>
