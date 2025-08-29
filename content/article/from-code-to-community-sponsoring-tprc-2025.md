@@ -133,5 +133,5 @@ languages through open source development, education, and community building.
 
 ### Contact Information
 
-For more information on to become a sponsor, please contact:
+For more information on how to become a sponsor, please contact:
 <olaf@perlfoundation.org>
