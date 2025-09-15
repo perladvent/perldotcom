@@ -4,8 +4,8 @@ categories="web"
 date=2025-09-12T18:12:41
 description="The Dancer Core Team is excited to announce the release of Dancer2 2.0.0."
 draft=false
-image=""
-thumbnail=""
+image="/images/announcing-dancer2-2-0-0/perldancer-logo.png"
+thumbnail="/images/announcing-dancer2-2-0-0/perldancer-header-logo.png"
 title="Announcing Dancer2 2.0.0"
 authors=[
   "jason-a-crome",
