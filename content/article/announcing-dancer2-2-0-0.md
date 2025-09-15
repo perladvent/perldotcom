@@ -1,7 +1,7 @@
 +++
 canonicalUrl=""
 categories="web"
-date=2025-09-12T18:12:41
+date=2025-09-15T18:00:00
 description="The Dancer Core Team is excited to announce the release of Dancer2 2.0.0."
 draft=false
 image="/images/announcing-dancer2-2-0-0/perldancer-logo.png"
