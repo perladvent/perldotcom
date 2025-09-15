@@ -18,7 +18,7 @@ tags=[]
 The Dancer Core Team project is proud to announce the release of **Dancer2 2.0.0**!
 
 This release has been a long time coming, and while open source sometimes takes longer
-than we’d like, we believe wait has been worth it. With fresh documentation, architectural
+than we’d like, we believe the wait has been worth it. With fresh documentation, architectural
 improvements, and developer-friendly new features, version 2.0.0 represents a significant
 evolution of Dancer2 and the Perl web ecosystem.
 
