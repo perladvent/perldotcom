@@ -53,7 +53,7 @@ Here are some of the most important changes included in Dancer2 2.0.0:
   [Learn more in the config guide →](https://metacpan.org/dist/Dancer2/view/lib/Dancer2/Config.pod)
 
 - **A Leaner Core Distribution**
-  Why have two configuration systems in the core framework when you can have zero?
+  Why have two templating systems in the core framework when you can have zero?
   - `Dancer2::Template::Simple` has been removed from the core. It is now available
     as a separate distribution on [MetaCPAN](https://metacpan.org/pod/Dancer2::Template::Simple)
     for migration projects from Dancer 1.
