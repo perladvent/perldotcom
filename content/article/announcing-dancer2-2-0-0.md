@@ -50,7 +50,7 @@ Here are some of the most important changes included in Dancer2 2.0.0:
   Building on this work, long-time core team member **Yanick Champoux** enhanced the new
   configuration system even further, enabling additional configuration readers to be
   bootstrapped by the default one.
-  [Learn more in the config guide →](https://metacpan.org/dist/Dancer2/view/lib/Dancer2/Config.pod)
+  [Learn more in the config guide →](https://metacpan.org/dist/Dancer2/view/lib/Dancer2/Manual/Config.pod)
 
 - **A Leaner Core Distribution**
   Why have two templating systems in the core framework when you can have zero?
@@ -63,15 +63,15 @@ Here are some of the most important changes included in Dancer2 2.0.0:
 
 - **Smarter Data Handling**
   Dancer2 now supports configurable data/secrets censoring using `Data::Censor`, helping developers
-  protect sensitive information in logs and debug pages. [Learn more about Data::Censor →](https://perldancer.org/documentation/logging)
+  protect sensitive information in logs and debug pages. [Learn more about Data::Censor →](https://metacpan.org/pod/Data::Censor)
 
 - **Better Logging and Debugging**
   Hooks are now logged as they are executed, and a brand-new hook — `on_hook_exception` — provides
-  a way to handle unexpected issues more gracefully. [See the hooks documentation →](https://github.com/PerlDancer/Dancer2/blob/main/lib/Dancer2/Manual.pod#Hooks)
+  a way to handle unexpected issues more gracefully. [See the hooks documentation →](https://metacpan.org/dist/Dancer2/view/lib/Dancer2/Manual.pod#Hooks)
 
 - **CLI Improvements**
   The command-line interface also received some attention:
-  - Allows new Dancer2 applications to be scaffolded from the [Dancer2 Tutorial](https://github.com/PerlDancer/Dancer2/blob/main/lib/Dancer2/Manual/Tutorial.pod).
+  - Allows new Dancer2 applications to be scaffolded from the [Dancer2 Tutorial](https://metacpan.org/dist/Dancer2/view/lib/Dancer2/Manual/Tutorial.pod).
   - Behind-the-scenes improvements to allow future scaffolding of plugins and extensions.
 
 ## Thank You to Our Contributors
