@@ -25,17 +25,29 @@ secure the future of The Perl 5 Core Maintenance Fund.
 
 -- Michael Kröll of Geizhals Preisvergleich
 
-Geizhals Preisvergleich (literally [Skinflint Price
-Comparison](https://skinflint.co.uk/)) began in July of 1997 as a hobby project
-and has leveraged the power of Perl to scale up to serving [4.3 million monthly
-users](https://unternehmen.geizhals.at/). With Perl being a key part of their
-infrastructure, they have have generously decided to support the Perl 5 Core
-Maintenance Fund.
+> “Geizhals is not only providing core funding for the Perl ecosystem, but also
+> supporting developers, actively contributing to European conferences, and
+> employing Perl coders. Their interest in the strategic maintenance and
+> development of Perl and CPAN is of great value to us all, and their
+> investment is very much appreciated.”
 
-Many of use are familiar with the Core 5 Maintenance Fund, but we may not have
-a clear idea of which problems it actually solves. I reached out to the
-maintainers whose work is supported by this fund. This is what core maintainer
-Tony Cook had to say:
+-- Stuart J Mackintosh, President of The Perl and Raku Foundation
+
+But who exactly is Geizhals, and why does their support matter so much to the
+Perl community?
+
+Geizhals Preisvergleich began in July of 1997 as a hobby project—and yes,
+"Geizhals" literally translates to "skinflint" in English (they even operate
+[skinflint.co.uk](https://skinflint.co.uk/) for UK users!). From those humble
+beginnings, they've leveraged the power of Perl to scale up to serving [4.3
+million monthly users](https://unternehmen.geizhals.at/). With Perl being a key
+part of their infrastructure, they have generously decided to support the Perl
+5 Core Maintenance Fund.
+
+While many of us know about the Core Maintenance Fund, the specific problems it
+addresses often remain invisible to users. I reached out to the maintainers
+whose work is supported by this fund. This is what core maintainer Tony Cook
+had to say:
 
 > My work tends to be little things, I review other people's work which I think
 > improves quality and velocity, and fix more minor issues, some examples would
