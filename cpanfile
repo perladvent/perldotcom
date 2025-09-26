@@ -1,6 +1,7 @@
 requires 'CPAN::Recent::Uploads';
 requires 'DBD::SQLite';
 requires 'DBI';
+requires 'Feature::Compat::Try';
 requires 'File::Find::Rule';
 requires 'File::Path';
 requires 'File::Spec::Functions';
