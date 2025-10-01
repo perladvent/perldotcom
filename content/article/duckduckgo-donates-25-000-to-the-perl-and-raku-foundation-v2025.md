@@ -13,7 +13,8 @@ authors=[
 tags=[]
 +++
 For the second consecutive year, The Perl and Raku Foundation (TPRF) is
-overjoyed to announce a donation of USD 25,000 from DuckDuckGo.
+overjoyed to announce [a donation of USD 25,000 from
+DuckDuckGo](https://spreadprivacy.com/2025-duckduckgo-charitable-donations/).
 
 > DuckDuckGo has demonstrated how Perl and its ecosystem can deliver power and
 > scale to drive the DuckDuckGo core systems, plug-in framework and Instant
