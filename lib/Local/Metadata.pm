@@ -7,6 +7,7 @@ use Carp qw(carp);
 use File::stat;
 use JSON::MaybeXS;
 use Time::Moment;
+use TOML::Tiny qw(from_toml);
 
 =head1 NAME
 
@@ -111,16 +112,47 @@ sub _extract_metadata_from_md ( $class, $filename ) {
 		return;
 		};
 
-	my $json_data;
+	# Skip blank lines to find the front matter start
+	my $first_line;
 	while (<$fh>) {
-		$json_data .= $_ if /^\s*{/ .. 0;
-		last if /}\s*$/;
+		next if /^\s*$/;
+		$first_line = $_;
+		last;
+		}
+	seek $fh, 0, 0;  # rewind
+
+	my $perl_data;
+	if ( $first_line =~ /^\s*\{/ ) {
+		# JSON front matter
+		my $json_data;
+		while (<$fh>) {
+			$json_data .= $_ if /^\s*{/ .. 0;
+			last if /}\s*$/;
+			}
+		my $json_obj = JSON->new();
+		$perl_data = $json_obj->decode($json_data);
+		}
+	elsif ( $first_line =~ /^\+\+\+/ ) {
+		# TOML front matter
+		my $toml_data = '';
+		<$fh>;  # skip the opening +++
+		while (<$fh>) {
+			last if /^\+\+\+/;
+			$toml_data .= $_;
+			}
+		my ($data, $err) = from_toml($toml_data);
+		if ( $err ) {
+			carp "Could not parse TOML in <$filename>: $err\n";
+			return;
+			}
+		$perl_data = $data;
+		}
+	else {
+		carp "Unknown front matter format in <$filename>\n";
+		return;
 		}
 
 	close $fh;
-
-	my $json_obj = JSON->new();
-	my $perl_data = $json_obj->decode($json_data);
 	return $perl_data;
 	}
 
