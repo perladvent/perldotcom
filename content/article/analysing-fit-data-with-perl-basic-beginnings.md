@@ -801,4 +801,4 @@ Seeing numerical values of ride statistics is all well and good, but it's
 much nicer to see a picture of the data.  To do this, we need to plot it.
 
 But that's [a story for another
-time]({{site.baseurl}}/analysing-fit-data-with-perl-producing-png-plots/).
+time](/article/analysing-fit-data-with-perl-producing-png-plots/).
