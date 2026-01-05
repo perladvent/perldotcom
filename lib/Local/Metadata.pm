@@ -3,11 +3,11 @@ use feature qw(signatures);
 no warnings qw(experimental::signatures);
 
 package Local::Metadata;
-use Carp qw(carp);
-use File::stat;
-use JSON::MaybeXS;
-use Time::Moment;
-use TOML::Tiny qw(from_toml);
+use Carp          qw( carp );
+use File::stat    qw( stat );
+use JSON::MaybeXS qw( JSON );
+use Time::Moment  ();
+use TOML::Tiny    qw( from_toml );
 
 =head1 NAME
 
@@ -68,93 +68,96 @@ something goes wrong.
 # I know the error checking is a bit tedious here but we're largely
 # dealing with human-edited files so I expect many problems.
 sub new_from_file ( $class, $filename ) {
-	unless( -e $filename ) {
-		carp "Could not find <$filename>";
-		return;
-		}
+    unless ( -e $filename ) {
+        carp "Could not find <$filename>";
+        return;
+    }
 
-	open my $fh, '<:utf8', $filename or do {
-		carp "Could not open file <$filename>: $!";
-		return;
-		};
+    open my $fh, '<:utf8', $filename or do {
+        carp "Could not open file <$filename>: $!";
+        return;
+    };
 
-	my $metadata = $class->_extract_metadata_from_md( $filename );
-	unless( ref $metadata ) {
-		carp "Could not extract metadata for <$filename>";
-		return;
-		}
+    my $metadata = $class->_extract_metadata_from_md($filename);
+    unless ( ref $metadata ) {
+        carp "Could not extract metadata for <$filename>";
+        return;
+    }
 
-	unless( ref $metadata eq ref {}  ) {
-		carp "Metadata in <$filename> was not a hash. It was a $metadata.";
-		return;
-		}
+    unless ( ref $metadata eq ref {} ) {
+        carp "Metadata in <$filename> was not a hash. It was a $metadata.";
+        return;
+    }
 
-	bless $metadata, $class;
+    bless $metadata, $class;
 
-	$metadata->augment(
-		filename => $filename,
-		stat     => stat( $filename ),
-		legacy   => !! ( $filename =~ m|\Acontent/legacy/| ),
-		);
+    $metadata->augment(
+        filename => $filename,
+        stat     => stat($filename),
+        legacy   => !!( $filename =~ m|\Acontent/legacy/| ),
+    );
 
-	$metadata->augment(
-		url_path => $metadata->_file_to_url_path,
-		epoch    => $metadata->_date_to_epoch,
-		);
+    $metadata->augment(
+        url_path => $metadata->_file_to_url_path,
+        epoch    => $metadata->_date_to_epoch,
+    );
 
-	return $metadata;
-	}
+    return $metadata;
+}
 
 sub _extract_metadata_from_md ( $class, $filename ) {
-	# we need the raw UTF-8 string to decode it as JSON
-	open my $fh, '<:raw', $filename or do {
-		carp "Could not open <$filename>: $!\n";
-		return;
-		};
 
-	# Skip blank lines to find the front matter start
-	my $first_line;
-	while (<$fh>) {
-		next if /^\s*$/;
-		$first_line = $_;
-		last;
-		}
-	seek $fh, 0, 0;  # rewind
+    # we need the raw UTF-8 string to decode it as JSON
+    open my $fh, '<:raw', $filename or do {
+        carp "Could not open <$filename>: $!\n";
+        return;
+    };
 
-	my $perl_data;
-	if ( $first_line =~ /^\s*\{/ ) {
-		# JSON front matter
-		my $json_data;
-		while (<$fh>) {
-			$json_data .= $_ if /^\s*{/ .. 0;
-			last if /}\s*$/;
-			}
-		my $json_obj = JSON->new();
-		$perl_data = $json_obj->decode($json_data);
-		}
-	elsif ( $first_line =~ /^\+\+\+/ ) {
-		# TOML front matter
-		my $toml_data = '';
-		<$fh>;  # skip the opening +++
-		while (<$fh>) {
-			last if /^\+\+\+/;
-			$toml_data .= $_;
-			}
-		my ($data, $err) = from_toml($toml_data);
-		if ( $err ) {
-			carp "Could not parse TOML in <$filename>: $err\n";
-			return;
-			}
-		$perl_data = $data;
-		}
-	else {
-		carp "Unknown front matter format in <$filename>\n";
-		return;
-		}
+    # Skip blank lines to find the front matter start
+    my $first_line;
+    while (<$fh>) {
+        next if /^\s*$/;
+        $first_line = $_;
+        last;
+    }
+    seek $fh, 0, 0;    # rewind
 
-	close $fh;
-	return $perl_data;
-	}
+    my $perl_data;
+    if ( $first_line =~ /^\s*\{/ ) {
+
+        # JSON front matter
+        my $json_data;
+        while (<$fh>) {
+            $json_data .= $_ if /^\s*{/ .. 0;
+            last             if /}\s*$/;
+        }
+        my $json_obj = JSON->new();
+        $perl_data = $json_obj->decode($json_data);
+    }
+    elsif ( $first_line =~ /^\+\+\+/ ) {
+
+        # TOML front matter
+        my $toml_data = '';
+        <$fh>;    # skip the opening +++
+        while (<$fh>) {
+            last if /^\+\+\+/;
+            $toml_data .= $_;
+        }
+        my ( $data, $err ) = from_toml($toml_data);
+        if ($err) {
+            carp "Could not parse TOML in <$filename>: $err\n";
+            return;
+        }
+        $perl_data = $data;
+    }
+    else {
+        carp "Unknown front matter format in <$filename>\n";
+        return;
+    }
+
+    close $fh;
+    return $perl_data;
+}
 
 =item * is_published
 
@@ -167,9 +170,9 @@ Returns true if the article isn't published yet
 
 =cut
 
-sub is_published ( $self ) {  ! $self->is_draft }
+sub is_published ($self) { !$self->is_draft }
 
-sub is_draft     ( $self ) { !! $self->{draft} }
+sub is_draft ($self) { !!$self->{draft} }
 
 =item * tags
 
@@ -185,27 +188,28 @@ Carps and returns an empty array reference if something goes wrong.
 
 =cut
 
-sub tags       ( $self ) { $self->_get_list( 'tags'       ) }
-sub authors    ( $self ) { $self->_get_list( 'authors'    ) }
-sub categories ( $self ) { $self->_get_list( 'categories' ) }
+sub tags       ($self) { $self->_get_list('tags') }
+sub authors    ($self) { $self->_get_list('authors') }
+sub categories ($self) { $self->_get_list('categories') }
 
 sub _get_list ( $self, $key ) {
-	unless( exists $self->{$key} ) {
-		carp "Didn't find <$key> in metadata object for <" . $self->augmented->{filename} . ">";
-		return [];
-		}
-	my $values = $self->{$key};
-	return $values if ref $values eq ref [];  # array
-	return [ $values ] unless ref $values;    # single value
+    unless ( exists $self->{$key} ) {
+        carp "Didn't find <$key> in metadata object for <"
+            . $self->augmented->{filename} . ">";
+        return [];
+    }
+    my $values = $self->{$key};
+    return $values if ref $values eq ref [];    # array
+    return [$values] unless ref $values;        # single value
 
-	if( ref $values eq ref {} ) {
-		carp "Expected single value or array for <$key> but got a hash for <" . $self->augmented->{filename} . ">";
-		return [];
-		}
+    if ( ref $values eq ref {} ) {
+        carp "Expected single value or array for <$key> but got a hash for <"
+            . $self->augmented->{filename} . ">";
+        return [];
+    }
 
-	return [];
-	}
-
+    return [];
+}
 
 =item * has_tag( SEARCHER )
 
@@ -234,18 +238,19 @@ sub has_author   ( $self, $search ) { $self->_find( 'authors',    $search ) }
 sub has_category ( $self, $search ) { $self->_find( 'categories', $search ) }
 
 sub _find ( $self, $key, $search ) {
-	# If it's a string, turn it into a pattern. This is easier than
-	# duplicating code to go in both directions
-	unless( ref $search eq ref qr// ) {
-		$search = qr/\A\Q$search\E\z/;
-		}
 
-	foreach my $item ( $self->_get_list( $key )->@* ) {
-		return 1 if $item =~ $search
-		}
+    # If it's a string, turn it into a pattern. This is easier than
+    # duplicating code to go in both directions
+    unless ( ref $search eq ref qr// ) {
+        $search = qr/\A\Q$search\E\z/;
+    }
 
-	return 0;
-	}
+    foreach my $item ( $self->_get_list($key)->@* ) {
+        return 1 if $item =~ $search;
+    }
+
+    return 0;
+}
 
 =back
 
@@ -260,7 +265,7 @@ but we add them to the object anyway.
 
 =cut
 
-sub filename ( $self ) { $self->augmented->{'filename'} }
+sub filename ($self) { $self->augmented->{'filename'} }
 
 =item * file_stat
 
@@ -269,7 +274,7 @@ is probably not reliable.
 
 =cut
 
-sub file_stat ( $self ) { $self->augmented->{'stat'} }
+sub file_stat ($self) { $self->augmented->{'stat'} }
 
 =item * url_path
 
@@ -277,24 +282,26 @@ Returns the URL path from the filename.
 
 =cut
 
-sub _file_to_url_path ( $self ) {
-	my $file = $self->filename;
-	$file =~ s/\.md\z//;
+sub _file_to_url_path ($self) {
+    my $file = $self->filename;
+    $file =~ s/\.md\z//;
 
-	return do {
-		# content/legacy/_pub_2011_05_new-features-of-perl-514-package-block.md
-		# There's that leading underscore for the front of the URL
-		if( $self->is_legacy ) {
-			$file =~ s|\Acontent/legacy/||;
-			$file = "$file";
-			$file =~ s|_|/|gr;
-			}
-		# content/article/untangling-subroutine-attributes.md
-		else { $file =~ s|\Acontent/|/|r }
-		};
-	}
+    return do {
 
-sub url_path ( $self ) { $self->augmented->{'url_path'} }
+        # content/legacy/_pub_2011_05_new-features-of-perl-514-package-block.md
+        # There's that leading underscore for the front of the URL
+        if ( $self->is_legacy ) {
+            $file =~ s|\Acontent/legacy/||;
+            $file = "$file";
+            $file =~ s|_|/|gr;
+        }
+
+        # content/article/untangling-subroutine-attributes.md
+        else { $file =~ s|\Acontent/|/|r }
+    };
+}
+
+sub url_path ($self) { $self->augmented->{'url_path'} }
 
 =item * is_legacy
 
@@ -302,7 +309,7 @@ Returns true if the article was from the old, legacy Perl.com site.
 
 =cut
 
-sub is_legacy ( $self ) { !! $self->augmented->{'legacy'} }
+sub is_legacy ($self) { !!$self->augmented->{'legacy'} }
 
 =item * epoch
 
@@ -314,27 +321,30 @@ Returns an integer version of the publication date.
 # The newer files don't, so I'll make them Z
 # 2012-12-31T06:00:01-08:00
 # 2016-05-04T20:37:57
-sub _date_to_epoch ( $self ) {
-	my $date = $self->{date};
-        # handle dates without any time info
-        if ($date =~ /\A\d{4}-\d{2}-\d{2}\z/) {
-            $date .= 'T12Z';
-        }
-        # handle dates without timezone info
-        elsif ($date !~ /[+-]\d\d:?\d\d\z/) {
-            $date .= 'Z';
-        }
-	my $epoch = eval {
-		Time::Moment->from_string( $date )->epoch
-		};
-	if( $@ ) {
-		carp "Couldn't parse <" . $self->{date} . "> ($date) as a date for <" . $self->augmented->{filename} . '>';
-		return;
-		}
-	return $epoch;
-	}
+sub _date_to_epoch ($self) {
+    my $date = $self->{date};
 
-sub epoch ( $self ) { $self->augmented->{'epoch'} }
+    # handle dates without any time info
+    if ( $date =~ /\A\d{4}-\d{2}-\d{2}\z/ ) {
+        $date .= 'T12Z';
+    }
+
+    # handle dates without timezone info
+    elsif ( $date !~ /[+-]\d\d:?\d\d\z/ ) {
+        $date .= 'Z';
+    }
+    my $epoch = eval { Time::Moment->from_string($date)->epoch };
+    if ($@) {
+        carp "Couldn't parse <"
+            . $self->{date}
+            . "> ($date) as a date for <"
+            . $self->augmented->{filename} . '>';
+        return;
+    }
+    return $epoch;
+}
+
+sub epoch ($self) { $self->augmented->{'epoch'} }
 
 =item * augmented
 
@@ -343,7 +353,7 @@ augmented data. This is compartmentalized from the declared metadata.
 
 =cut
 
-sub augmented ( $self ) { $self->{augmented} //= {} }
+sub augmented ($self) { $self->{augmented} //= {} }
 
 =item * augment( KEY, VALUE, ... )
 
@@ -359,14 +369,14 @@ want to overwrite:
 =cut
 
 sub augment( $self, @args ) {
-	my %args = @args;
+    my %args = @args;
 
-	foreach my $key ( keys %args ) {
-		$self->augmented->{$key} = $args{$key};
-		}
+    foreach my $key ( keys %args ) {
+        $self->augmented->{$key} = $args{$key};
+    }
 
-	return $self;
-	}
+    return $self;
+}
 
 =back
 
