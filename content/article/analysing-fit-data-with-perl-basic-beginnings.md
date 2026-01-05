@@ -57,7 +57,7 @@ analysing the resulting information.
     bad and in the winter.
 
 [^not-affiliated-garmin]: Note that I'm not affiliated with Garmin.  I
-    own a [Garmin Edge 530 head unit]({{site.baseurl}}/using-a-garmin-edge-530-head-unit-with-linux/) and find that it works well for my needs.
+    own a [Garmin Edge 530 head unit](https://peateasea.de/using-a-garmin-edge-530-head-unit-with-linux/) and find that it works well for my needs.
 
 [^not-affiliated-strava]: Note that I'm not affiliated with Strava.  I've
     found the platform to be useful for individual ride analysis and for
