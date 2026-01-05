@@ -6,6 +6,7 @@ package Local::Metadata;
 use Carp          qw( carp );
 use File::stat    qw( stat );
 use JSON::MaybeXS qw( JSON );
+use Path::Tiny    qw( path );
 use Time::Moment  ();
 use TOML::Tiny    qw( from_toml );
 
@@ -73,11 +74,6 @@ sub new_from_file ( $class, $filename ) {
         return;
     }
 
-    open my $fh, '<:utf8', $filename or do {
-        carp "Could not open file <$filename>: $!";
-        return;
-    };
-
     my $metadata = $class->_extract_metadata_from_md($filename);
     unless ( ref $metadata ) {
         carp "Could not extract metadata for <$filename>";
@@ -108,28 +104,26 @@ sub new_from_file ( $class, $filename ) {
 sub _extract_metadata_from_md ( $class, $filename ) {
 
     # we need the raw UTF-8 string to decode it as JSON
-    open my $fh, '<:raw', $filename or do {
-        carp "Could not open <$filename>: $!\n";
-        return;
-    };
+    my @lines = path($filename)->lines_raw;
 
     # Skip blank lines to find the front matter start
     my $first_line;
-    while (<$fh>) {
-        next if /^\s*$/;
-        $first_line = $_;
+    for my $line (@lines) {
+        next if $line =~ /^\s*$/;
+        $first_line = $line;
         last;
     }
-    seek $fh, 0, 0;    # rewind
 
     my $perl_data;
     if ( $first_line =~ /^\s*\{/ ) {
 
         # JSON front matter
         my $json_data;
-        while (<$fh>) {
-            $json_data .= $_ if /^\s*{/ .. 0;
-            last             if /}\s*$/;
+        my $in_json = 0;
+        for my $line (@lines) {
+            $in_json = 1        if $line =~ /^\s*\{/;
+            $json_data .= $line if $in_json;
+            last                if $line =~ /}\s*$/;
         }
         my $json_obj = JSON->new();
         $perl_data = $json_obj->decode($json_data);
@@ -138,10 +132,18 @@ sub _extract_metadata_from_md ( $class, $filename ) {
 
         # TOML front matter
         my $toml_data = '';
-        <$fh>;    # skip the opening +++
-        while (<$fh>) {
-            last if /^\+\+\+/;
-            $toml_data .= $_;
+        my $in_toml   = 0;
+        for my $line (@lines) {
+            if ( $line =~ /^\+\+\+/ ) {
+                if ($in_toml) {
+                    last;
+                }
+                else {
+                    $in_toml = 1;
+                    next;
+                }
+            }
+            $toml_data .= $line if $in_toml;
         }
         my ( $data, $err ) = from_toml($toml_data);
         if ($err) {
@@ -155,7 +157,6 @@ sub _extract_metadata_from_md ( $class, $filename ) {
         return;
     }
 
-    close $fh;
     return $perl_data;
 }
 
