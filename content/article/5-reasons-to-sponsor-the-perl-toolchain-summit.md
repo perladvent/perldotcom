@@ -3,7 +3,7 @@
     "title"       : "5 Reasons to Sponsor the Perl Toolchain Summit",
     "authors"     : ["olaf-alders"],
     "date"        : "2024-03-25T18:00:00",
-    "tags"        : [],
+    "tags"        : ["perl-toolchain-summit", "pts"],
     "draft"       : false,
     "image"       : "/images/5-reasons-to-sponsor-the-perl-toolchain-summit/summit-group.jpeg",
     "thumbnail"   : "/images/5-reasons-to-sponsor-the-perl-toolchain-summit/summit-group.jpeg",
