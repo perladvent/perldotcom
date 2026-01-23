@@ -5,8 +5,8 @@
     "tags": [],
     "date": "2026-01-23T12:00:00",
     "draft": false,
-    "image": "/images/announcing-the-perl-toolchain-summit-2026/simplelists-logo.png",
-    "thumbnail": "/images/announcing-the-perl-toolchain-summit-2026/simplelists-logo.png",
+    "image": "/images/5-reasons-to-sponsor-the-perl-toolchain-summit/summit-group.jpeg",
+    "thumbnail": "/images/5-reasons-to-sponsor-the-perl-toolchain-summit/summit-group.jpeg",
     "description": "Major Perl ecosystem maintainers will gather in Vienna, Austria for four days of intensive collaboration that will benefit the entire Perl community.",
     "categories": "community"
   }
@@ -18,7 +18,7 @@ and today I'm happy to announce that the 16th Perl Toolchain Summit will
 be held in Vienna, Austria, from Thursday April 23rd till Sunday April
 26th, 2026.
 
-This post is brought to you by Simplelists, a group email and
+This post is brought to you by [Simplelists](https://www.simplelists.com/), a group email and
 mailing list service provider, and a recurring sponsor of the Perl
 Toolchain Summit.
 
@@ -82,13 +82,13 @@ through sponsorship. If you're interested in helping sponsor the summit,
 please get in touch with the global team at
 <pts2026@perltoolchainsummit.org>.
 
-Simplelists has been sponsoring the Perl Toolchain Summit for several
+[Simplelists](https://www.simplelists.com/) has been sponsoring the Perl Toolchain Summit for several
 years now. We are very grateful for their continued support.
 
-Simplelists is proud to sponsor the 2026 Perl Toolchain Summit, as Perl
-forms the core of our technology stack. We are grateful that we can rely
-on the robust and comprehensive Perl ecosystem, from the core of Perl
-itself to a whole myriad of CPAN modules. We are glad that the PTS
-continues its unsung work, ensuring that Simplelists can continue to
-rely on these many tools.
+> Simplelists is proud to sponsor the 2026 Perl Toolchain Summit, as Perl
+> forms the core of our technology stack. We are grateful that we can rely
+> on the robust and comprehensive Perl ecosystem, from the core of Perl
+> itself to a whole myriad of CPAN modules. We are glad that the PTS
+> continues its unsung work, ensuring that Simplelists can continue to
+> rely on these many tools.
 
