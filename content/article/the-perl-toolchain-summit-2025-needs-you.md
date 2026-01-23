@@ -2,7 +2,7 @@
     "title"       : "The Perl Toolchain Summit 2025 Needs You",
     "authors"     : ["philippe-bruhat"],
     "date"        : "2025-04-04T06:00:00",
-    "tags"        : [],
+    "tags"        : ["perl-toolchain-summit", "pts"],
     "draft"       : false,
     "image"       : "/images/5-reasons-to-sponsor-the-perl-toolchain-summit/summit-group.jpeg",
     "thumbnail"   : "/images/5-reasons-to-sponsor-the-perl-toolchain-summit/summit-group.jpeg",

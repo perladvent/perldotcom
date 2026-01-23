@@ -1,7 +1,7 @@
   {
     "title": "The Perl Toolchain Summit 2025: Security, Testing, and Community Collaboration",
     "authors": ["breno-g-de-oliveira"],
-    "tags": [],
+    "tags": ["perl-toolchain-summit", "pts"],
     "date": "2025-05-30T12:00:00",
     "draft": false,
     "image": "/images/perl-toolchain-summit-2025-key-results/pts-2025-group-photo.jpg",
