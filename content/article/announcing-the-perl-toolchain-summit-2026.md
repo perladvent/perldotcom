@@ -3,10 +3,10 @@
     "title": "Announcing the Perl Toolchain Summit 2026",
     "authors": ["philippe-bruhat"],
     "tags": [],
-    "date": "2026-01-24T12:00:00",
-    "draft": true,
-    "image": "",
-    "thumbnail": "",
+    "date": "2026-01-23T12:00:00",
+    "draft": false,
+    "image": "/images/announcing-the-perl-toolchain-summit-2026/simplelists-logo.png",
+    "thumbnail": "/images/announcing-the-perl-toolchain-summit-2026/simplelists-logo.png",
     "description": "Major Perl ecosystem maintainers will gather in Vienna, Austria for four days of intensive collaboration that will benefit the entire Perl community.",
     "categories": "community"
   }
@@ -22,7 +22,7 @@ This post is brought to you by Simplelists, a group email and
 mailing list service provider, and a recurring sponsor of the Perl
 Toolchain Summit.
 
-![Simplelists logo](simplelists-logo.png)
+![Simplelists logo](/images/announcing-the-perl-toolchain-summit-2026/simplelists-logo.png)
 
 ---
 
@@ -55,7 +55,7 @@ April. They are Alexander Hartmaier
 ([MAROS](https://metacpan.org/author/MAROS)), Michael Kröll and Helmut
 Wollmersdorfer ([WOLLMERS](https://metacpan.org/author/WOLLMERS)).
 
-The developers who maintain CPAN and associated tools and service are
+The developers who maintain CPAN and associated tools and services are
 all volunteers, scattered across the globe. This event is the one time
 in the year when they can get together.
 
@@ -68,7 +68,7 @@ with 35 participants expected to join us in Vienna.
 If you want to find out more about the work being done at the Toolchain
 Summit, and hear the teams and people involved, you can listen to
 several episodes of [The Underbar](https://underbar.cpan.io/) podcast,
-which were recorded during the 2025 editioni in Leipzig, Germany:
+which were recorded during the 2025 edition in Leipzig, Germany:
 
 * [MetaCPAN](https://underbar.cpan.io/episodes/3/)
 * [Test::Smoke](https://underbar.cpan.io/episodes/5/)
@@ -82,7 +82,7 @@ through sponsorship. If you're interested in helping sponsor the summit,
 please get in touch with the global team at
 <pts2026@perltoolchainsummit.org>.
 
-Simplelist has been sponsoring the Perl Toolchain Summit for several
+Simplelists has been sponsoring the Perl Toolchain Summit for several
 years now. We are very grateful for their continued support.
 
 Simplelists is proud to sponsor the 2026 Perl Toolchain Summit, as Perl
