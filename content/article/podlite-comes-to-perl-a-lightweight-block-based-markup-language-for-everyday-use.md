@@ -1,11 +1,11 @@
 +++
 canonicalUrl=""
 categories="tooling"
-date=2025-11-19T18:13:16
+date=2026-01-27T18:13:16
 description="This article introduces Podlite to the Perl community, explores the 1.0 specification, shows real examples, and demonstrates early integrations with Perl."
 draft=false
 image="/images/podlite-comes-to-perl-a-lightweight-block-based-markup-language-for-everyday-use/podlite-social-logo.png"
-thumbnail="/images/podlite-comes-to-perl-a-lightweight-block-based-markup-language-for-everyday-use/podlite-social-logo.png"
+thumbnail="/images/podlite-comes-to-perl-a-lightweight-block-based-markup-language-for-everyday-use/podlite-social-logo-circle.png"
 title="Podlite comes to Perl: a lightweight block-based markup language for everyday use"
 authors=[
   "aliaksandr-zahatski",
