@@ -2,7 +2,7 @@
   {
     "title": "Announcing the Perl Toolchain Summit 2026",
     "authors": ["philippe-bruhat"],
-    "tags": ["perl-toolchain-summit"],
+    "tags": ["perl-toolchain-summit", "pts"],
     "date": "2026-01-23T12:00:00",
     "draft": false,
     "image": "/images/5-reasons-to-sponsor-the-perl-toolchain-summit/summit-group.jpeg",
