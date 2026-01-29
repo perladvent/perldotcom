@@ -1,8 +1,8 @@
 +++
 canonicalUrl=""
 categories="community"
-date=2026-01-28T00:45:55
-description="Fastmail gave $10K because Perl's stability matters to their business. TPRF can fund community grants again because of donors like this."
+date=2026-02-04T00:45:55
+description="Fastmail stuck with Perl because Perl stuck with them. TPRF can fund community grants again because of donors like this."
 draft=false
 image="/images/fastmail-donates-usd-10-000-to-the-perl-and-raku-foundation/FM-Logo-RGB.png"
 thumbnail="/images/fastmail-donates-usd-10-000-to-the-perl-and-raku-foundation/FM-Icon-RGB.png"
@@ -21,7 +21,7 @@ tags=["tprf", "community", "sponsors"]
 
 One of the reasons that you don't hear about Perl in the headlines is its reliability. Upgrading your Perl from one version to the next? That can be a very boring deployment. You code worked before and it continues to "just work" after the upgrade. You don't need to rant about short deprecation cycles, performance degradation or dependencies which no longer install. The Perl 5 core maintainers take great care to ensure that you don't have to care very much about upgrading your Perl. Backwards compatibility is top of mind. If your deployment is boring, it's because a lot of care and attention has been given to this matter by the people who love Perl and love to work on it.
 
-As we moved to secure TPRF's 2025 budget, we reached out to organizations which rely on Perl. A number of these companies immediately offered to help. Fastmail has already been a supporter of TPRF for quite some time. In addition to this much needed donation of USD 10,000, Fastmail has been providing rock solid free email hosting to the foundation for many years.
+As we moved to secure TPRF's 2025 budget, we reached out to organizations which rely on Perl. A number of these companies immediately offered to help. Fastmail has already been a supporter of TPRF for quite some time. In addition to this much needed donation, Fastmail has been providing rock solid free email hosting to the foundation for many years.
 
 While Fastmail's donation has been allocated towards Perl 5 Core maintenance, TPRF is now in the position to re-open [the community grants program](https://perlfoundation.org/grants.html), funding it with USD 10,000 for 2026. There is also an opportunity to increase the community grants funding if sponsor participation increases. As we begin our 2026 fundraising, we are looking to cast a wider net and bring more sponsor organizations on board to help support healthy Perl and Raku ecosystems.
 
