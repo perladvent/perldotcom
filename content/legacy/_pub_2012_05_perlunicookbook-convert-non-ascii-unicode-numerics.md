@@ -25,10 +25,11 @@ Unless you've used `/a` or `/aa`, `\d` matches more than ASCII digits only. That
 As usual, the [Unicode::UCD]({{<mcpan "Unicode::UCD" >}}) module provides access to the Unicode character database. Its `num()` function can numify Unicode digits—and strings of Unicode digits.
 
      use v5.14;  # needed for num() function
+     use utf8;
      use Unicode::UCD qw(num);
      my $str = "got Ⅻ and ४५६७ and ⅞ and here";
      my @nums = ();
-     while (/$str =~ (\d+|\N)/g) {  # not just ASCII!
+     while ($str =~ /(\d+|\N)/g) {  # not just ASCII!
         push @nums, num($1);
      }
      say "@nums";   #     12      4567      0.875
