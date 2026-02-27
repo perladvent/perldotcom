@@ -109,8 +109,6 @@ And the 16 compositions of `5` are:
 
 That is, the list of compositions has, not only the partition `[1, 2, 2]`, but also its variations: `[2, 1, 2]` and `[2, 2, 1]`. Same with the other partitions. Selections from this list will produce possibly cool rhythms.
 
-So returning to music now... Previously, we output directly to a named, open MIDI port. But going forward, we will write MIDI files to the disk. This takes a bit more code, as we shall see.
-
 Here are the compositions of `5` turned into sequences, played by a snare drum, and written to the disk:
 
 ```perl
