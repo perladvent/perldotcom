@@ -342,11 +342,11 @@ References:
 
 * [Creating Rhythms book](https://abrazol.com/books/rhythm1/)
 
-* [Creating Rhythms Perl package](https://metacpan.org/dist/Music-CreatingRhythms)
+* [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}})
 
 * [MIDI::Util]({{< mcpan "MIDI::Util" >}})
 
-* [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}})
+* [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}})
 
 * [fluidsynth](https://www.fluidsynth.org/)
 
