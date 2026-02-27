@@ -344,7 +344,7 @@ References:
 
 * [Creating Rhythms Perl package](https://metacpan.org/dist/Music-CreatingRhythms)
 
-* [MIDI::Util](https://metacpan.org/dist/MIDI-Util)
+* [MIDI::Util]({{< mcpan "MIDI::Util" >}})
 
 * [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}})
 
