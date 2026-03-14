@@ -93,7 +93,7 @@ fluidsynth -i ~/Music/soundfont/FluidR3_GM.sf2 perldotcom-1.mid
 
 Not terribly exciting yet.
 
-Let's see what the "compositions" of a number reveal. According to the documentation, a composition of a number is "the set of combinatorial variations of the partitions of `n` with the duplicates removed."
+Let's see what the "compositions" of a number reveal. According to the [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) docs, a composition of a number is "the set of combinatorial variations of the partitions of `n` with the duplicates removed."
 
 Ok. Well the 7 partitions of `5` are:
 
@@ -156,7 +156,7 @@ To convert a MIDI file to an mp3 (or other audio formats), I do this:
 timidity -c ~/timidity.cfg perldotcom-2.mid -Ow -o - | ffmpeg -i - -acodec libmp3lame -ab 64k perldotcom-2.mp3
 ```
 
-Ok. Enough technical details! What if we want a kick bass drum and hi-hats, too? Refactor time…
+Ok. Enough technical details! What if we want a kick bass drum and hi-hatcymbals, too? Refactor time…
 
 ```perl
 use MIDI::Util qw(setup_score);
@@ -210,7 +210,7 @@ my $necklaces = $mcr->neck(16);
 print scalar @$necklaces, "\n"; # 4116 of 'em!
 ```
 
-Ok. Let's generate necklaces of `8` instead, pull a random choice, and play the pattern with a world percussion instrument.
+Ok. Let's generate necklaces of `8` instead, pull a random choice, and play the pattern with a percussion instrument.
 
 ```perl
 use MIDI::Util qw(setup_score);
