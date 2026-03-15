@@ -6,7 +6,7 @@
   "draft"       : false,
   "image"       : "/images/musical-rhythms-with-math-in-perl/rhythm-necklaces-thumb.png",
   "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
-  "description" : "Using math to generate rhythms",
+  "description" : "Turn partitions, necklaces, and Euclidean patterns into actual drum grooves with Perl and MIDI",
   "categories"  : "development"
 }
 
