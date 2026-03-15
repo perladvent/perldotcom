@@ -41,7 +41,7 @@ print "\n";
 
 This shows that `fluidsynth` is alive and ready for interaction.
 
-Okay on with the show!
+Okay, on with the show!
 
 First-up, let's look at partition algorithms. With the `part()` function, we can generate all partitions of `n`, where `n` is `5`, and the "parts" all add up to `5`. Then taking one of these (say, the third element), we convert it to a binary sequence that can be interpreted as a rhythmic phrase, and play it 4 times.
 
@@ -57,9 +57,9 @@ my $mcr = Music::CreatingRhythms->new;
 my $parts = $mcr->part(5);
 # [ [ 1, 1, 1, 1, 1 ], [ 1, 1, 1, 2 ], [ 1, 2, 2 ], [ 1, 1, 3 ], [ 2, 3 ], [ 1, 4 ], [ 5 ] ]
 
-my $p = $parts->[2] # [ 1, 2, 2 ]
+my $p = $parts->[2]; # [ 1, 2, 2 ]
 
-my $seq = $mcr->int2b([$p]) # [ [ 1, 1, 0, 1, 0 ] ]
+my $seq = $mcr->int2b([$p]); # [ [ 1, 1, 0, 1, 0 ] ]
 ```
 
 Now we render and save the rhythm:
@@ -69,7 +69,7 @@ use MIDI::Util qw(setup_score);
 
 my $score = setup_score(bpm => 120, channel => 9);
 
-for (1 .. 4): {
+for (1 .. 4) {
     for my $bit ($seq->[0]->@*) {
         if ($bit) {
             $score->n('en', 40);
@@ -95,7 +95,7 @@ Not terribly exciting yet.
 
 Let's see what the "compositions" of a number reveal. According to the [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) docs, a composition of a number is "the set of combinatorial variations of the partitions of `n` with the duplicates removed."
 
-Ok. Well the 7 partitions of `5` are:
+Okay. Well, the 7 partitions of `5` are:
 
 ```
 [[1, 1, 1, 1, 1], [1, 1, 1, 2], [1, 1, 3], [1, 2, 2], [1, 4], [2, 3], [5]]
@@ -156,7 +156,7 @@ To convert a MIDI file to an mp3 (or other audio formats), I do this:
 timidity -c ~/timidity.cfg perldotcom-2.mid -Ow -o - | ffmpeg -i - -acodec libmp3lame -ab 64k perldotcom-2.mp3
 ```
 
-Ok. Enough technical details! What if we want a kick bass drum and hi-hatcymbals, too? Refactor time…
+Okay. Enough technical details! What if we want a kick bass drum and hi-hat cymbals, too? Refactor time…
 
 ```perl
 use MIDI::Util qw(setup_score);
@@ -210,7 +210,7 @@ my $necklaces = $mcr->neck(16);
 print scalar @$necklaces, "\n"; # 4116 of 'em!
 ```
 
-Ok. Let's generate necklaces of `8` instead, pull a random choice, and play the pattern with a percussion instrument.
+Okay. Let's generate necklaces of `8` instead, pull a random choice, and play the pattern with a percussion instrument.
 
 ```perl
 use MIDI::Util qw(setup_score);
@@ -241,7 +241,7 @@ $score->write_score('perldotcom-4.mid');
 
 {{< audio src="/media/musical-rhythms-with-math-in-perl/perldotcom-4.mp3" type="audio/mpeg" >}}
 
-Here we choose from **all** necklaces. But note that also includes the sequence with all ones and the sequence with all zeroes. More sophisticated code might skip these.
+Here we choose from **all** necklaces. But note that this also includes the sequence with all ones and the sequence with all zeroes. More sophisticated code might skip these.
 
 More interesting would be playing simultaneous beats.
 
@@ -326,7 +326,7 @@ $score->write_score('perldotcom-6.mid');
 
 {{< audio src="/media/musical-rhythms-with-math-in-perl/perldotcom-6.mp3" type="audio/mpeg" >}}
 
-Now we're talkin' - an actual drum groove! To reiterate, the `euclid()` method distributes a number of beats, like `2` or `11` over the number of beats, `16`. The kick and snare use the same arguments, but the snare pattern is rotated by 4 beats, so that they alternate.
+Now we're talkin' - an actual drum groove! To reiterate, the `euclid()` method distributes a number of beats, like `2` or `11`, over the number of beats, `16`. The kick and snare use the same arguments, but the snare pattern is rotated by 4 beats, so that they alternate.
 
 So what have we learned today?
 ------------------------------
