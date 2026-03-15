@@ -1,7 +1,7 @@
 {
   "title"       : "Musical Rhythms with Math in Perl",
   "authors"     : ["gene-boggs"],
-  "date"        : "2026-03-15T17:24:51",
+  "date"        : "2026-03-15T00:00:00",
   "tags"        : ["MIDI", "Music", "Math"],
   "draft"       : false,
   "image"       : "/images/musical-rhythms-with-math-in-perl/rhythm-necklaces-thumb.png",
