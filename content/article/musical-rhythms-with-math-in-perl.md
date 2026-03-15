@@ -331,7 +331,7 @@ Now we're talkin' - an actual drum groove! To reiterate, the `euclid()` method d
 So what have we learned today?
 ------------------------------
 
-1. That you can use mathematical functions to generate different sequences to represent rhythmic patterns.
+1. That you can use mathematical functions to generate sequences to represent rhythmic patterns.
 
 2. That you can play an entire sequence or simultaneous notes with MIDI.
 
