@@ -137,7 +137,6 @@ my %primes = ( # for computing the pattern
 my $ticks = 0; # clock ticks
 my $beat_count = 0; # how many beats?
 my $toggle = 0; # part A or B?
-my $hats = 0; # toggle 1st hihat beat
 my @queue; # priority queue for note_on/off messages
 
 # open the named midi output device
@@ -215,7 +214,6 @@ sub adjust_drums($mcr, $drums, $primes, $toggle) {
         $drums->{snare}{pat} = [qw(0 0 0 0 1 0 0 0 0 0 0 0 1 0 1 0)];
         $$toggle = 0; # set to part A
     }
-    $hats = $drums->{hihat}{pat}[0]; # save bit
 }
 ```
 
