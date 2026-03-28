@@ -6,7 +6,7 @@ set -e -u -x -o pipefail
 # In your Render dashboard, set the HUGO_VERSION env var for your static site. You'll get the same experience as, say, Netlify.
 
 # It's easier to set the version here when testing out a new version.
-HUGO_VERSION=0.147.5
+HUGO_VERSION=0.159.1
 TAR_NAME="hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz"
 
 hugo version # Output the OLD version
