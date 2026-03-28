@@ -225,9 +225,9 @@ To run with `fluidsynth` and hear the General MIDI percussion sounds, open a fre
 fluidsynth -a coreaudio -m coremidi -g 2.0 ~/Music/soundfont/FluidR3_GM.sf2
 ```
 
-The `FluidR3_GM.sf2` is a MIDI "soundfont" file and can be downloaded for free.
+(The `FluidR3_GM.sf2` is a MIDI "soundfont" file and can be downloaded for free.)
 
-Then enter this on the command-line:
+Next, enter this on the command-line:
 
 ```shell
 perl clocked-euclidean-drums.pl fluid 90
