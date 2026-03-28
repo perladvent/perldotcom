@@ -241,7 +241,7 @@ And here is what that sounds like:
 To-do Challenges
 ----------------
 
-* Make patterns other than prime-number based Euclidean grooves.
+* Make patterns other than prime-number based Euclidean phrases.
 
 * Toggle more than two groove parts.
 
