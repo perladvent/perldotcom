@@ -19,7 +19,7 @@ Clocks:
 
 A MIDI clock tells a MIDI device about the tempo. This can be handed to a drum machine or a sequencer. Each clock tick tells the device to advance a step of a measured interval. Usually this is very short, and is often 24 pulses per quarter-note.
 
-Here is code to do that, followed by an explaination of the parts:
+Here is code to do that, followed by an explanation of the parts:
 
 ```perl
 #!/usr/bin/env perl
