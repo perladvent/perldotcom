@@ -12,6 +12,8 @@
 
 Let's Make a Drum Machine! Yeah! :D
 
+There are basically two important things to handle: A MIDI "clock" and a groove to play.
+
 Clocks:
 -------
 
