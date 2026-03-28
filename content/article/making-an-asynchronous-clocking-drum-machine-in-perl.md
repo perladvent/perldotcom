@@ -14,8 +14,8 @@ Let's Make a Drum Machine! Yeah! :D
 
 There are basically two important things to handle: A MIDI "clock" and a groove to play.
 
-Clocks:
--------
+Clocks
+------
 
 A MIDI clock tells a MIDI device about the tempo. This can be handed to a drum machine or a sequencer. Each clock tick tells the device to advance a step of a measured interval. Usually this is very short, and is often 24 pulses per quarter-note.
 
@@ -79,8 +79,8 @@ perl clock-gen-async.pl
 
 {{< audio src="/media/making-an-asynchronous-clocking-drum-machine-in-perl/clocked-sequence.mp3" type="audio/mpeg" >}}
 
-Add a Groove:
--------------
+Add a Groove
+------------
 
 What we really want is to make our drum machine actually play something of our own making. So it's refactor time... Let's make a 4/4 groove with 16th-note resolution, that alternates between two different parts.
 
@@ -238,8 +238,8 @@ And here is what that sounds like:
 {{< audio src="/media/making-an-asynchronous-clocking-drum-machine-in-perl/clocked-euclidean-drums.mp3" type="audio/mpeg" >}}
 
 
-To-do Challenges:
------------------
+To-do Challenges
+----------------
 
 * Make patterns other than prime-number based Euclidean grooves.
 
@@ -249,8 +249,8 @@ To-do Challenges:
 
 * Make this code handle odd meter grooves.
 
-Resources:
-----------
+Resources
+---------
 
 * [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}})
 
