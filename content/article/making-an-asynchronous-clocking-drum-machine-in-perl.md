@@ -228,7 +228,7 @@ fluidsynth -a coreaudio -m coremidi -g 2.0 ~/Music/soundfont/FluidR3_GM.sf2
 Then enter this on the command-line:
 
 ```shell
-perl clock-gen-async.pl fluid 90
+perl clocked-euclidean-drums.pl fluid 90
 ```
 
 You will hear standard kick, snare, and closed hihat cymbal. And here is a poor recording of this with my phone:
@@ -238,7 +238,7 @@ You will hear standard kick, snare, and closed hihat cymbal. And here is a poor 
 To run the code with my multi-timbral drum machine, I enter this on the command-line:
 
 ```shell
-perl clock-gen-async.pl usb 90 -1
+perl clocked-euclidean-drums.pl usb 90 -1
 ```
 
 And here is what that sounds like:
