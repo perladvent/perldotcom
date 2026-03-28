@@ -173,14 +173,22 @@ my $timer = IO::Async::Timer::Periodic->new(
             }
             # play the queue
             for my $drum (@queue) {
-                $midi_out->note_on($drums->{ $drum->{drum} }{chan}, $drums->{ $drum->{drum} }{num}, $drum->{velocity});
+                $midi_out->note_on(
+                    $drums->{ $drum->{drum} }{chan},
+                    $drums->{ $drum->{drum} }{num},
+                    $drum->{velocity}
+                );
             }
             $beat_count++;
         }
         else {
             # drain the queue with note_off messages
             while (my $drum = pop @queue) {
-                $midi_out->note_off($drums->{ $drum->{drum} }{chan}, $drums->{ $drum->{drum} }{num}, 0);
+                $midi_out->note_off(
+                    $drums->{ $drum->{drum} }{chan},
+                    $drums->{ $drum->{drum} }{num},
+                    0
+                );
             }
         }
     },
