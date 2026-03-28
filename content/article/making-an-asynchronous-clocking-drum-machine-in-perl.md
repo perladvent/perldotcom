@@ -98,7 +98,7 @@ Next, an [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) object
 
 The meaty bits are in the timer's `on_tick` callback. This contains all the logic needed to trigger our drum grooves.
 
-As was done in the previous clock code, a clock message is sent, but also we keep track of the number of clock ticks that have passed. This number of ticks is used to trigger the drums. We care about 16 beats. So every 16th beat we do something - adjust the drum patterns or handle a queue of upcoming events.
+As was done in the previous clock code, a clock message is sent, but also we keep track of the number of clock ticks that have passed. This number of ticks is used to trigger the drums. We care about 16 beats. So every 16th beat we do something - adjust the drum patterns and handle a queue of upcoming events.
 
 Adjusting the drum patterns is where [Math::Prime::XS]({{< mcpan "Math::Prime::XS" >}}) and [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) come into play. In that subroutine that fires every 4th measure (measure = 4 quarter-notes). It reassigns either Euclidean or manual patterns of 16 beats to each drum pattern.
 
