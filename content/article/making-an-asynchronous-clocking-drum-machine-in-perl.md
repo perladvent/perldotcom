@@ -275,3 +275,5 @@ Resources
 * [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}})
 
 * [fluidsynth](https://www.fluidsynth.org/)
+
+* My [original music](https://www.youtube.com/@GeneBoggs)
