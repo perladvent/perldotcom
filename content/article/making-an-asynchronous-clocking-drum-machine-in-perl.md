@@ -65,7 +65,7 @@ Next up, a `$name` variable is captured for a unique MIDI device. (And to see wh
 
 The clock needs a time interval (in fractions of a second) to tick off. This is computed as the number of seconds divided by the beats per minute divided by the number of clock ticks per beat - which for us is `24`.
 
-In order to get the job done, we will need to open the named MIDI device for sending output messages to. This is given a name itself - "RtMidiOut", which can be used by other applications that interact with open MIDI devices (and other apps, too).
+In order to get the job done, we will need to open the named MIDI device for sending output messages to. This is given a name itself - "RtMidiOut", which can be used by other applications that interact with open MIDI devices.
 
 Now in order to not just die when we want to stop, `$SIG{INT}` is redefined to gracefully halt. This also sends a `stop` message to the open MIDI device. This stops the sequencer from playing.
 
