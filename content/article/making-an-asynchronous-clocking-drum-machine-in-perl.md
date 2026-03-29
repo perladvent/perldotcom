@@ -257,7 +257,7 @@ To-do Challenges
 
 * Toggle more than two groove parts.
 
-* Add snare fills to the (end of the) 4th bar.
+* Add snare fills to the (end of the) 4th bars.
 
 * Make this code handle odd meter grooves.
 
