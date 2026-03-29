@@ -102,7 +102,7 @@ As was done in the previous clock code, a clock message is sent, but also we kee
 
 Adjusting the drum patterns is where [Math::Prime::XS]({{< mcpan "Math::Prime::XS" >}}) and [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) come into play. The subroutine that does that is `adjust_drums()` and is fired every 4th measure. A measure is equal to four quarter-notes, and we use another four pulses to make 16 beats per measure. It reassigns either Euclidean or manual patterns of 16 beats to each drum pattern.
 
-Managing the queue is next. If a drum is to be played at the current beat (as tallied by the `$beat_count` variable), it is added to the queue at full velocity. Then, after all the drums have been accounted for, the queue is played with `$midi_out->note_on()` messages. And lastly, the queue is "drained" by sending `$midi_out->note_off()` messages.
+Managing the queue is next. If a drum is to be played at the current beat (as tallied by the `$beat_count` variable), it is added to the queue at full velocity (`127`). Then, after all the drums have been accounted for, the queue is played with `$midi_out->note_on()` messages. And lastly, the queue is "drained" by sending `$midi_out->note_off()` messages.
 
 ```perl
 #!/usr/bin/env perl
