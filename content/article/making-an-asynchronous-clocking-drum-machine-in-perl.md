@@ -79,8 +79,8 @@ perl clock-gen-async.pl
 
 {{< audio src="/media/making-an-asynchronous-clocking-drum-machine-in-perl/clocked-sequence.mp3" type="audio/mpeg" >}}
 
-Add a Groove
-------------
+Grooves
+-------
 
 What we really want is to make our drum machine actually play something of our own making. So it's refactor time... Let's make a 4/4 groove with 16th-note resolution, that alternates between two different parts.
 
