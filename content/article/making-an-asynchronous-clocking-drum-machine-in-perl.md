@@ -82,7 +82,7 @@ perl clock-gen-async.pl
 Grooves
 -------
 
-What we really want is to make our drum machine actually play something of our own making. So it's refactor time... Let's make a 4/4 groove with 16th-note resolution, that alternates between two different parts.
+What we really want is to make our drum machine actually play something of our own making. So it's refactor time... Let's make a 4/4 time groove, with 16th-note resolution, that alternates between two different parts. "4/4" is a "time signature" in music jargon and means that there are four beats per measure (numerator), and a quarter note equals one beat (denominator). Other time signatures like 3/4 of the waltz or 7/8 would be "odd meters."
 
 In order to generate syncopated patterns, [Math::Prime::XS]({{< mcpan "Math::Prime::XS" >}}) and [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) are added to the `use` statements.
 
