@@ -253,7 +253,7 @@ Thank you to Andrew Rodland (hobbs), who helped me wrap my head around the "no-s
 To-do Challenges
 ----------------
 
-* Make patterns other than prime-number based Euclidean phrases.
+* Make patterns other than prime number based Euclidean phrases.
 
 * Toggle more than two groove parts.
 
@@ -264,16 +264,16 @@ To-do Challenges
 Resources
 ---------
 
-* [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}})
+* The [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}}) module
 
-* [IO::Async::Timer::Periodic]({{< mcpan "IO::Async::Timer::Periodic" >}})
+* The [IO::Async::Timer::Periodic]({{< mcpan "IO::Async::Timer::Periodic" >}}) module
 
-* [Math::Prime::XS]({{< mcpan "Math::Prime::XS" >}}) 
+* The [Math::Prime::XS]({{< mcpan "Math::Prime::XS" >}}) module
 
-* [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}})
+* The [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) module
 
-* [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}})
+* The [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) module
 
-* [fluidsynth](https://www.fluidsynth.org/)
+* The cross-platform [fluidsynth](https://www.fluidsynth.org/) application
 
-* My original music at [https://www.youtube.com/@GeneBoggs](https://www.youtube.com/@GeneBoggs)
+* My original music: [https://www.youtube.com/@GeneBoggs](https://www.youtube.com/@GeneBoggs)
