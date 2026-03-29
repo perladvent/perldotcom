@@ -17,7 +17,7 @@ There are basically two important things to handle: A MIDI "clock" and a groove 
 Clocks
 ------
 
-A MIDI clock tells a MIDI device about the tempo. This can be handed to a drum machine or a sequencer. Each clock tick tells the device to advance a step of a measured interval. Usually this is very short, and is often 24 pulses per quarter-note.
+A MIDI clock tells a MIDI device about the tempo. This can be handed to a drum machine or a sequencer. Each clock tick tells the device to advance a step of a measured interval. Usually this is very short, and is often 24 pulses per quarter-note (four quarter-notes to a measure of four beats).
 
 Here is code to do that, followed by an explanation of the parts:
 
@@ -100,7 +100,7 @@ The meaty bits are in the timer's `on_tick` callback. This contains all the logi
 
 As was done in the previous clock code, a clock message is sent, but also we keep track of the number of clock ticks that have passed. This number of ticks is used to trigger the drums. We care about 16 beats. So every 16th beat we do something - adjust the drum patterns and handle a queue of upcoming events.
 
-Adjusting the drum patterns is where [Math::Prime::XS]({{< mcpan "Math::Prime::XS" >}}) and [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) come into play. The subroutine that does that is `adjust_drums()` and is fired every 4th measure (where a is measure is eqal to 4 quarter-notes). It reassigns either Euclidean or manual patterns of 16 beats to each drum pattern.
+Adjusting the drum patterns is where [Math::Prime::XS]({{< mcpan "Math::Prime::XS" >}}) and [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) come into play. The subroutine that does that is `adjust_drums()` and is fired every 4th measure (where a measure is equal to 4 quarter-notes). It reassigns either Euclidean or manual patterns of 16 beats to each drum pattern.
 
 Managing the queue is next. If a drum is to be played at the current beat (as tallied by the `$beat_count` variable), it is added to the queue at full velocity. Then, after all the drums have been accounted for, the queue is played with `$midi_out->note_on()` messages. And lastly, the queue is "drained" by sending `$midi_out->note_off()` messages.
 
