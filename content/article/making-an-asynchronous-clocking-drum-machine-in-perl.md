@@ -61,15 +61,15 @@ $loop->run;
 
 The above code does a few things. First it uses a modern perl, then the modules that will make execution asynchronous, and finally the module that makes real-time MIDI possible.
 
-Next up, a `$name` variable is captured for a unique MIDI device. (And to see what the names of MIDI devices on the system are, use [JBARRETT](https://metacpan.org/author/JBARRETT)'s little [list_devices](https://metacpan.org/release/JBARRETT/MIDI-RtMidi-FFI-0.10/source/examples/list_devices.pl) script.) Also, the beats per minute is grabbed from the command-line. If neither is given, `usb` is used for the name, and the BPM is set to "dance tempo."
+Next up, a `$name` variable is captured for a unique MIDI device. (And to see what the names of MIDI devices on the system are, use [JBARRETT](https://metacpan.org/author/JBARRETT)'s little [list_devices](https://metacpan.org/release/JBARRETT/MIDI-RtMidi-FFI-0.10/source/examples/list_devices.pl) script.) Also, the beats per minute is taken from the command-line. If neither is given, `usb` is used for the name, and the BPM is set to "dance tempo."
 
-The clock needs a time interval (in fractions of a second) to tick off. This is computed as the number of seconds divided by the beats per minute divided by the number of clock ticks per beat - which for us is `24`.
+The clock needs a time interval to tick off. For us, this is a fraction of a second and is assigned to the `$interval` variable.
 
-In order to get the job done, we will need to open the named MIDI device for sending output messages to. This is given a name itself - "RtMidiOut", which can be used by other applications that interact with open MIDI devices.
+To get the job done, we will need to open the named MIDI device for sending output messages to. This is given a name itself - "RtMidiOut", which can be used by other applications that interact with open MIDI devices.
 
 In order to not just die when we want to stop, `$SIG{INT}` is redefined to gracefully halt. This also sends a `stop` message to the open MIDI device. This stops the sequencer from playing.
 
-Ok. Now for the meat & potatoes: The asynchronous loop and periodic timer. These tell the program to do its thing, in a non-blocking and event-driven manner. A simple `while (1) { sleep($interval); ... }` will not do because the time between ticks will fluctuate, often dramatically. The periodic timer ticks off a clock message every `$interval`. Pretty simple!
+Now for the meat & potatoes: The asynchronous loop and periodic timer. These tell the program to do its thing, in a non-blocking and event-driven manner. A simple `while (1) { sleep($interval); ... }` will not do because the time between ticks will fluctuate, often dramatically. The periodic timer ticks off a clock message every `$interval`. Pretty simple!
 
 As an axample, here is the above code controlling my [Volca Drum](https://www.korg.com/us/products/dj/volca_drum/) drum machine on a stock, funky groove. We invoke it on the command-line like this:
 
