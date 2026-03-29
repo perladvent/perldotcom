@@ -245,6 +245,10 @@ And here is what that sounds like:
 
 {{< audio src="/media/making-an-asynchronous-clocking-drum-machine-in-perl/clocked-euclidean-drums.mp3" type="audio/mpeg" >}}
 
+Credits
+-------
+
+Thank you to Andrew Rodland (hobbs), who helped me wrap my head around the "no-sleeping asynchronous" algorithm.
 
 To-do Challenges
 ----------------
