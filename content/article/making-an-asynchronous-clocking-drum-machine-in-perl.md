@@ -63,7 +63,7 @@ The above code does a few things. First it uses a modern perl, then the modules 
 
 Next up, a `$name` variable is captured for a unique MIDI device. (And to see what the names of MIDI devices on the system are, use [JBARRETT](https://metacpan.org/author/JBARRETT)'s little [list_devices](https://metacpan.org/release/JBARRETT/MIDI-RtMidi-FFI-0.10/source/examples/list_devices.pl) script.) Also, the beats per minute is taken from the command-line. If neither is given, `usb` is used for the name, and the BPM is set to "dance tempo."
 
-The clock needs a time interval to tick off. For us, this is a fraction of a second and is assigned to the `$interval` variable.
+The clock needs a time interval to tick off. For us, this is a fraction of a second based on the beats per minute, and is assigned to the `$interval` variable.
 
 To get the job done, we will need to open the named MIDI device for sending output messages to. This is given a name itself - "RtMidiOut", which can be used by other applications that interact with open MIDI devices.
 
