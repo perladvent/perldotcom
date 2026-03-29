@@ -86,9 +86,9 @@ What we really want is to make our drum machine actually play something of our o
 
 In order to generate syncopated patterns, [Math::Prime::XS]({{< mcpan "Math::Prime::XS" >}}) and [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) are added to the `use` statements. "What are syncopated patterns?", you may ask. Good question! "Syncopated" means, "characterized by displaced beats." That is, every beat does not happen evenly, at exactly the same time. Instead, some are displaced. For example, a repeated `[1 1 1 1]` is even and boring. But when it becomes a repeated `[1 1 0 1]` things get spicier and more syncopated.
 
-The desired MIDI channel is added to the command-line inputs. Most commonly, this will be channel `9` (in zero-based numbering). But some drum machines and sequencers are "multi-timbral" and use multiple channels simultaneously for individual sound patches.
+The desired MIDI channel is added to the command-line inputs. Most commonly, this will be channel `9` (in zero-based numbering). But some drum machines and sequencers are "multi-timbral" and use multiple channels simultaneously for individual sounds.
 
-Next we define the drum patches to use. This is a hash-reference that includes the MIDI patch number, the channel it's on, and the pattern to play. The combined patterns of all the drums, when played at tempo, make a groove.
+Next we define the drums to use. This is a hash-reference that includes the MIDI patch number, the channel it's on, and the pattern to play. The combined patterns of all the drums, when played together at tempo, make a groove.
 
 Now we compute intervals and friends. Previously, there was one `$interval`. Now there are a whole host of measurements to make before sending MIDI messages.
 
