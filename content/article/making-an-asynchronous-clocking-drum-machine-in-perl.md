@@ -225,7 +225,7 @@ fluidsynth -a coreaudio -m coremidi -g 2.0 ~/Music/soundfont/FluidR3_GM.sf2
 
 The `FluidR3_GM.sf2` is a MIDI "soundfont" file and can be downloaded for free.
 
-Next, enter this on the command-line (back in the **first** terminal session):
+Next, enter this on the command-line (back in the **previous** terminal session):
 
 ```shell
 perl clocked-euclidean-drums.pl fluid 90
