@@ -276,4 +276,4 @@ Resources
 
 * [fluidsynth](https://www.fluidsynth.org/)
 
-* My [original music](https://www.youtube.com/@GeneBoggs)
+* My original music at [https://www.youtube.com/@GeneBoggs](https://www.youtube.com/@GeneBoggs)
