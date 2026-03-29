@@ -124,7 +124,7 @@ my $drums = {
     hihat => { num => 42, chan => $chan < 0 ? 2 : $chan, pat => [] },
 };
 
-my $beats = 16; # beats in a phrase
+my $beats = 16; # beats in a measure
 my $divisions = 4; # divisions of a quarter-note into 16ths
 my $clocks_per_beat = 24; # PPQN
 my $clock_interval = 60 / $bpm / $clocks_per_beat; # seconds / bpm / ppqn
