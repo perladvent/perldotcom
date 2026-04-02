@@ -112,7 +112,6 @@ Managing the queue is next. If a drum is to be played at the current beat (as ta
 
 use v5.36;
 use feature 'try';
-no warnings 'experimental::try';
 use IO::Async::Loop ();
 use IO::Async::Timer::Periodic ();
 use Math::Prime::XS qw(primes);
