@@ -50,8 +50,8 @@ $midi_out->start; # start the sequencer
 $SIG{INT} = sub { # halt gracefully
     say "\nStop";
     try {
-        $midi_out->panic;
-        $midi_out->stop;
+        $midi_out->panic; # make sure all notes are off
+        $midi_out->stop; # stop the sequencer
     }
     catch ($e) {
         warn "Can't halt the MIDI out device: $e\n";
@@ -65,7 +65,7 @@ my $timer = IO::Async::Timer::Periodic->new(
    interval => $interval,
    on_tick  => sub { $midi_out->clock }, # send a clock tick!
 );
-$timer->start;
+$timer->start; # start the sequencer
 
 $loop->add($timer);
 $loop->run;
@@ -163,8 +163,8 @@ $midi_out->open_port_by_name(qr/\Q$name/i);
 $SIG{INT} = sub { # halt gracefully
     say "\nStop";
     try {
-        $midi_out->panic;
-        $midi_out->stop;
+        $midi_out->panic; # make sure all notes are off
+        $midi_out->stop; # stop the sequencer
     }
     catch ($e) {
         warn "Can't halt the MIDI out device: $e\n";
