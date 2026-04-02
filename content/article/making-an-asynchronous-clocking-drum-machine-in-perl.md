@@ -14,7 +14,7 @@ Let's Make a Drum Machine! Yeah! :D
 
 There are basically two important things to handle: A MIDI "clock" and a groove to play.
 
-Why asynchronous? Well, a simple `while (1) { Time::HiRes::sleep($interval); ... }` will not do because the time between ticks will fluctuate, often dramatically. The Periodic module is a great timer for this purpose. Its default scheduler uses system time, so intervals happen as close to the correct real-world time as possible. That is, events not simply rescheduled after the previous timer has elapsed.
+Why asynchronous? Well, a simple `while (1) { Time::HiRes::sleep($interval); ... }` will not do because the time between ticks will fluctuate, often dramatically. The Periodic module is a great timer for this purpose. Its default scheduler uses system time, so intervals happen as close to the correct real-world time as possible.
 
 Clocks
 ------
