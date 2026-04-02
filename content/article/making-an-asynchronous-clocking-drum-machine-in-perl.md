@@ -232,16 +232,16 @@ sub adjust_drums($mcr, $drums, $primes, $toggle) {
 }
 ```
 
-To run with `fluidsynth` and hear the General MIDI percussion sounds, open a fresh new terminal session, and start-up `fluidsynth` like so (mac syntax):
-
-```shell
-fluidsynth -a coreaudio -m coremidi -g 2.0 ~/Music/soundfont/FluidR3_GM.sf2
-```
-
 On Windows, this works fine:
 
 ```shell
 perl clocked-euclidean-drums.pl "gs wavetable" 90
+```
+
+To run with `fluidsynth` and hear the General MIDI percussion sounds, open a fresh new terminal session, and start-up `fluidsynth` like so (mac syntax):
+
+```shell
+fluidsynth -a coreaudio -m coremidi -g 2.0 ~/Music/soundfont/FluidR3_GM.sf2
 ```
 
 The `FluidR3_GM.sf2` is a MIDI "soundfont" file and can be downloaded for free.
