@@ -14,6 +14,8 @@ Let's Make a Drum Machine! Yeah! :D
 
 There are basically two important things to handle: A MIDI "clock" and a groove to play.
 
+Why asynchronous? Well, a simple `while (1) { sleep($interval); ... }` will not do because the time between ticks will fluctuate, often dramatically. The Periodic module is a great timer for this purpose. Its default scheduler uses wall clock time, so intervals happen as close to the correct real-world time as possible. That is, events not simply rescheduled after the previous timer has elapsed.
+
 Clocks
 ------
 
@@ -70,7 +72,7 @@ To get the job done, we will need to open the named MIDI device for sending outp
 
 In order to not just die when we want to stop, `$SIG{INT}` is redefined to gracefully halt. This also sends a `stop` message to the open MIDI device. This stops the sequencer from playing.
 
-Now for the meat & potatoes: The asynchronous loop and periodic timer. These tell the program to do its thing, in a non-blocking and event-driven manner. A simple `while (1) { sleep($interval); ... }` will not do because the time between ticks will fluctuate, often dramatically. The periodic timer ticks off a clock message every `$interval`. Pretty simple!
+Now for the meat & potatoes: The asynchronous loop and periodic timer. These tell the program to do its thing, in a non-blocking and event-driven manner. The periodic timer ticks off a clock message every `$interval`. Pretty simple!
 
 As an axample, here is the above code controlling my [Volca Drum](https://www.korg.com/us/products/dj/volca_drum/) drum machine on a stock, funky groove. We invoke it on the command-line like this:
 
