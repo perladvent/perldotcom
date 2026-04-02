@@ -146,7 +146,7 @@ my @queue; # priority queue for note_on/off messages
 
 # open the named midi output device
 my $midi_out = RtMidiOut->new;
-try { # this will die on windows
+try { # this will die on windows but is needed for mac
     $midi_out->open_virtual_port('RtMidiOut');
 }
 catch ($e) {}
