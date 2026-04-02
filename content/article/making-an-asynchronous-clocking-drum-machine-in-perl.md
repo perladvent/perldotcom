@@ -35,7 +35,7 @@ use MIDI::RtMidi::FFI::Device ();
 my $name = shift || 'usb'; # MIDI sequencer device
 my $bpm  = shift || 120; # beats per minute
 
-my $interval = 60 / $bpm / 24; # seconds / bpm / clocks-per-beat
+my $interval = 60 / $bpm / 24; # time / bpm / clocks-per-beat
 
 # open the named midi device for output
 my $midi_out = RtMidiOut->new;
@@ -140,7 +140,7 @@ my $drums = {
 my $beats = 16; # beats in a measure
 my $divisions = 4; # divisions of a quarter-note into 16ths
 my $clocks_per_beat = 24; # PPQN
-my $clock_interval = 60 / $bpm / $clocks_per_beat; # seconds / bpm / ppqn
+my $clock_interval = 60 / $bpm / $clocks_per_beat; # time / bpm / ppqn
 my $sixteenth = $clocks_per_beat / $divisions; # clocks per 16th-note
 my %primes = ( # for computing the pattern
     all  => [ primes($beats) ],
