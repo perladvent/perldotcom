@@ -43,6 +43,7 @@ $midi_out->start; # start the sequencer
 
 $SIG{INT} = sub { # halt gracefully
     say "\nStop";
+    $midi_out->panic; # all notes off
     $midi_out->stop; # stop the sequencer
     exit;
 };
