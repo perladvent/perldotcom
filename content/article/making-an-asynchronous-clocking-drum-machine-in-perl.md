@@ -153,8 +153,8 @@ $midi_out->open_port_by_name(qr/\Q$name/i);
 $SIG{INT} = sub { # halt gracefully
     say "\nStop";
     try {
-    $midi_out->panic;
-    $midi_out->stop;
+        $midi_out->panic;
+        $midi_out->stop;
     }
     catch ($e) {
         warn "Can't halt the MIDI out device: $e\n";
