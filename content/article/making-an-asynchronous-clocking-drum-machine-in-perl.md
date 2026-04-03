@@ -65,7 +65,7 @@ my $timer = IO::Async::Timer::Periodic->new(
    interval => $interval,
    on_tick  => sub { $midi_out->clock }, # send a clock tick!
 );
-$timer->start; # start the sequencer
+$timer->start;
 
 $loop->add($timer);
 $loop->run;
