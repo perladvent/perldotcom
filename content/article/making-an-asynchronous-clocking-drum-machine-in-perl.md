@@ -277,7 +277,7 @@ And here is what that sounds like:
 The Module
 ----------
 
-I have coded this logic, and a bit more, into a friendly [CPAN module](https://metacpan.org/pod/Music::SimpleDrumMachine). Check out the `eg/euclidean.pl` example program.
+I have coded this logic, and a bit more, into a friendly [CPAN module](https://metacpan.org/pod/Music::SimpleDrumMachine). Check out the `eg/euclidean.pl` example program in the distribution.
 
 Credits
 -------
