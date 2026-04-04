@@ -50,8 +50,8 @@ $midi_out->start; # start the sequencer
 $SIG{INT} = sub { # halt gracefully
     say "\nStop";
     try {
-        $midi_out->panic; # make sure all notes are off
         $midi_out->stop; # stop the sequencer
+        $midi_out->panic; # make sure all notes are off
     }
     catch ($e) {
         warn "Can't halt the MIDI out device: $e\n";
@@ -163,8 +163,8 @@ $midi_out->open_port_by_name(qr/\Q$name/i);
 $SIG{INT} = sub { # halt gracefully
     say "\nStop";
     try {
-        $midi_out->panic; # make sure all notes are off
         $midi_out->stop; # stop the sequencer
+        $midi_out->panic; # make sure all notes are off
     }
     catch ($e) {
         warn "Can't halt the MIDI out device: $e\n";
