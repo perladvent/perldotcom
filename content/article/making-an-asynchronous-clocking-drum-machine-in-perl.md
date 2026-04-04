@@ -303,6 +303,8 @@ Resources
 
 * The [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) module
 
+* The [Music::SimpleDrumMachine]({{< mcpan "Music::SimpleDrumMachine" >}}) module based on this logic
+
 * The cross-platform [fluidsynth](https://www.fluidsynth.org/) application
 
 * My original music: [https://www.youtube.com/@GeneBoggs](https://www.youtube.com/@GeneBoggs)
