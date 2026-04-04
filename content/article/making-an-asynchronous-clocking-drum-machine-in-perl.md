@@ -106,7 +106,7 @@ Now we compute intervals and friends. Previously, there was one `$interval`. Now
 
 Then, as before, a named MIDI output device is opened, and a graceful stop is defined.
 
-Next, an [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) object is created. And then, again as before, an asynchronous loop and periodic timer are instantiated and set in motion.
+Next, a [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) object is created. And then, again as before, an asynchronous loop and periodic timer are instantiated and set in motion.
 
 The meaty bits are in the timer's `on_tick` callback. This contains all the logic needed to trigger our drum grooves.
 
