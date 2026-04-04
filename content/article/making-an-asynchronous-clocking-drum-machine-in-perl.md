@@ -274,6 +274,11 @@ And here is what that sounds like:
 
 {{< audio src="/media/making-an-asynchronous-clocking-drum-machine-in-perl/clocked-euclidean-drums.mp3" type="audio/mpeg" >}}
 
+The Module
+----------
+
+I have coded this logic, and a bit more, into a friendly [CPAN module](https://metacpan.org/pod/Music::SimpleDrumMachine). Check out the `eg/euclidean.pl` example program.
+
 Credits
 -------
 
