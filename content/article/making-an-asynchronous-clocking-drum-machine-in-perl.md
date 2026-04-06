@@ -1,16 +1,16 @@
 {
-  "title"       : "Making an Asynchronous Clocking Drum Machine in Perl",
+  "title"       : "Making an Asynchronous Clocking Drum Machine App in Perl",
   "authors"     : ["gene-boggs"],
   "date"        : "2026-03-28T13:00:00",
   "tags"        : ["Asynchronous", "Drums", "MIDI", "Music"],
   "draft"       : false,
   "image"       : "/images/making-an-asynchronous-clocking-drum-machine-in-perl/volca-drum.jpg",
   "thumbnail"   : "/images/making-an-asynchronous-clocking-drum-machine-in-perl/vintage-drums.png",
-  "description" : "Let's Make a Drum Machine!",
+  "description" : "Let's Make a Drum Machine App!",
   "categories"  : "development"
 }
 
-Let's Make a Drum Machine! Yeah! :D
+Let's Make a Drum Machine application! Yeah! :D
 
 There are basically two important things to handle: A MIDI "clock" and a groove to play.
 
