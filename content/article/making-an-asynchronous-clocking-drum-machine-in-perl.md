@@ -277,7 +277,7 @@ And here is what that sounds like:
 The Module
 ----------
 
-I have coded this logic, and a bit more, into a friendly [CPAN module](https://metacpan.org/pod/Music::SimpleDrumMachine). Check out the `eg/euclidean.pl` example program in the distribution.
+I have coded this logic, and a bit more, into a friendly [CPAN module](https://metacpan.org/pod/Music::SimpleDrumMachine). Check out the `eg/euclidean.pl` example program in the distribution. It is a work in progress. YMMV.
 
 Credits
 -------
@@ -308,7 +308,7 @@ Resources
 
 * The [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) module
 
-* The [Music::SimpleDrumMachine]({{< mcpan "Music::SimpleDrumMachine" >}}) module based on this logic
+* The [Music::SimpleDrumMachine]({{< mcpan "Music::SimpleDrumMachine" >}}) WIP module based on this logic
 
 * The cross-platform [fluidsynth](https://www.fluidsynth.org/) application
 
