@@ -14,7 +14,7 @@ Let's Make a Drum Machine application! Yeah! :D
 
 There are basically two important things to handle: A MIDI "clock" and a groove to play.
 
-Why asynchronous? Well, a simple `while (1) { Time::HiRes::sleep($interval); ... }` will not do because the time between ticks will fluctuate, often dramatically. The Periodic module is a great timer for this purpose. Its default scheduler uses system time, so intervals happen as close to the correct real-world time as possible.
+Why asynchronous? Well, a simple `while (1) { Time::HiRes::sleep($interval); ... }` will not do because the time between ticks will fluctuate, often dramatically. `IO::Async::Timer::Periodic` is a great timer for this purpose. Its default scheduler uses system time, so intervals happen as close to the correct real-world time as possible.
 
 Clocks
 ------
@@ -39,7 +39,7 @@ my $interval = 60 / $bpm / 24; # time / bpm / clocks-per-beat
 
 # open the named midi device for output
 my $midi_out = RtMidiOut->new;
-try { # this will die on windows but is needed for mac
+try { # this will die on Windows but is needed for Mac
     $midi_out->open_virtual_port('RtMidiOut');
 }
 catch ($e) {}
@@ -71,7 +71,7 @@ $loop->add($timer);
 $loop->run;
 ```
 
-The above code does a few things. First it uses a modern perl, then the modules that will make execution asynchronous, and finally the module that makes real-time MIDI possible.
+The above code does a few things. First it uses modern Perl, then the modules that will make execution asynchronous, and finally the module that makes real-time MIDI possible.
 
 Next up, a `$name` variable is captured for a unique MIDI device. (And to see what the names of MIDI devices on the system are, use [JBARRETT](https://metacpan.org/author/JBARRETT)'s little [list_devices](https://metacpan.org/release/JBARRETT/MIDI-RtMidi-FFI-0.10/source/examples/list_devices.pl) script.) Also, the beats per minute is taken from the command-line. If neither is given, `usb` is used for the name, and the BPM is set to "dance tempo."
 
@@ -81,9 +81,9 @@ To get the job done, we will need to open the named MIDI device for sending outp
 
 In order to not just die when we want to stop, `$SIG{INT}` is redefined to gracefully halt. This also sends a `stop` message to the open MIDI device. This stops the sequencer from playing.
 
-Now for the meat & potatoes: The asynchronous loop and periodic timer. These tell the program to do its thing, in a non-blocking and event-driven manner. The periodic timer ticks off a clock message every `$interval`. Pretty simple!
+Now for the meat and potatoes: The asynchronous loop and periodic timer. These tell the program to do its thing, in a non-blocking and event-driven manner. The periodic timer ticks off a clock message every `$interval`. Pretty simple!
 
-As an axample, here is the above code controlling my [Volca Drum](https://www.korg.com/us/products/dj/volca_drum/) drum machine on a stock, funky groove. We invoke it on the command-line like this:
+As an example, here is the above code controlling my [Volca Drum](https://www.korg.com/us/products/dj/volca_drum/) drum machine on a stock, funky groove. We invoke it on the command-line like this:
 
 ```shell
 perl clock-gen-async.pl
@@ -94,7 +94,7 @@ perl clock-gen-async.pl
 Grooves
 -------
 
-What we really want is to make our drum machine actually play something of our own making. So it's refactor time... Let's make a 4/4 time groove, with 16th-note resolution, that alternates between two different parts. "4/4" is a "time signature" in music jargon and means that there are four beats per measure (numerator), and a quarter note equals one beat (denominator). Other time signatures like 3/4 of the waltz or 7/8 would be "odd meters."
+What we really want is to make our drum machine actually play something of our own making. So it's refactor time... Let's make a 4/4 time groove, with 16th-note resolution, that alternates between two different parts. "4/4" is a "time signature" in music jargon and means that there are four beats per measure (numerator), and a quarter note equals one beat (denominator). Other time signatures like the waltz's 3/4 are simple, while odd meters like 7/8 are not.
 
 In order to generate syncopated patterns, [Math::Prime::XS]({{< mcpan "Math::Prime::XS" >}}) and [Music::CreatingRhythms]({{< mcpan "Music::CreatingRhythms" >}}) are added to the `use` statements. "What are syncopated patterns?", you may ask. Good question! "Syncopated" means, "characterized by displaced beats." That is, every beat does not happen evenly, at exactly the same time. Instead, some are displaced. For example, a repeated `[1 1 1 1]` is even and boring. But when it becomes a repeated `[1 1 0 1]` things get spicier and more syncopated.
 
@@ -154,7 +154,7 @@ my @queue; # priority queue for note_on/off messages
 
 # open the named midi output device
 my $midi_out = RtMidiOut->new;
-try { # this will die on windows but is needed for mac
+try { # this will die on Windows but is needed for Mac
     $midi_out->open_virtual_port('RtMidiOut');
 }
 catch ($e) {}
@@ -246,7 +246,7 @@ On Windows, this works fine:
 perl clocked-euclidean-drums.pl "gs wavetable" 90
 ```
 
-To run with `fluidsynth` and hear the General MIDI percussion sounds, open a fresh new terminal session, and start-up `fluidsynth` like so (mac syntax):
+To run with `fluidsynth` and hear the General MIDI percussion sounds, open a fresh new terminal session, and start up `fluidsynth` like so (mac syntax):
 
 ```shell
 fluidsynth -a coreaudio -m coremidi -g 2.0 ~/Music/soundfont/FluidR3_GM.sf2
