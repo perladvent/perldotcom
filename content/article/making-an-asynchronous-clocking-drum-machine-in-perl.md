@@ -241,7 +241,7 @@ sub adjust_drums($mcr, $drums, $primes, $toggle) {
 }
 ```
 
-You may notice the inefficiency of attempting to drain an empty queue 23 times every 16th note. Oof! Fortunately, this doesn't fire anything other than a single while loop condition once. A more efficient solution would be to only drain the queue once, but this requires a bit more complexity that we won't adding, for brevity's sake.
+You may notice the inefficiency of attempting to drain an empty queue 23 times every 16th note. Oof! Fortunately, this doesn't fire anything other than a single while loop condition. A more efficient solution would be to only drain the queue once, but this requires a bit more complexity that we won't adding, for brevity's sake.
 
 On Windows, this works fine:
 
