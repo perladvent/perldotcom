@@ -1,7 +1,7 @@
 {
   "title"       : "Making an Asynchronous Clocking Drum Machine App in Perl",
   "authors"     : ["gene-boggs"],
-  "date"        : "2026-03-28T13:00:00",
+  "date"        : "2026-04-13T22:00:00",
   "tags"        : ["Asynchronous", "Drums", "MIDI", "Music"],
   "draft"       : false,
   "image"       : "/images/making-an-asynchronous-clocking-drum-machine-in-perl/volca-drum.jpg",
