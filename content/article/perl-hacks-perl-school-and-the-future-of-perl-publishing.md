@@ -23,9 +23,6 @@ Dave Cross, long-time Perl user, trainer, and author, recently released [The Bes
 
 There's an unrelated book, [Perl Hacks: Tips & Tools For Programming, Debugging, And Surviving](http://shop.oreilly.com/product/9780596526740.do), by chromatic, Damian Conway, and Curtis "Ovid" Poe. It's also very good, but completely separate from Dave's.
 
-\
-\
-
 #### What is Perl Hacks? When did you start it and what do you like to post there?
 
 Perl Hacks is my Perl blog. It's where I post all my Perl-related articles.
@@ -46,9 +43,6 @@ entries—"London.pm will be holding these meetings", "I'm running a
 training course", things like that. But later I started posting longer
 articles about the Perl community or interesting technical corners of
 Perl.
-
-\
-\
 
 #### How did you choose what went into the ebook? What are some of your favorite posts? Which ones got the best responses?
 
@@ -75,15 +69,12 @@ would have. I thought there was some nice detective work in there.
 
 The post that got the most response was called [You Must Hate Version
 Control
-Systems](https://perlhacks.com/2012/03/you-must-hate-version-control-
-systems/). The title was taken from a Perl job ad from a company that
+Systems](https://perlhacks.com/2012/03/you-must-hate-version-control-systems/).
+The title was taken from a Perl job ad from a company that
 no-one seemed to want to work for. The person who posted the ad turned
 up in the comments and tried to explain why he wrote that, but I don't
 think anyone was convinced. This was the one time that I regretted
 that I couldn't use a post's comments in the book.
-
-\
-\
 
 #### What is Perl School? Why did you start it? What was the first book?
 
@@ -120,10 +111,6 @@ offering to help with the technical parts of getting them published.
 John Davies approached me about the book that became [Selenium and
 Perl](https://perlschool.com/books/selenium-perl/) and it's just grown from there.
 
-
-\
-\
-
 #### What was your experience giving low-cost and free Perl training in the UK?
 
 I've run Perl training at all levels in the UK. Five years ago I'd
@@ -141,9 +128,6 @@ For many years I've run a free ninety-minute or two-hour course as
 part of the London Perl Workshop. I always get a pretty good turn-out
 for those. But, to be honest, that's about the only place I can
 guarantee much interest in Perl training in the UK these days.
-
-\
-\
 
 #### You previously wrote the print books [Data Munging with Perl](https://www.manning.com/books/data-munging-with-perl) (Manning Press) and [Template Toolkit](http://www.template-toolkit.org/book.html) (O'Reilly & Associates, with Andy Wardley and Darren Chamberlain). How is Perl School's process different than what you experienced with those publishers?
 
@@ -174,9 +158,6 @@ and we're agile. If you come to me with a completed book, we might
 well be able to get it on Amazon in a week or two. For a traditional
 publisher, that time will be months.
 
-\
-\
-
 #### What do you think are the biggest challenges to technical publishing today? How does something like Perl School respond to that?
 
 Traditional publishing is an expensive business. Publishers need to
@@ -202,9 +183,6 @@ don't see that they would get the level of sales needed to justify a
 new Perl book. Perl School is happy to take that risk—because, really,
 it's a tiny risk for us.
 
-\
-\
-
 #### What are your personal reading preferences? Which device do you like, what size screen do you need, and which format works best for you?
 
 I do like a real book. But they take up too much space, so I've pretty
@@ -227,9 +205,6 @@ you're reading them on a smaller screen it will either be too small to
 read or you'll need to scroll back and forth a lot. A proper ebook
 format (like Mobi or ePub) will reformat pages for any combination of
 screen size and font size.
-
-\
-\
 
 #### How can someone write a book for Perl School? What topics do you think would be most interesting?
 
