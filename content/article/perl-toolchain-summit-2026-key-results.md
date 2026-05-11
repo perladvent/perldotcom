@@ -12,9 +12,9 @@
 
 # The Perl Toolchain Summit 2026
 
-From April 23-26, 2026, the invite-only [Perl Toolchain Summit](https://perltoolchainsummit.org/pts2026/) (PTS) brought together in Vienna, Austria, about 30 of the ecosystem’s most active maintainers —and welcomed 4 first-timers— for four days of uninterrupted deep-dive collaboration in pair-programming sessions, consensus discussions, and critical infrastructure work. Attendees tackled security tooling and infrastructure, modernization and redesign proposals, several CI and test harness improvements, Perl core optimizations, and metadata/spec updates.
+From April 23-26, 2026, the invite-only [Perl Toolchain Summit](https://perltoolchainsummit.org/pts2026/) (PTS) brought together in Vienna, Austria, about 30 of the ecosystem’s most active maintainers, and welcomed 4 first-timersr, for four days of uninterrupted deep-dive collaboration in pair-programming sessions, consensus discussions, and critical infrastructure work. Attendees tackled security tooling and infrastructure, modernization and redesign proposals, several CI and test harness improvements, Perl core optimizations, and metadata/spec updates.
 
-Thanks to all the sponsors support —financial, in-kind, and community— this year's Summit was a huge success and produced multiple module releases, consensus on future smoke-testing and CPAN Testers architecture, and a new CPANSec advisory feed that will allow developers to quickly assess any Perl project's security using either CLI tools or the MetaCPAN website itself. Those advancements benefit all organizations relying on Perl directly or indirectly.
+Thanks to all the sponsors support: financial, in-kind, and community. This year's Summit was a huge success and produced multiple module releases, consensus on future smoke-testing and CPAN Testers architecture, and a new CPANSec advisory feed that will allow developers to quickly assess any Perl project's security using either CLI tools or the MetaCPAN website itself. Those advancements benefit all organizations relying on Perl directly or indirectly.
 
 ## PTS 2026 Key Results & Deliverables
 
@@ -31,23 +31,23 @@ CPANSec took it to another level, getting faster at discovering vulnerabilities 
 
 Continued work on testing and QA:
 
+- On the road to [Devel::Cover](https://metacpan.org/pod/Devel::Cover) **2.00**;
 - Several improvements made to [Test::Smoke](https://metacpan.org/pod/Test::Smoke), with 3 releases: removal of dual PerlIO/stdio testing, make install more robust (and portable);
 - Test::Smoke [backend](https://perl5.test-smoke.org/) full rewrite to ensure sustainability with new features and better performances;
 - The [Test2](https://metacpan.org/pod/Test2) family of modules, including the new web user interface, was greatly improved, with many issues fixed and new features implemented;
-- On the road to [Devel::Cover](https://metacpan.org/pod/Devel::Cover) **2.00**.
+- Syncing from [backpan.perl.org](https://backpan.perl.org) to fill in CPAN Testers's [backpan](https://backpan.cpantesters.org/);
+- New MCP server [mcp.cpantesters.org](https://mcp.cpantesters.org) to browse CPANTesters reports from your prefered LLM CLI;
 
 ### Supply Chain and Other Modules
 
-With multiple CPAN clients/authoring maintainers worked:
+Many CPAN authors and maintainers worked on:
 
 - Release of [cpm v1](https://skaji.medium.com/cpm-v1-making-installs-stable-b2236b8eda44);
 - Fixes and hardening to [YAML::XS](https://metacpan.org/pod/YAML::XS), [YAML::PP](https://metacpan.org/pod/YAML::PP) and [libyaml](https://github.com/yaml/libyaml);
-- [PPI](https://metacpan.org/pod/PPI) saw several fixes and not less than 7 new releases!
+- [PPI](https://metacpan.org/pod/PPI) saw several fixes and no less than 7 new releases!
 - [Perl::Version::Bumper](https://metacpan.org/pod/Perl::Version::Bumper) updated to take advantage of the first of those 7 PPI releases;
 - Continuous effort on [MetaCPAN](https://metacpan.org/) infrastructure: migration to Hetzner, improving secret management and monitoring;
 - Proof of Concept of integrating [GitHub Flavored Markdown](https://github.github.com/gfm/) to [MetaCPAN](https://metacpan.org/);
-- Syncing from [backpan.perl.org](https://backpan.perl.org) to fill in CPAN Testers's [backpan](https://backpan.cpantesters.org/);
-- New MCP server [mcp.cpantesters.org](https://mcp.cpantesters.org) to browse CPANTesters reports from your prefered LLM CLI;
 - Huge progress on Automation Policy Metadata.
 
 ### PAUSE
@@ -100,7 +100,7 @@ During this PTS in particular, there were a lot of group discussions, proabably 
 - UTF-8 
 - Plan for Perl Platforms
 
-### Podcast
+### Podcasts
 
 As in 2025, PTS 2026 was a an opportunity to record new episodes for [The Underbar](https://underbar.cpan.io/).
 There were over 5 hours of conversations recorded, about:
