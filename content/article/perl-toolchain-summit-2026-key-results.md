@@ -12,9 +12,9 @@
 
 # The Perl Toolchain Summit 2026
 
-From April 23-26, 2026, the invite-only [Perl Toolchain Summit](https://perltoolchainsummit.org/pts2026/) (PTS) brought together in Vienna, Austria, about 30 of the ecosystem’s most active maintainers, and welcomed 4 first-timersr, for four days of uninterrupted deep-dive collaboration in pair-programming sessions, consensus discussions, and critical infrastructure work. Attendees tackled security tooling and infrastructure, modernization and redesign proposals, several CI and test harness improvements, Perl core optimizations, and metadata/spec updates.
+From April 23-26, 2026, the invite-only [Perl Toolchain Summit](https://perltoolchainsummit.org/pts2026/) (PTS) brought together in Vienna, Austria, about 30 of the ecosystem’s most active maintainers, and welcomed 4 first-timers, for four days of uninterrupted deep-dive collaboration in pair-programming sessions, consensus discussions, and critical infrastructure work. Attendees tackled security tooling and infrastructure, modernization and redesign proposals, several CI and test harness improvements, Perl core optimizations, and metadata/spec updates.
 
-Thanks to all the sponsors support: financial, in-kind, and community. This year's Summit was a huge success and produced multiple module releases, consensus on future smoke-testing and CPAN Testers architecture, and a new CPANSec advisory feed that will allow developers to quickly assess any Perl project's security using either CLI tools or the MetaCPAN website itself. Those advancements benefit all organizations relying on Perl directly or indirectly.
+Thanks to all the sponsors support (financial, in-kind, and community), this year's Summit was a huge success. It produced multiple module releases, consensus on future smoke-testing and CPAN Testers architecture, and a new CPANSec advisory feed that will allow developers to quickly assess any Perl project's security using either CLI tools or the MetaCPAN website itself. Those advancements benefit all organizations relying on Perl directly or indirectly.
 
 ## PTS 2026 Key Results & Deliverables
 
