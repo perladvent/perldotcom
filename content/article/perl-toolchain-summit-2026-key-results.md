@@ -128,7 +128,7 @@ The continued support of our sponsors ensures that the Perl Toolchain Summit rem
 - [Ctrl O](https://www.ctrlo.com/),
 - [Simplelists](https://www.simplelists.com/),
 - [HKS3 / Koha Support](https://koha-support.eu/)
-- Harald Joerg,
+- Harald Jörg,
 - Michele Beltrame ([Sigmafin](https://www.blendgroup.it/)),
 - Laurent Boivin.
 
