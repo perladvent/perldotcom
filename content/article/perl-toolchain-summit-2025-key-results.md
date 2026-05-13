@@ -4,15 +4,13 @@
     "tags": ["perl-toolchain-summit", "pts"],
     "date": "2025-05-30T12:00:00",
     "draft": false,
-    "image": "/images/perl-toolchain-summit-2025-key-results/pts-2025-group-photo.jpg",
-    "thumbnail": "/images/perl-toolchain-summit-2025-key-results/pts-2025-group-photo.jpg",
+    "image": "/images/perl-toolchain-summit-key-results/pts-2025-group-photo.jpg",
+    "thumbnail": "/images/perl-toolchain-summit-key-results/pts-2025-group-photo.jpg",
     "description": "33 Perl ecosystem maintainers gathered in Leipzig for four days of intensive collaboration, delivering major security tooling improvements, testing infrastructure updates, and core performance enhancements that benefit the entire Perl community.",
     "categories": "community"
   }
 
 # The Perl Toolchain Summit 2025
-
-![](pts-2025-group-photo.jpg)
 
 From May 1–4, 2025, the invite-only [Perl Toolchain Summit](https://perltoolchainsummit.org/pts2025/) (PTS) brought together in Leipzig, Germany, 33 of the ecosystem’s most active maintainers — and welcomed 6 first-timers — for four days of uninterrupted deep-dive collaboration in pair-programming sessions, consensus discussions, and critical infrastructure work. Attendees tackled security tooling and infrastructure, modernization and redesign proposals, several CI and test harness improvements, Perl core optimizations, and metadata/spec updates.
 
@@ -29,7 +27,7 @@ Thanks to all the sponsors support —financial, in-kind, and community— this 
 
 ### Testing and Quality Assurance
 
- - Initiated deprecation plan for dual PerlIO/stdio testing, spun up a Linux-focused [Test::Smoke](ihttps://metacpan.org/pod/Test::Smoke) farm proof of concept, and defined patching workflow for test runs;
+ - Initiated deprecation plan for dual PerlIO/stdio testing, spun up a Linux-focused [Test::Smoke](https://metacpan.org/pod/Test::Smoke) farm proof of concept, and defined patching workflow for test runs;
  - Converted smoke testers results from MariaDB to PostgreSQL, paving the way for unified reporting with CPAN Testers;
  - Several discussions and work ensuring [cpantesters.org](https://cpantesters.org)'s stability, availability and improved reporting for the entire ecosystem;
  - Creation of a CPAN Reporter client able to work from a manual installation without an attached cpan client;
