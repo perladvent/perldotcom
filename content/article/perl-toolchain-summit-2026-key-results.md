@@ -10,26 +10,24 @@
     "categories": "community"
   }
 
-# The Perl Toolchain Summit 2026
+From April 23-26, 2026, the invite-only [Perl Toolchain Summit](https://perltoolchainsummit.org/pts2026/) (PTS) brought together about 30 of the ecosystem’s most active maintainers — including four first-timers — in Vienna, Austria for four days of uninterrupted deep-dive collaboration in pair-programming sessions, consensus discussions, and critical infrastructure work. Attendees tackled security tooling and infrastructure, modernization and redesign proposals, several CI and test harness improvements, Perl core optimizations, and metadata/spec updates.
 
-From April 23-26, 2026, the invite-only [Perl Toolchain Summit](https://perltoolchainsummit.org/pts2026/) (PTS) brought together in Vienna, Austria, about 30 of the ecosystem’s most active maintainers, and welcomed 4 first-timers, for four days of uninterrupted deep-dive collaboration in pair-programming sessions, consensus discussions, and critical infrastructure work. Attendees tackled security tooling and infrastructure, modernization and redesign proposals, several CI and test harness improvements, Perl core optimizations, and metadata/spec updates.
-
-Thanks to all the sponsors' support (financial, in-kind, and community), this year's Summit was a huge success. It produced multiple module releases, consensus on future smoke-testing and CPAN Testers architecture, and a new CPANSec advisory feed that will allow developers to quickly assess any Perl project's security using either CLI tools or the MetaCPAN website itself. Those advancements benefit all organizations relying on Perl directly or indirectly.
+Thanks to all the sponsors' support (financial, in-kind, and community), this year's Summit was a success. It produced multiple module releases, consensus on future smoke-testing and CPAN Testers architecture, and a new CPANSec advisory feed that will allow developers to quickly assess any Perl project's security using either CLI tools or the MetaCPAN website itself. Those advancements benefit all organizations relying on Perl directly or indirectly.
 
 ## PTS 2026 Key Results & Deliverables
 
 ### Security
 
-CPANSec took it to another level, getting faster at discovering vulnerabilities (in modules, infra and core) and improving its process:
+CPANSec took it to another level, getting faster at discovering vulnerabilities (in modules, infrastructure and core) and improving its process:
 
 - Vulnerability triage;
 - CNA improvements;
-- Meta V3 is moving forward!
+- Meta V3 is moving forward;
 - Deprecated Module::Signature, considered "security theater".
 
 ### Testing and Quality Assurance
 
-Continued work on testing and QA:
+Testing and QA work included:
 
 - On the road to [Devel::Cover](https://metacpan.org/pod/Devel::Cover) **2.00**;
 - Several improvements made to [Test::Smoke](https://metacpan.org/pod/Test::Smoke), with 3 releases: removal of dual PerlIO/stdio testing, making install more robust (and portable);
@@ -44,7 +42,7 @@ Many CPAN authors and maintainers worked on:
 
 - Release of [cpm v1](https://skaji.medium.com/cpm-v1-making-installs-stable-b2236b8eda44);
 - Fixes and hardening to [YAML::XS](https://metacpan.org/pod/YAML::XS), [YAML::PP](https://metacpan.org/pod/YAML::PP) and [libyaml](https://github.com/yaml/libyaml);
-- [PPI](https://metacpan.org/pod/PPI) saw several fixes and no fewer than 7 new releases!
+- [PPI](https://metacpan.org/pod/PPI) saw several fixes and no fewer than 7 new releases;
 - [Perl::Version::Bumper](https://metacpan.org/pod/Perl::Version::Bumper) updated to take advantage of the first of those 7 PPI releases;
 - Continuous effort on [MetaCPAN](https://metacpan.org/) infrastructure: migration to Hetzner, improving secret management and monitoring;
 - Proof of Concept of integrating [GitHub Flavored Markdown](https://github.github.com/gfm/) to [MetaCPAN](https://metacpan.org/);
@@ -54,7 +52,7 @@ Many CPAN authors and maintainers worked on:
 
 Very hacktive PAUSE table:
 
-- Implemented new [API token access](https://github.com/andk/pause/pull/576)!
+- Implemented new [API token access](https://github.com/andk/pause/pull/576);
 - Security fixes ("rand rand rand rand", "ABRA time" and "META symlinks");
 - New dockerized PAUSE;
 - Various pentesting (e.g. reviewing YAML parser);
@@ -67,7 +65,7 @@ Recent years brought the topic of funding to the front of the stage. In particul
 
 A lot of things happened on this front during the Perl Toolchain Summit:
 
-- A very strong effort towards funding security work;
+- A strong effort towards funding security work;
 - General discussions about funding of the community.
 
 ### Group discussions
@@ -103,7 +101,7 @@ During this PTS in particular, there were a lot of group discussions, probably h
 ### Podcasts
 
 As in 2025, PTS 2026 was an opportunity to record new episodes for [The Underbar](https://underbar.cpan.io/).
-There were over 5 hours of conversations recorded, about:
+There were over five hours of conversations recorded, about:
 
 - Configure
 - Vienna.pm
@@ -113,7 +111,7 @@ There were over 5 hours of conversations recorded, about:
 
 ## Why Sponsor Support Matters
 
-Bringing 30–35 experts under one roof enabled unprecedented collaboration with real-time problem solving, saving months of remote coordination and alignment. That kind of accelerated development and knowledge transfer not only brings the community together but fuels the contributors of critical open source products for the rest of the year so they can renew their shared goals and work in the same direction. Having 4 first-time attendees gaining direct mentorship is also fundamental to seed future contributions and expand the volunteer base, ensuring the longevity of the Perl ecosystem and toolchain.
+Bringing 30–35 experts under one roof enabled unprecedented collaboration with real-time problem solving, saving months of remote coordination and alignment. That kind of accelerated development and knowledge transfer not only brings the community together but fuels the contributors of critical open source projects for the rest of the year so they can renew their shared goals and work in the same direction. Having four first-time attendees gaining direct mentorship is also fundamental to seed future contributions and expand the volunteer base, ensuring the longevity of the Perl ecosystem and toolchain.
 
 The continued support of our sponsors ensures that the Perl Toolchain Summit remains a catalyst for Perl sustainability — translating sponsor investment into tangible improvements in performance, security, and ecosystem features and coherence. We look forward to partnering again to power the next wave of innovation in Perl's toolchain.
 
