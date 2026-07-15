@@ -135,7 +135,14 @@ Or for external images:
 image = "https://example.com/image.png"
 ```
 
-Thumbnails are displayed in circular format on listing pages.
+Thumbnails are displayed in circular format on listing pages. The circle
+uses CSS `background-size: cover` with center positioning, so it crops the
+`thumbnail` image to a centered square. Use a **square (1:1) image** for
+`thumbnail` — a wide banner (e.g. a 2:1 social/og image) gets center-cropped
+and loses its edges. Keep the wide banner as `image` (it feeds the
+og:image/Twitter card, which wants ~2:1) and point `thumbnail` at a square
+variant. A square logo on a padded background circles cleanly. (A `thumbnail`
+whose path ends in `.svg` is special-cased to render whole, uncropped.)
 
 ## Deployment Process
 
