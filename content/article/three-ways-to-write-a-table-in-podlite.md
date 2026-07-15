@@ -13,7 +13,7 @@ authors=[
 tags=["documentation", "pod", "podlite", "syntax"]
 +++
 
-In my [previous article](https://www.perl.com/article/podlite-comes-to-perl-a-lightweight-block-based-markup-language-for-everyday-use/) I introduced Podlite as a block-based markup language. Today I'll zoom into one piece: tables.
+In my [previous article](/article/podlite-comes-to-perl-a-lightweight-block-based-markup-language-for-everyday-use/) I introduced Podlite as a block-based markup language. Today I'll zoom into one piece: tables.
 
 I write tables in three rough shapes: a few rows of words I'm jotting down, a visual grid like a tic-tac-toe board, or a data export I want to embed in a document. Podlite has three syntaxes around the same model, one per shape. The first has several flavors, so let's start with that.
 
