@@ -127,8 +127,8 @@ Tables break in real documents. A copy-paste loses a column, two rows pick diffe
 
 * Per-line separator detection. Each row decides its separator from what it sees.
 * Cell count validation. Short rows pad with empty cells, long rows truncate. Both produce a warning.
-* Mixed-separator warning. Pipes in the header and whitespace in data still works, but you get a warning.
-* CSV recovery. Missing data renders an empty table. A non-CSV mime type falls back to a `=code` block so the content stays visible.
+* Mixed-separator warning. Pipes in the header and whitespace in data still work, but you get a warning.
+* CSV recovery. Missing data renders an empty table. A non-CSV MIME type falls back to a `=code` block so the content stays visible.
 
 I'd rather see a warning in the console than ship a document with a dropped row.
 
