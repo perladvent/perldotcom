@@ -25,12 +25,38 @@ I<tpf/perl.com-staging>, is the one that Perl NOC serves as the
 website.
 
 To convert the public repo to the public site, you run this program.
-There are no options or environment variables.
 
 This essentially does a bunch of sanity checks about files and directories
 then lets Hugo build a site into the I<tpf/perl.com-staging> directory.
 
+=head2 Run it through C<make deploy>, not directly
+
+This program is only the Hugo build-and-push step. The full deploy also
+has to regenerate the (git-ignored) JSON metadata and contributors list
+first, and move the C<deployed> tag afterward. All of that lives in the
+C<deploy> target in the F<Makefile>. Running C<bin/deploy> on its own
+skips it and ships stale metadata.
+
+To enforce that, this program refuses to run unless the environment
+variable C<PERLDOTCOM_DEPLOY_VIA_MAKE> is set, which the C<make deploy>
+recipe does for you. If you genuinely need to bypass the wrapper, set it
+by hand:
+
+    PERLDOTCOM_DEPLOY_VIA_MAKE=1 bin/deploy
+
 =cut
+
+unless ( $ENV{PERLDOTCOM_DEPLOY_VIA_MAKE} ) {
+    die <<'END_REFUSAL';
+Refusing to run bin/deploy directly.
+
+Run `make deploy` instead: it regenerates the JSON metadata and
+contributors list first, then runs this script, then updates the
+`deployed` tag. Running bin/deploy on its own ships stale metadata.
+
+To bypass on purpose: PERLDOTCOM_DEPLOY_VIA_MAKE=1 bin/deploy
+END_REFUSAL
+}
 
 my $perldotcom_repo   = dirname($Bin);
 my $perldotcom_parent = dirname($perldotcom_repo);

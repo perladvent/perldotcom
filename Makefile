@@ -31,7 +31,7 @@ legacy-start: json contributors ## start the local server
 
 .PHONY: deploy
 deploy: on_master json contributors ## deploy the website to the static repo
-	bin/deploy
+	PERLDOTCOM_DEPLOY_VIA_MAKE=1 bin/deploy
 	git tag -d $(DEPLOYED_TAG_NAME)
 	- git push origin --delete $(DEPLOYED_TAG_NAME)
 	git tag $(DEPLOYED_TAG_NAME)
