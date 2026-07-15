@@ -1,7 +1,7 @@
 +++
 canonicalUrl=""
 categories="tooling"
-date=2026-05-25T10:00:00
+date=2026-07-15T10:00:00
 description="A sequel to Podlite comes to Perl: a deep-dive into the three syntaxes for tables (text-mode, structured, and data-driven) with concrete examples and error recovery rules."
 draft=false
 image="/images/three-ways-to-write-a-table-in-podlite/podlite-social-logo.png"
