@@ -44,6 +44,15 @@ sub head_links {
 	return ( $canon, $prev, $next );
 }
 
+# Return the whole rendered <head>-ish blob for a page (for tag-by-tag checks).
+sub slurp {
+	my ( $rel_path ) = @_;
+	open my $fh, '<:encoding(UTF-8)', "$dest/$rel_path" or return '';
+	my $html = do { local $/; <$fh> };
+	close $fh;
+	return $html;
+}
+
 subtest home_page_1 => sub {
 	my ( $canon, $prev, $next ) = head_links( 'index.html' );
 	is( $canon, "$BASE/", "home canonicalizes to itself" );
@@ -89,6 +98,51 @@ subtest single_article_unchanged => sub {
 		"single article canonicalizes to its own permalink" );
 	is( $prev, undef, "single article has no rel=prev" );
 	is( $next, undef, "single article has no rel=next" );
+};
+
+subtest og_url_matches_canonical => sub {
+	# og:url must agree with rel=canonical; otherwise social scrapers get a
+	# conflicting page-1 signal (the #519 bug class in a different tag).
+	for my $page ( 'index.html', 'page/2/index.html', 'article/page/2/index.html' )
+	{
+		SKIP: {
+			skip "no $page in this build", 1 unless -e "$dest/$page";
+			my ($canon) = head_links($page);
+			my ($ogurl) = slurp($page)
+				=~ /<meta property="og:url" content="([^"]*)"/;
+			is( $ogurl, $canon, "$page og:url matches rel=canonical" );
+		}
+	}
+};
+
+subtest meta_description_has_fallback => sub {
+	# Now-indexable list pages must carry a non-empty description, falling back
+	# to the site description when the page supplies none.
+	my ($site_desc) =
+		slurp('index.html') =~ /<meta name="description" content="([^"]*)"/;
+	for my $page ( 'index.html', 'page/2/index.html', 'article/index.html' ) {
+		SKIP: {
+			skip "no $page in this build", 1 unless -e "$dest/$page";
+			my ($desc) =
+				slurp($page) =~ /<meta name="description" content="([^"]*)"/;
+			ok( length $desc, "$page has a non-empty meta description" );
+		}
+	}
+	ok( length $site_desc, "site description fallback is non-empty" );
+};
+
+subtest paginated_title_has_page_number => sub {
+	# Page 1 has no suffix; deeper pages disambiguate with "- Page N".
+	like( slurp('index.html'), qr{<title>[^<]*</title>},
+		"home has a title" );
+	unlike( slurp('index.html'), qr{<title>[^<]*- Page \d+[^<]*</title>},
+		"home (page 1) title has no page-number suffix" );
+	SKIP: {
+		skip "no page/2 in this build", 1 unless -e "$dest/page/2/index.html";
+		like( slurp('page/2/index.html'),
+			qr{<title>[^<]*- Page 2[^<]*</title>},
+			"/page/2/ title carries '- Page 2' suffix" );
+	}
 };
 
 done_testing();
