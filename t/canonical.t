@@ -102,9 +102,17 @@ subtest single_article_unchanged => sub {
 
 subtest og_url_matches_canonical => sub {
 	# og:url must agree with rel=canonical; otherwise social scrapers get a
-	# conflicting page-1 signal (the #519 bug class in a different tag).
-	for my $page ( 'index.html', 'page/2/index.html', 'article/page/2/index.html' )
-	{
+	# conflicting page-1 signal (the #519 bug class in a different tag). Cover
+	# all three paginated kinds: home, section, and term.
+	my @pages = ( 'index.html', 'page/2/index.html', 'article/page/2/index.html' );
+
+	# Add a real term page/2 if one exists (term is the third paginated kind).
+	if ( my ($term_p2) = glob("$dest/tags/*/page/2/index.html") ) {
+		( my $rel = $term_p2 ) =~ s{^\Q$dest\E/}{};
+		push @pages, $rel;
+	}
+
+	for my $page ( @pages ) {
 		SKIP: {
 			skip "no $page in this build", 1 unless -e "$dest/$page";
 			my ($canon) = head_links($page);
@@ -112,6 +120,35 @@ subtest og_url_matches_canonical => sub {
 				=~ /<meta property="og:url" content="([^"]*)"/;
 			is( $ogurl, $canon, "$page og:url matches rel=canonical" );
 		}
+	}
+};
+
+subtest canonicalurl_article_og_matches => sub {
+	# Republished articles set canonicalUrl to an EXTERNAL original. Both
+	# rel=canonical and og:url must point at that external URL (they must not
+	# diverge, and og:url must not fall back to the perl.com copy). Discovered
+	# dynamically: any built article whose canonical is off-site.
+	my @external;
+	for my $f ( glob("$dest/article/*/index.html") ) {
+		open my $fh, '<:encoding(UTF-8)', $f or next;
+		my $html = do { local $/; <$fh> };
+		close $fh;
+		my ($canon) = $html =~ /<link rel="canonical" href="([^"]*)">/;
+		next unless defined $canon;
+		next if $canon =~ m{^\Q$BASE/\E};    # self-canonical (on-site) — skip
+		my ($ogurl) = $html =~ /<meta property="og:url" content="([^"]*)"/;
+		push @external, { canon => $canon, ogurl => $ogurl // '' };
+	}
+
+	SKIP: {
+		skip "no article with an external canonicalUrl in this build", 1
+			unless @external;
+		my @bad = grep { $_->{ogurl} ne $_->{canon} } @external;
+		diag( "mismatch: canonical=$_->{canon} og:url=$_->{ogurl}" ) for @bad;
+		is( scalar @bad, 0,
+			"all "
+				. scalar(@external)
+				. " external-canonical article(s): og:url == rel=canonical" );
 	}
 };
 
@@ -139,9 +176,11 @@ subtest paginated_title_has_page_number => sub {
 		"home (page 1) title has no page-number suffix" );
 	SKIP: {
 		skip "no page/2 in this build", 1 unless -e "$dest/page/2/index.html";
-		like( slurp('page/2/index.html'),
-			qr{<title>[^<]*- Page 2[^<]*</title>},
-			"/page/2/ title carries '- Page 2' suffix" );
+		my ($title) = slurp('page/2/index.html') =~ m{<title>([^<]*)</title>};
+		like( $title, qr{ - Page 2\z}, "/page/2/ title ends with ' - Page 2'" );
+		# Exactly one space each side of the dash — guards the prior
+		# double-space regression from the title's padding.
+		unlike( $title, qr{  }, "/page/2/ title has no double space" );
 	}
 };
 
