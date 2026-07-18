@@ -1,7 +1,8 @@
 use strict;
 use warnings;
 
-use File::Temp;
+use HTML::Parser;
+use Path::Tiny;
 use Test::More;
 
 # Regression test for issue #519.
@@ -31,35 +32,71 @@ my $BASE = do {
 	$url;
 };
 
-my $destdir = File::Temp->newdir(
-	DIR     => ( $ENV{TMPDIR} // '/tmp' ),
-	CLEANUP => 1,
-);
-my $dest = $destdir->dirname;
+# Cleaned up when $destdir goes out of scope at end of script. Path::Tiny uses
+# File::Temp underneath, which honors $TMPDIR and falls back to the system temp
+# dir when it is unset.
+my $destdir = Path::Tiny->tempdir;
+my $dest    = "$destdir";
 
 my $rc = system( 'hugo', '--destination', $dest, '--quiet' );
 is( $rc, 0, "hugo build succeeded (exit 0)" );
 
-# Return (canonical, prev, next) hrefs from a rendered page's <head>.
-sub head_links {
-	my ( $rel_path ) = @_;
-	my $file = "$dest/$rel_path";
-	open my $fh, '<:encoding(UTF-8)', $file or return;
-	my $html = do { local $/; <$fh> };
-	close $fh;
-	my ($canon) = $html =~ /<link rel="canonical" href="([^"]*)">/;
-	my ($prev)  = $html =~ /<link rel="prev" href="([^"]*)">/;
-	my ($next)  = $html =~ /<link rel="next" href="([^"]*)">/;
-	return ( $canon, $prev, $next );
+# Extract the <head> facts we assert on with HTML::Parser -- a real HTML
+# tokenizer, so attribute order, quoting, and whitespace can't fool us the way
+# a regex would. Returns a hashref: link_canonical / link_prev / link_next
+# hrefs, og_url, description, and the decoded <title> text.
+sub parse_head {
+	my ( $html ) = @_;
+	my %f;
+	my $in_title = 0;
+	my $p = HTML::Parser->new(
+		api_version => 3,
+		start_h     => [
+			sub {
+				my ( $tag, $attr ) = @_;
+				if ( $tag eq 'link' ) {
+					my $rel = $attr->{rel} // return;
+					$f{"link_$rel"} = $attr->{href}
+						if $rel eq 'canonical'
+						|| $rel eq 'prev'
+						|| $rel eq 'next';
+				}
+				elsif ( $tag eq 'meta' ) {
+					if ( ( $attr->{property} // '' ) eq 'og:url' ) {
+						$f{og_url} = $attr->{content};
+					}
+					elsif ( ( $attr->{name} // '' ) eq 'description' ) {
+						$f{description} = $attr->{content};
+					}
+				}
+				elsif ( $tag eq 'title' ) {
+					$in_title = 1;
+				}
+			},
+			'tagname, attr'
+		],
+		text_h => [ sub { $f{title} .= $_[0] if $in_title }, 'dtext' ],
+		end_h  => [ sub { $in_title = 0 if $_[0] eq 'title' }, 'tagname' ],
+	);
+	$p->parse( $html );
+	$p->eof;
+	return \%f;
 }
 
-# Return the whole rendered <head>-ish blob for a page (for tag-by-tag checks).
-sub slurp {
+# Parsed <head> facts for a rendered page (rel path under $dest), or undef if
+# the page was not built.
+sub head_of {
 	my ( $rel_path ) = @_;
-	open my $fh, '<:encoding(UTF-8)', "$dest/$rel_path" or return '';
-	my $html = do { local $/; <$fh> };
-	close $fh;
-	return $html;
+	my $file = path( $dest, $rel_path );
+	return unless $file->exists;
+	return parse_head( $file->slurp_utf8 );
+}
+
+# Convenience: (canonical, prev, next) hrefs for a page.
+sub head_links {
+	my ( $rel_path ) = @_;
+	my $h = head_of( $rel_path ) or return;
+	return ( $h->{link_canonical}, $h->{link_prev}, $h->{link_next} );
 }
 
 subtest home_page_1 => sub {
@@ -150,10 +187,9 @@ subtest og_url_matches_canonical => sub {
 	for my $page ( @pages ) {
 		SKIP: {
 			skip "no $page in this build", 1 unless -e "$dest/$page";
-			my ($canon) = head_links($page);
-			my ($ogurl) = slurp($page)
-				=~ /<meta property="og:url" content="([^"]*)"/;
-			is( $ogurl, $canon, "$page og:url matches rel=canonical" );
+			my $h = head_of($page);
+			is( $h->{og_url}, $h->{link_canonical},
+				"$page og:url matches rel=canonical" );
 		}
 	}
 };
@@ -165,14 +201,11 @@ subtest canonicalurl_article_og_matches => sub {
 	# dynamically: any built article whose canonical is off-site.
 	my @external;
 	for my $f ( glob("$dest/article/*/index.html") ) {
-		open my $fh, '<:encoding(UTF-8)', $f or next;
-		my $html = do { local $/; <$fh> };
-		close $fh;
-		my ($canon) = $html =~ /<link rel="canonical" href="([^"]*)">/;
+		my $h = parse_head( path($f)->slurp_utf8 );
+		my $canon = $h->{link_canonical};
 		next unless defined $canon;
 		next if $canon =~ m{^\Q$BASE/\E};    # self-canonical (on-site) — skip
-		my ($ogurl) = $html =~ /<meta property="og:url" content="([^"]*)"/;
-		push @external, { canon => $canon, ogurl => $ogurl // '' };
+		push @external, { canon => $canon, ogurl => $h->{og_url} // '' };
 	}
 
 	SKIP: {
@@ -190,28 +223,28 @@ subtest canonicalurl_article_og_matches => sub {
 subtest meta_description_has_fallback => sub {
 	# Now-indexable list pages must carry a non-empty description, falling back
 	# to the site description when the page supplies none.
-	my ($site_desc) =
-		slurp('index.html') =~ /<meta name="description" content="([^"]*)"/;
+	my $site_desc = ( head_of('index.html') // {} )->{description};
 	for my $page ( 'index.html', 'page/2/index.html', 'article/index.html' ) {
 		SKIP: {
 			skip "no $page in this build", 1 unless -e "$dest/$page";
-			my ($desc) =
-				slurp($page) =~ /<meta name="description" content="([^"]*)"/;
-			ok( length $desc, "$page has a non-empty meta description" );
+			my $desc = head_of($page)->{description};
+			ok( defined $desc && length $desc,
+				"$page has a non-empty meta description" );
 		}
 	}
-	ok( length $site_desc, "site description fallback is non-empty" );
+	ok( defined $site_desc && length $site_desc,
+		"site description fallback is non-empty" );
 };
 
 subtest paginated_title_has_page_number => sub {
 	# Page 1 has no suffix; deeper pages disambiguate with "- Page N".
-	like( slurp('index.html'), qr{<title>[^<]*</title>},
-		"home has a title" );
-	unlike( slurp('index.html'), qr{<title>[^<]*- Page \d+[^<]*</title>},
+	my $home_title = ( head_of('index.html') // {} )->{title};
+	ok( defined $home_title && length $home_title, "home has a title" );
+	unlike( $home_title // '', qr{- Page \d+},
 		"home (page 1) title has no page-number suffix" );
 	SKIP: {
 		skip "no page/2 in this build", 1 unless -e "$dest/page/2/index.html";
-		my ($title) = slurp('page/2/index.html') =~ m{<title>([^<]*)</title>};
+		my $title = head_of('page/2/index.html')->{title};
 		like( $title, qr{ - Page 2\z}, "/page/2/ title ends with ' - Page 2'" );
 		# Exactly one space each side of the dash — guards the prior
 		# double-space regression from the title's padding.
