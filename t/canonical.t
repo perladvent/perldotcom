@@ -16,11 +16,20 @@ use Test::More;
 # and adds rel=prev/next markup. This test builds the real site with the local
 # hugo binary and asserts the rendered <head> links.
 
-my $BASE = 'https://www.perl.com';
-
 my $hugo = qx{command -v hugo 2>/dev/null};
 chomp $hugo;
 plan skip_all => "hugo binary not found on PATH" unless $hugo;
+
+# Derive the base URL from Hugo's own resolved config rather than hardcoding it,
+# so this test tracks hugo.toml if baseURL ever changes. `hugo config` prints
+# e.g. `baseurl = 'https://www.perl.com/'`; strip the trailing slash since every
+# assertion below appends its own path.
+my $BASE = do {
+	my ($url) = qx{hugo config 2>/dev/null} =~ /^baseurl\s*=\s*['"]?([^'"\s]+)/mi;
+	$url //= 'https://www.perl.com/';
+	$url =~ s{/+$}{};
+	$url;
+};
 
 my $destdir = File::Temp->newdir(
 	DIR     => ( $ENV{TMPDIR} // '/tmp' ),
@@ -98,6 +107,32 @@ subtest single_article_unchanged => sub {
 		"single article canonicalizes to its own permalink" );
 	is( $prev, undef, "single article has no rel=prev" );
 	is( $next, undef, "single article has no rel=next" );
+};
+
+subtest single_page_term_no_pagination => sub {
+	# A term page (tag/author/category) with only one page of results must
+	# canonicalize to its own unpaginated URL and carry no rel=prev/next --
+	# the opposite end of the same logic as the multi-page term checks below.
+	my $single_term;
+	for my $idx ( glob("$dest/tags/*/index.html"),
+		glob("$dest/authors/*/index.html") )
+	{
+		( my $dir = $idx ) =~ s{/index\.html$}{};
+		next if -e "$dir/page/2/index.html";    # want a SINGLE-page term
+		$single_term = $idx;
+		last;
+	}
+	ok( $single_term, "found a single-page term to check" )
+		or return;
+
+	( my $rel = $single_term ) =~ s{^\Q$dest\E/}{};
+	my ( $canon, $prev, $next ) = head_links( $rel );
+
+	( my $expected = $rel ) =~ s{index\.html$}{};
+	is( $canon, "$BASE/$expected",
+		"single-page term canonicalizes to its own URL" );
+	is( $prev, undef, "single-page term has no rel=prev" );
+	is( $next, undef, "single-page term has no rel=next" );
 };
 
 subtest og_url_matches_canonical => sub {
