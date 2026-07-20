@@ -1,0 +1,34 @@
+{{- /*
+  Returns the article + legacy page collection that list.html paginates, but
+  ONLY for the paginated list kinds (home/section/term); for every other kind
+  it returns an empty slice. This makes list-pages.html the single source of
+  truth for BOTH which kinds paginate and the collection they paginate over.
+
+  Callers treat a non-empty return as "this page paginates" (header.html builds
+  its pager, canonical-url.html emits a pagination-aware self URL), so the kind
+  list lives in exactly one place -- add or remove a paginated kind here and
+  every caller follows. This is what prevents the two from drifting apart and
+  reintroducing issue #519 (a page whose canonical disagrees with its pager).
+
+  A paginated kind that happens to have zero article/legacy pages returns empty
+  too, which is harmless: with no page 2+, its page-1 paginator URL equals its
+  .Permalink, so the canonical/pager logic degrades to the same result either
+  way.
+
+  Sharing one collection also matters because Hugo caches the paginator on the
+  FIRST .Paginate call per page and reuses it for every later call, ignoring
+  the arguments passed to those later calls (it does not validate that they
+  match). Routing all callers through this one partial is what keeps the shared
+  paginator correct for all of them -- Hugo does not enforce it, so the
+  identical collection is a convention we maintain here on purpose.
+*/ -}}
+{{- $pages := slice -}}
+{{- if in (slice "home" "section" "term") .Kind -}}
+  {{- $types := slice "article" "legacy" -}}
+  {{- if .IsHome -}}
+    {{- $pages = where site.RegularPages "Type" "in" $types -}}
+  {{- else -}}
+    {{- $pages = where .Pages "Type" "in" $types -}}
+  {{- end -}}
+{{- end -}}
+{{- return $pages -}}

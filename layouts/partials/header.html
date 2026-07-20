@@ -1,16 +1,37 @@
 <!DOCTYPE html>
 <html lang="{{ .Site.LanguageCode }}">
   <head>
-  <title>{{ if .Title }} {{ .Title }} {{ else }} {{ .Site.Title }} {{ end }}</title>
-{{ if .Params.canonicalUrl }}
-  <link rel="canonical" href="{{ .Params.canonicalUrl }}">
-{{ else }}
-  <link rel="canonical" href="{{ .Permalink }}">
+  {{/* $collection is the paginated article/legacy set for the list kinds
+       (home/section/term) and empty for everything else; list-pages.html is
+       the single source of truth for which kinds paginate. A non-empty
+       collection means this page paginates, so we build its pager -- which
+       drives the page-number title suffix and rel=prev/next below. See #519. */}}
+  {{ $pager := false }}
+  {{ $collection := partial "list-pages.html" . }}
+  {{ if $collection }}
+    {{ $pager = .Paginate $collection }}
+  {{ end }}
+  <title>{{ if .Title }}{{ .Title }}{{ else }}{{ .Site.Title }}{{ end }}{{ if and $pager (gt $pager.PageNumber 1) }} - Page {{ $pager.PageNumber }}{{ end }}</title>
+  {{/* Canonical and og:url both flow through canonical-url.html (which honors
+       an explicit canonicalUrl, then pagination, then .Permalink) so the two
+       tags can never disagree. See #519. */}}
+  <link rel="canonical" href="{{ partial "canonical-url.html" . }}">
+{{ if $pager }}
+  {{/* rel=prev/next is a supplementary hint: Google dropped it as an indexing
+       signal in 2019, but Bing and others still honor it. The primary crawl
+       path for deep pages remains the Older/Newer Posts links in
+       pagination.html plus the self-canonical above. */}}
+  {{ if $pager.HasPrev }}
+  <link rel="prev" href="{{ $pager.Prev.URL | absURL }}">
+  {{ end }}
+  {{ if $pager.HasNext }}
+  <link rel="next" href="{{ $pager.Next.URL | absURL }}">
+  {{ end }}
 {{ end }}
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="{{.Description}}"/>
+  <meta name="description" content="{{ or .Description .Site.Params.description }}"/>
 {{- if .Params.authors }}
 {{- range $author_name := .Params.authors }}
 {{- $author := index hugo.Data.author $author_name }}
