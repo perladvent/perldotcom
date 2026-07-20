@@ -1,5 +1,60 @@
 <div class="row" style="margin-top:20px">
-  <div class="col-sm-12 centering">
+  <div id="reddit-widget" class="col-sm-12 centering">
     <script src="https://www.reddit.com/r/perl/hot/.embed?limit=10&t=all" type="text/javascript"></script>
   </div>
 </div>
+<script type="text/javascript">
+  // Reddit's legacy blog-widget labels itself "links from perl.reddit.com"
+  // (its old per-subreddit subdomain alias). Rewrite that to the canonical
+  // reddit.com/r/perl. Scoped to the widget's own text nodes so link hrefs
+  // are left untouched.
+  //
+  // Assumes the legacy `.embed` widget writes plain markup into this document
+  // (it uses document.write, not a cross-origin iframe) with "perl.reddit.com"
+  // contiguous in a single text node. If Reddit ever changes that, this becomes
+  // a silent no-op — verify in a real browser after any Reddit-side change.
+  // The sidebar partial renders once per page, so the id is unique.
+  (function () {
+    var container = document.getElementById("reddit-widget");
+    if (!container) return;
+
+    function relabel() {
+      var changed = false;
+      var walker = document.createTreeWalker(
+        container,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+      );
+      var node;
+      while ((node = walker.nextNode())) {
+        // A fresh global regex per node avoids the g-flag + lastIndex footgun.
+        var rewritten = node.nodeValue.replace(
+          /perl\.reddit\.com/gi,
+          "reddit.com/r/perl"
+        );
+        if (rewritten !== node.nodeValue) {
+          node.nodeValue = rewritten;
+          changed = true;
+        }
+      }
+      return changed;
+    }
+
+    // The widget renders via document.write during load, so the text usually
+    // exists already. Observe for late/async rendering just in case, but stop
+    // observing once the page has loaded so the observer can't leak for the
+    // page's lifetime when the label never appears (e.g. blocked by an ad
+    // blocker).
+    if (!relabel()) {
+      var observer = new MutationObserver(function () {
+        if (relabel()) observer.disconnect();
+      });
+      observer.observe(container, { childList: true, subtree: true });
+      window.addEventListener("load", function () {
+        relabel();
+        observer.disconnect();
+      });
+    }
+  })();
+</script>
