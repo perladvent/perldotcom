@@ -6,6 +6,7 @@ requires 'File::Find::Rule';
 requires 'File::Path';
 requires 'File::Spec::Functions';
 requires 'FindBin';
+requires 'HTML::Parser';
 requires 'I18N::Langinfo';
 requires 'IO::Interactive';
 requires 'IPC::Run';
