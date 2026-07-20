@@ -21,9 +21,15 @@ json: ## create the JSON files (static/json)
 contributors:
 	perl bin/list_contributors > content/contributors.md
 
+HUGO_SERVER_FLAGS=--buildDrafts --buildFuture --disableFastRender -d built --config hugo.toml
+
 .PHONY: start
-start: json contributors ## start the local server
-	hugo server --buildDrafts --buildFuture --disableFastRender -d built --config hugo.toml
+start: json contributors ## start the local server (see start-tailscale to expose it)
+	hugo server $(HUGO_SERVER_FLAGS)
+
+.PHONY: start-tailscale
+start-tailscale: json contributors ## start the server bound to your Tailscale IP (reachable on your tailnet)
+	hugo server --bind $(shell tailscale ip -4 | head -1) --baseURL http://$(shell tailscale ip -4 | head -1):1313/ $(HUGO_SERVER_FLAGS)
 
 .PHONY: legacy-start
 legacy-start: json contributors ## start the local server
