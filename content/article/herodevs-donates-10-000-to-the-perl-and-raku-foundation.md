@@ -62,7 +62,7 @@ Summit](https://www.perl.com/article/perl-toolchain-summit-2026-key-results/)
 met in beautiful Vienna, Austria in April to work on the infrastructure everyone depends
 on and nobody sees. The [Perl and Raku
 Conference](https://tprc.us/tprc-2026-gsp/) ran in Greenville, South Carolina
-in June, and the [London Perl Workshop](https://act.yapc.eu/lpw2026/) is coming
+in June, and the [London Perl & Raku Workshop](https://act.yapc.eu/lpw2026/) is coming
 up in the UK at the end of November. Perl 5.44 also shipped in July — the
 annual stable release, succeeding 5.42 (odd versions like 5.41 and 5.43 being
 development-only).
