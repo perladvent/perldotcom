@@ -1,7 +1,7 @@
 +++
 canonicalUrl=""
 categories="community"
-date=2026-09-10T22:42:07
+date=2026-09-11T10:00:00
 description="The Perl and Raku Foundation is grateful to announce a gift of $10,000 from HeroDevs in support of Perl and CPAN."
 draft=false
 image="/images/herodevs-donates-10-000-to-the-perl-and-raku-foundation/herodevs-logo.png"
