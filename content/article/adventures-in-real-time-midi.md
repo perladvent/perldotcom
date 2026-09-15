@@ -19,7 +19,7 @@ I have a few music and midi related modules on metacpan: [music](https://metacpa
 
 This will be a mostly commented-code illutration of real-time arpeggiation. It is maybe "just a hobby." But the prinicles of asynchronous, periodic execution of a set of things, is generically applicable to other types of problems.
 
-Anyway, on with the show!
+Anyway, on with the show! (And audio examples are at the bottom.)
 
 Broad strokes
 _____________
@@ -241,6 +241,17 @@ sub velocity ($min, $max, $offset) {
 ```
 
 A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" >}}) to parse command-line arguments.
+
+Audio Examples
+--------------
+
+With an electric piano:
+
+{{< audio src="/media/adventures-in-real-time-midi/example-1.mp3" type="audio/mpeg" >}}
+
+With a synth:
+
+{{< audio src="/media/adventures-in-real-time-midi/example-2.mp3" type="audio/mpeg" >}}
 
 Resources
 ---------
