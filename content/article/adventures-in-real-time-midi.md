@@ -22,7 +22,7 @@ This will be a mostly commented-code illutration of real-time arpeggiation. It i
 Anyway, on with the show! (And audio examples are at the bottom.)
 
 Broad strokes
-_____________
+-------------
 
 **What this is:**
 
