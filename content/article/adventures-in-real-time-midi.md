@@ -73,6 +73,7 @@ my %opt = (
     octave   => '3,4,5', # octaves (0 .. 9)
     tonic    => 'C',     # scale key base note
     scale    => 'minor', # scale name as known to Music::Scales
+    program  => 0,       # synth program
 );
 ```
 
@@ -121,6 +122,7 @@ my $beat_count = 0; # beats!
 
 # open the midi device for output
 my $midi_out = out_port($opt{port});
+$midi_out->program_change($channel, $opt{program});
 say "Opened $opt{port}";
 ```
 
