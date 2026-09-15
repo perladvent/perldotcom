@@ -135,7 +135,7 @@ Cleanup
 $SIG{INT} = sub {
     say "\nStop";
     stop_all_notes($midi_out); # make sure all notes are off
-    exit(0);
+    exit;
 };
 ```
 
