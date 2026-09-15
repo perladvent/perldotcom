@@ -259,6 +259,10 @@ Ok. How about arping an ethereal pad?
 
 {{< audio src="/media/adventures-in-real-time-midi/example-3.mp3" type="audio/mpeg" >}}
 
+This one sounds like an arcade:
+
+{{< audio src="/media/adventures-in-real-time-midi/example-4.mp3" type="audio/mpeg" >}}
+
 Resources
 ---------
 
