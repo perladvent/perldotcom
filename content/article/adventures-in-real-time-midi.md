@@ -90,7 +90,7 @@ my $arper = Music::MelodicDevice::Arpeggiation->new(
 );
 
 # used to rescale durations
-my $arp_ticks => Music::MelodicDevice::Arpeggiation::TICKS();
+my $arp_ticks = Music::MelodicDevice::Arpeggiation::TICKS();
 
 # split things
 my @octave    = split /,/, $opt{octave};
