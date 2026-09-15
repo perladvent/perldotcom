@@ -31,7 +31,7 @@ A generative arpeggiator that runs forever, picking new random arpeggios, and pl
 **The core ideas:**
 
 * A universe of notes combining a tonic pitch, a scale name, and a set of octaves
-* An asynchronous clock engine using a fast periodic timer to drive the events and MIDI messaging
+* An asynchronous clock engine using a periodic timer to drive the events and MIDI messaging
 * Phrase generation with flexible arpeggio parameters and velocity randomization
 * Graceful shutdown
 
