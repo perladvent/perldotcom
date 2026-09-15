@@ -247,11 +247,11 @@ A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" 
 Audio Examples
 --------------
 
-With an electric piano:
+With an old-school synth sound:
 
 {{< audio src="/media/adventures-in-real-time-midi/example-1.mp3" type="audio/mpeg" >}}
 
-With a synth:
+Here it is with an already arpeggiated synth patch:
 
 {{< audio src="/media/adventures-in-real-time-midi/example-2.mp3" type="audio/mpeg" >}}
 
