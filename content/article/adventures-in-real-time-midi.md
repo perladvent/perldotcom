@@ -55,7 +55,7 @@ use IO::Async::Loop ();                    # async
 use IO::Async::Timer::Periodic ();         # async
 use List::Util qw(max sum0);               # duration scaling
 use MIDI::RtMidi::FFI::Device ();          # rt-midi
-use MIDI::RtMidi::Util qw(out_port stop_device stop_all_notes); # rt-midi
+use MIDI::RtMidi::Util qw(out_port stop_all_notes); # rt-midi
 use Music::MelodicDevice::Arpeggiation (); # arpeggios
 use Music::Scales qw(get_scale_MIDI);      # pitches
 ```
