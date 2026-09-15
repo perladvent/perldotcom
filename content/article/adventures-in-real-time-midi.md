@@ -247,7 +247,7 @@ A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" 
 Audio Examples
 --------------
 
-This one sounds like an arcade:
+This one sounds like an arcade. It repeats the arp twice:
 
 {{< audio src="/media/adventures-in-real-time-midi/example-4.mp3" type="audio/mpeg" >}}
 
