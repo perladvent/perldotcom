@@ -15,7 +15,7 @@ Pre-ramble
 
 Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I have experimented further, as you do sometimes.
 
-I have a few music and midi related modules on metacpan: [music](https://metacpan.org/search?size=20&q=music) + [midi](https://metacpan.org/search?size=20&q=midi). I like to put them to use in real-time, now that I have been enlightended by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
+I have a few music and midi related modules on the cpan: [music](https://metacpan.org/search?size=20&q=music) + [midi](https://metacpan.org/search?size=20&q=midi). I like to put them to use in real-time, now that I have been enlightended by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
 
 This will be a mostly commented-code illutration of real-time arpeggiation. It is maybe "just a hobby." But the prinicles of asynchronous, periodic execution of a set of things, is generically applicable to other types of problems.
 
