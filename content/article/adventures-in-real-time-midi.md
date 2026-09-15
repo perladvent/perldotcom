@@ -247,21 +247,21 @@ A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" 
 Audio Examples
 --------------
 
-With an old-school synth sound:
+This one sounds like an arcade:
+
+{{< audio src="/media/adventures-in-real-time-midi/example-4.mp3" type="audio/mpeg" >}}
+
+With an old-school sound and already arpeggiated synth patch:
 
 {{< audio src="/media/adventures-in-real-time-midi/example-1.mp3" type="audio/mpeg" >}}
 
-Here it is with an already arpeggiated synth patch!
+Here is another:
 
 {{< audio src="/media/adventures-in-real-time-midi/example-2.mp3" type="audio/mpeg" >}}
 
 Ok. How about arping an ethereal pad?
 
 {{< audio src="/media/adventures-in-real-time-midi/example-3.mp3" type="audio/mpeg" >}}
-
-This one sounds like an arcade:
-
-{{< audio src="/media/adventures-in-real-time-midi/example-4.mp3" type="audio/mpeg" >}}
 
 Resources
 ---------
