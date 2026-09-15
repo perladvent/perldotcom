@@ -24,14 +24,18 @@ Anyway, on with the show!
 Broad strokes
 _____________
 
-The core ideas:
+**What this is:**
+
+A generative arpeggiator that runs forever, picking new random arpeggios, and playing them on a MIDI synth, all driven by its own internal clock.
+
+**The core ideas:**
 
 * A universe of notes combining a tonic pitch, a scale name, and a set of octaves
 * An asynchronous clock engine using a fast periodic timer to drive the events and MIDI messaging
 * Phrase generation with flexible arpeggio parameters and velocity randomization
 * Graceful shutdown
 
-Code overview:
+**Code overview:**
 
 * Dependency imports
 * Optional parameters that guide the processing
@@ -45,7 +49,6 @@ Dependency imports
 
 ```perl
 use v5.36;
-use Data::Dumper::Compact qw(ddc);         # debugging
 use IO::Async::Loop ();                    # async
 use IO::Async::Timer::Periodic ();         # async
 use List::Util qw(max sum0);               # duration scaling
@@ -59,11 +62,14 @@ Optional parameters
 -------------------
 
 ```perl
+# used to rescale durations
+use constant ARP_TICKS => Music::MelodicDevice::Arpeggiation::TICKS();
+
 my %opt = (
     port     => 'synth', # Required MIDI device (e.g. microKorg)
     bpm      => 80,      # beats-per-minute
     arp_type => 'any',   # 'any' or any known to the arp module
-    note_num => '5,7',   # arp notes pool
+    note_num => '5,7',   # number of arp notes pool
     repeats  => 1,       # arp repeats before the next one begins
     duration => 1,       # number of beats taken to arp
     spread   => 4,       # beats an arp should stretch across given bpm
@@ -234,31 +240,15 @@ sub velocity ($min, $max, $offset) {
 }
 ```
 
-With Phrasing
--------------
-
-**What it is**: TBD
-
-```perl
-# TBD
-```
-
-A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" >}}) module to parse command-line arguments.
-
-Arpeggiation
-------------
-
-**What it is**: A generative arpeggiator that runs forever, picking new random arpeggios, and playing them on a MIDI synth, all driven by its own internal clock.
-
-```perl
-# TBD
-```
-
-Again, a superior implementation would use [Getopt::Long]({{< mcpan "Getopt::Long" >}}).
+A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" >}}) to parse command-line arguments.
 
 Resources
 ---------
 
+* [IO::Async::Loop]({{< mcpan "IO::Async::Loop" >}})
+* [IO::Async::Timer::Periodic]({{< mcpan "IO::Async::Timer::Periodic" >}})
+* [List::Util]({{< mcpan "List::Util" >}})
 * [MIDI::RtMidi::FFI::Device]({{< mcpan "MIDI::RtMidi::FFI::Device" >}})
-* [Music::Duration::Partition]({{< mcpan "Music::Duration::Partition" >}})
+* [MIDI::RtMidi::Util]({{< mcpan "MIDI::RtMidi::Util" >}})
 * [Music::MelodicDevice::Arpeggiation]({{< mcpan "Music::MelodicDevice::Arpeggiation" >}})
+* [Music::Scales]({{< mcpan "Music::Scales" >}})
