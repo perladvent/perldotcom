@@ -317,7 +317,7 @@ Conclusions
 
 You too can make MIDI music in real-time! And arpeggios are a highly useful technique for "filling the silence."
 
-Also, doing timed things with async code is pretty involved, but `sleep`ing is **not** an option.
+Also, doing timed things with async code is pretty involved, and `sleep`ing is **not** an option.
 
 These techniques have wider usefulness. :-)
 
