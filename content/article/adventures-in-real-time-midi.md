@@ -44,6 +44,8 @@ A generative arpeggiator that runs forever, picking new random arpeggios, and pl
 * Loop and periodic timer
 * Handy subroutines
 
+We look at each of these in closer detail, below.
+
 Dependency imports
 ------------------
 
