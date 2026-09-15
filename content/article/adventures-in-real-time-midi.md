@@ -19,7 +19,7 @@ I have a few [music](https://metacpan.org/search?size=20&q=music) and [midi](htt
 
 This will be a mostly commented-code illutration of real-time arpeggiation. It is maybe "just a hobby." But the principles of asynchronous, periodic execution of a set of things, are generically applicable to other types of problems.
 
-Anyway, on with the show! (And audio examples are at the bottom.)
+Anyway, on with the show! (And [audio examples](#audio-examples) are at the bottom.)
 
 Broad strokes
 -------------
