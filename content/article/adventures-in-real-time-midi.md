@@ -259,7 +259,7 @@ Here is another:
 
 {{< audio src="/media/adventures-in-real-time-midi/example-2.mp3" type="audio/mpeg" >}}
 
-Ok. How about arping an ethereal pad?
+Ok. How about an ethereal pad arping in slow motion?
 
 {{< audio src="/media/adventures-in-real-time-midi/example-3.mp3" type="audio/mpeg" >}}
 
