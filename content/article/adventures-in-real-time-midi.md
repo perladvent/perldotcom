@@ -269,7 +269,7 @@ Ok. How about an ethereal pad arping in slow motion?
 Here is an example of the verbose console output that is produced:
 
 ```shell
-perl perl.com/arpeggios.pl
+> perl perl.com/arpeggios.pl
 Arp types: any
 Arp nums: 5,7
 Pitches: 48 50 52 53 55 57 59 60 62 64 65 67 69 71 72 74 76 77 79 81 83
