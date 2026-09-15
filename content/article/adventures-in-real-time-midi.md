@@ -10,8 +10,8 @@
   "categories"  : "development"
 }
 
-Pre-ramble
-----------
+Preamble
+--------
 
 Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I have experimented further, as you do sometimes.
 
@@ -247,7 +247,7 @@ A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" 
 Audio Examples
 --------------
 
-These were recorded with my [microKORG](https://www.korg.com/us/products/synthesizers/microkorg/) synthesizer.
+These were recorded with my [microKORG](https://www.korg.com/us/products/synthesizers/microkorg/) synthesizer. But any MIDI capable synth will do!
 
 This one sounds like an arcade. It repeats the arp twice:
 
@@ -309,7 +309,7 @@ Arp: [ [ 'd19', 52 ], [ 'd19', 65 ], [ 'd19', 65 ], [ 'd19', 59 ], [ 'd19', 59 ]
 Stop
 ```
 
-The port opened is my MIDI interface to the synth called `midimate`.
+The port opened is my MIDI interface to the synth partly named `midimate`.
 
 Conclusions
 -----------
