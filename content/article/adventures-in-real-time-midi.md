@@ -331,5 +331,5 @@ Resources
 * [MIDI::RtMidi::Util]({{< mcpan "MIDI::RtMidi::Util" >}})
 * [Music::MelodicDevice::Arpeggiation]({{< mcpan "Music::MelodicDevice::Arpeggiation" >}})
 * [Music::Scales]({{< mcpan "Music::Scales" >}})
-* The code of this article: [arpeggios.pl](https://github.com/ology/Music/blob/master/perl.com/arpeggios.pl)
+* The code for this article: [arpeggios.pl](https://github.com/ology/Music/blob/master/perl.com/arpeggios.pl)
 * The more complete version of this code: [arping.pl](https://github.com/ology/Music/blob/master/arping.pl)
