@@ -95,7 +95,7 @@ my @octave    = split /,/, $opt{octave};
 my @note_nums = split /,/, $opt{note_num};
 my @arp_types = $opt{arp_type} eq 'any'
     ? keys $arper->arp_type->%*
-    : split /,/, $opt{arp_type}; # the Music::MelodicDevice::Arpeggiation docs
+    : split /,/, $opt{arp_type}; # see the Music::MelodicDevice::Arpeggiation docs
 
 # get full range of pitches by octave
 my @pitches = map { get_scale_MIDI($opt{tonic}, $_, $opt{scale}) } @octave;
