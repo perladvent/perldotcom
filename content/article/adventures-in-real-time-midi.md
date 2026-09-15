@@ -4,8 +4,8 @@
   "date"        : "2026-09-14T11:49:00",
   "tags"        : ["Asynchronous", "Real-time", "MIDI", "Music"],
   "draft"       : false,
-  "image"       : "/images/adventures-in-real-time-midi/splash.jpg",
-  "thumbnail"   : "/images/adventures-in-real-time-midi/thumb.png",
+  "image"       : "/images/adventures-in-real-time-midi/arpeggios.png",
+  "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
   "description" : "Real-time MIDI Music",
   "categories"  : "development"
 }
