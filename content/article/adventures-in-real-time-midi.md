@@ -265,6 +265,52 @@ Ok. How about an ethereal pad arping in slow motion?
 
 {{< audio src="/media/adventures-in-real-time-midi/example-3.mp3" type="audio/mpeg" >}}
 
+Here is an example of the verbose console output that is produced:
+
+```shell
+perl perl.com/arpeggios.pl
+Arp types: any
+Arp nums: 5,7
+Pitches: 48 50 52 53 55 57 59 60 62 64 65 67 69 71 72 74 76 77 79 81 83
+Opened midimate on program 21
+Repeat: 1, Type: pedal_down, Pattern: 6 5 6 4 6 3 6 2 6 1 6 0
+Ticks: 96, Duration: 8
+Arp: [
+  [ 'd8', 77 ], [ 'd8', 77 ], [ 'd8', 77 ], [ 'd8', 77 ], [ 'd8', 77 ],
+  [ 'd8', 67 ], [ 'd8', 77 ], [ 'd8', 65 ], [ 'd8', 77 ], [ 'd8', 53 ],
+  [ 'd8', 77 ], [ 'd8', 52 ],
+]
+Repeat: 1, Type: pedal_up, Pattern: 0 1 0 2 0 3 0 4 0 5 0 6
+Ticks: 96, Duration: 8
+Arp: [
+  [ 'd8', 50 ], [ 'd8', 53 ], [ 'd8', 50 ], [ 'd8', 53 ], [ 'd8', 50 ],
+  [ 'd8', 72 ], [ 'd8', 50 ], [ 'd8', 72 ], [ 'd8', 50 ], [ 'd8', 76 ],
+  [ 'd8', 50 ], [ 'd8', 76 ],
+]
+Repeat: 1, Type: down, Pattern: 4 3 2 1 0
+Ticks: 96, Duration: 19
+Arp: [ [ 'd19', 77 ], [ 'd19', 76 ], [ 'd19', 67 ], [ 'd19', 65 ], [ 'd19', 50 ] ]
+Repeat: 1, Type: down, Pattern: 4 3 2 1 0
+Ticks: 96, Duration: 19
+Arp: [ [ 'd19', 81 ], [ 'd19', 65 ], [ 'd19', 62 ], [ 'd19', 57 ], [ 'd19', 55 ] ]
+Repeat: 1, Type: pedal_updown, Pattern: 0 1 0 2 0 3 0 4 0 5 0 6 5 6 4 6 3 6 2 6 1 6 0
+Ticks: 96, Duration: 4
+Arp: [
+  [ 'd4', 48 ], [ 'd4', 60 ], [ 'd4', 48 ], [ 'd4', 64 ], [ 'd4', 48 ],
+  [ 'd4', 65 ], [ 'd4', 48 ], [ 'd4', 67 ], [ 'd4', 48 ], [ 'd4', 71 ],
+  [ 'd4', 48 ], [ 'd4', 76 ], [ 'd4', 71 ], [ 'd4', 76 ], [ 'd4', 67 ],
+  [ 'd4', 76 ], [ 'd4', 65 ], [ 'd4', 76 ], [ 'd4', 64 ], [ 'd4', 76 ],
+  [ 'd4', 60 ], [ 'd4', 76 ], [ 'd4', 48 ],
+]
+Repeat: 1, Type: random, Pattern: 0 3 3 2 2
+Ticks: 96, Duration: 19
+Arp: [ [ 'd19', 52 ], [ 'd19', 65 ], [ 'd19', 65 ], [ 'd19', 59 ], [ 'd19', 59 ] ]
+^C
+Stop
+```
+
+The port opened is my MIDI interface to the synth called `midimate`.
+
 Resources
 ---------
 
