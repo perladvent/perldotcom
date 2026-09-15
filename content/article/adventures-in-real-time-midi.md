@@ -6,7 +6,7 @@
   "draft"       : false,
   "image"       : "/images/adventures-in-real-time-midi/arpeggios.png",
   "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
-  "description" : "Real-time MIDI Music",
+  "description" : "Making musical arpeggios in real-time with a MIDI synthesizer!",
   "categories"  : "development"
 }
 
