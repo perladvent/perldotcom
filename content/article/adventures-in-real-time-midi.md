@@ -70,8 +70,7 @@ my %opt = (
     arp_type => 'any',   # 'any' or any known to the arp module
     note_num => '5,7',   # number of notes to arp
     repeats  => 1,       # arp repeats before the next one begins
-    duration => 1,       # number of beats taken to arp
-    spread   => 4,       # beats an arp should stretch across given bpm
+    spread   => 4,       # beats an arp should stretch across
     octave   => '3,4,5', # octaves (0 .. 9)
     tonic    => 'C',     # scale key base note
     scale    => 'minor', # scale name as known to Music::Scales
@@ -198,7 +197,7 @@ sub trigger_notes {
         map { $pitches[int rand @pitches] } 1 .. $note_nums[int rand @note_nums]; # XXX klunky
 
     # get an arpeggiated note list given a random arp_type
-    my $arped = $arper->arp(\@notes, $opt{duration}, $arp_types[int rand @arp_types]);
+    my $arped = $arper->arp(\@notes, 1, $arp_types[int rand @arp_types]);
 
     # convert from the arp's 96-ticks-per-quarter-note scale to our clock ticks
     my @raw_ticks = map {
