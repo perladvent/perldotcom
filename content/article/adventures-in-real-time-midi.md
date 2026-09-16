@@ -247,6 +247,12 @@ A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" 
 Audio Examples
 --------------
 
+This is the General MIDI piano with [fluidsynth](https://www.fluidsynth.org/):
+
+{{< audio src="/media/adventures-in-real-time-midi/example-5.mp3" type="audio/mpeg" >}}
+
+Not terribly exciting, yet.
+
 These were recorded with my [microKORG](https://www.korg.com/us/products/synthesizers/microkorg/) synthesizer. But any MIDI capable synth will do!
 
 This one sounds like an arcade. It repeats the arp twice:
