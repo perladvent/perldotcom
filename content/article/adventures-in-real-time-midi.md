@@ -6,16 +6,14 @@
   "draft"       : false,
   "image"       : "/images/adventures-in-real-time-midi/arpeggios.png",
   "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
-  "description" : "Making musical arpeggios in real-time with a MIDI synthesizer!",
+  "description" : "Making musical arpeggios in real-time with a MIDI synthesizer.",
   "categories"  : "development"
 }
 
 Preamble
 --------
 
-Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I have dove deeper into the possibilities.
-
-Also, I have a few [music](https://metacpan.org/search?size=20&q=music) and [midi](https://metacpan.org/search?size=20&q=midi) related modules on the cpan, and I like to put them to use in real-time, now that I have been enlightended by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
+Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I've dug deeper into what's possible. I have a few [music](https://metacpan.org/search?size=20&q=music) and [midi](https://metacpan.org/search?size=20&q=midi) related modules on the cpan, and like to put them to use in real-time, now that I have been enlightended by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
 
 This will be a mostly commented-code illutration of real-time arpeggiation. It is maybe "just a hobby." But the principles of asynchronous, periodic execution of a set of things, are generically applicable to other types of problems.
 
@@ -26,11 +24,11 @@ Broad strokes
 
 **What this is:**
 
-A generative arpeggiator that runs forever, picking new random arpeggios, and playing them on a MIDI synth, all driven by its own internal clock.
+A generative arpeggiator that runs forever, chosing random scale notes, and random arpeggios. This plays them on a MIDI synth, all driven by an internal clock.
 
 **The core ideas:**
 
-* A universe of notes combining a tonic pitch, a scale name, and a set of octaves
+* A universe of notes defined by a tonic pitch, a scale name, and a set of octaves
 * An asynchronous clock engine using a periodic timer to drive the events and MIDI messaging
 * Phrase generation with flexible arpeggio parameters and velocity randomization
 * Graceful shutdown
@@ -322,7 +320,7 @@ Conclusions
 
 You too can make MIDI music in real-time! And arpeggios are a highly useful technique for "filling the silence."
 
-Also, doing timed things with async code is pretty involved, and `sleep`ing is **not** an option.
+Doing timed things with async code is pretty involved with quite a bit of logic. And `sleep`ing is **not** an option.
 
 These techniques have wider usefulness. :-)
 
