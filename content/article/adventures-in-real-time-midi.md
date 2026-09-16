@@ -245,7 +245,7 @@ A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" 
 Audio Examples
 --------------
 
-This is the General MIDI piano with [fluidsynth](https://www.fluidsynth.org/):
+This is the General MIDI piano played with [fluidsynth](https://www.fluidsynth.org/):
 
 {{< audio src="/media/adventures-in-real-time-midi/example-5.mp3" type="audio/mpeg" >}}
 
