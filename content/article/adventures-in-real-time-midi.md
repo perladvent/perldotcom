@@ -337,4 +337,4 @@ Resources
 * [Music::MelodicDevice::Arpeggiation]({{< mcpan "Music::MelodicDevice::Arpeggiation" >}})
 * [Music::Scales]({{< mcpan "Music::Scales" >}})
 * The code for this article: [arpeggios.pl](https://github.com/ology/Music/blob/master/perl.com/arpeggios.pl)
-* The more complete and musical version of this code: [arping.pl](https://github.com/ology/Music/blob/master/arping.pl)
+* The more complete and musical version: [arping.pl](https://github.com/ology/Music/blob/master/arping.pl)
