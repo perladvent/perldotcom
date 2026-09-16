@@ -13,7 +13,7 @@
 Preamble
 --------
 
-Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I have dove deeper.
+Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I have dove deeper into the possibilities.
 
 Also, I have a few [music](https://metacpan.org/search?size=20&q=music) and [midi](https://metacpan.org/search?size=20&q=midi) related modules on the cpan, and I like to put them to use in real-time, now that I have been enlightended by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
 
