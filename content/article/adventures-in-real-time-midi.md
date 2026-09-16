@@ -205,7 +205,7 @@ sub trigger_notes {
         max(1, int($dur * $clocks_per_beat / arp_ticks));
     } @$arped;
 
-    my $scale = 1; # default multiplier: 1 = no rescaling, used as-is when spread is 0
+    my $scale = 1; # default multiplier: 1 = no rescaling
     if ($opt{spread}) {
         # total unscaled duration of the arp
         my $raw_total = sum0(@raw_ticks) || 1;
