@@ -13,7 +13,7 @@
 Preamble
 --------
 
-Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I've dug deeper into what's possible. I have a few [music](https://metacpan.org/search?size=20&q=music) and [midi](https://metacpan.org/search?size=20&q=midi) related modules on the cpan, and like to put them to use in real-time, now that I have been enlightended by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
+Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I've dug deeper into what's possible. I have a few [music](https://metacpan.org/search?size=20&q=music) and [midi](https://metacpan.org/search?size=20&q=midi) modules on the cpan, and like to put them to use in real-time, now that I have been enlightended by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
 
 This will be a mostly commented-code illutration of real-time arpeggiation. It is maybe "just a hobby." But the principles of asynchronous, periodic execution of a set of things, are generically applicable to other types of problems.
 
@@ -105,7 +105,7 @@ say "Arp nums: $opt{note_num}";
 say "Pitches: @pitches";
 
 # we are in 4/4 time...
-my $divisions       = 4; # divisions of a quarter-note into 16ths
+my $divisions       = 4; # useful factor :)
 my $clocks_per_beat = 6 * $divisions; # PPQN
 my $clock_interval  = 60 / $opt{bpm} / $clocks_per_beat; # time / bpm / ppqn
 
@@ -171,7 +171,7 @@ my $timer = IO::Async::Timer::Periodic->new(
 
         # align to fire exactly on beat boundaries
         if (($ticks - 1) % $clocks_per_beat == 0) {
-            if ($beat_count % $phrase_beats == 0) { # retrigger every $phrase_beats beats
+            if ($beat_count % $phrase_beats == 0) { # retrigger every $phrase_beats
                 trigger_notes(); # start a new arp phrase!
             }
             $beat_count++; # only increment on beat boundaries
