@@ -13,9 +13,9 @@
 Preamble
 --------
 
-Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I've dug deeper into what's possible. I have a few [music](https://metacpan.org/search?size=20&q=music) and [midi](https://metacpan.org/search?size=20&q=midi) modules on the cpan, and like to put them to use in real-time, now that I have been enlightended by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
+Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I've dug deeper into what's possible. I have a few [music](https://metacpan.org/search?size=20&q=music) and [midi](https://metacpan.org/search?size=20&q=midi) modules on the cpan, and like to put them to use in real-time, now that I have been enlightened by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
 
-This will be a mostly commented-code illutration of real-time arpeggiation. It is maybe "just a hobby." But the principles of asynchronous, periodic execution of a set of things, are generically applicable to other types of problems.
+This will be a mostly commented-code illustration of real-time arpeggiation. It is maybe "just a hobby." But the principles of asynchronous, periodic execution of a set of things, are generically applicable to other types of problems.
 
 Anyway, on with the show! (And [audio examples](#audio-examples) are at the bottom.)
 
@@ -24,7 +24,7 @@ Broad strokes
 
 **What this is:**
 
-A generative arpeggiator that runs forever, chosing random scale notes, and random arpeggios. This plays them on a MIDI synth, all driven by an internal clock.
+A generative arpeggiator that runs forever, choosing random scale notes, and random arpeggios. This plays them on a MIDI synth, all driven by an internal clock.
 
 **The core ideas:**
 
@@ -200,7 +200,7 @@ sub trigger_notes {
     my @raw_ticks = map {
         my ($dur) = $_->[0] =~ /^d(\d+)$/; # duration encoded as a string like "d96"
         # rescale from the module's tick resolution to our own clock's ticks-per-beat
-        max(1, int($dur * $clocks_per_beat / arp_ticks));
+        max(1, int($dur * $clocks_per_beat / $arp_ticks));
     } @$arped;
 
     my $scale = 1; # default multiplier: 1 = no rescaling
