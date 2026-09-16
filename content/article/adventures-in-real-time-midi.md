@@ -242,7 +242,7 @@ sub velocity ($min, $max, $offset) {
 
 A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" >}}) module to parse command-line arguments.
 
-Audio Examples
+Audio examples
 --------------
 
 This is the General MIDI piano played with [fluidsynth](https://www.fluidsynth.org/):
