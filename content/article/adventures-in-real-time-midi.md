@@ -5,7 +5,7 @@
   "tags"        : ["Asynchronous", "Real-time", "MIDI", "Music"],
   "draft"       : false,
   "image"       : "/images/adventures-in-real-time-midi/arpeggios.jpg",
-  "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.jpg",
+  "thumbnail"   : "/images/enhancing-midi-hardware-with-perl/midicamel.png",
   "description" : "Making musical arpeggios in real-time with a MIDI synthesizer.",
   "categories"  : "development"
 }
