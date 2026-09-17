@@ -52,7 +52,7 @@ Dependency imports
 ------------------
 
 ```perl
-use v5.36;
+use v5.36;                                 # use a modern Perl
 use IO::Async::Loop ();                    # async
 use IO::Async::Timer::Periodic ();         # async
 use List::Util qw(max sum0);               # duration scaling
