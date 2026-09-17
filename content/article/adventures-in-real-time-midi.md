@@ -244,6 +244,8 @@ sub velocity ($min, $max, $offset) {
 
 A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" >}}) module to parse command-line arguments.
 
+Basically, this code is all machinery to play things in real-time. The actual arpeggiation is pretty simple and happens at the beginning of the `trigger_notes()` routine.
+
 Audio examples
 --------------
 
