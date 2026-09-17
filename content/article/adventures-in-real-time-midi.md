@@ -44,7 +44,9 @@ A generative arpeggiator that runs forever, choosing random scale notes, and ran
 * Loop and periodic timer
 * Handy subroutines
 
-We look at each of these in closer detail, below.
+Basically, this code is all machinery to play things in real-time. The actual arpeggiation is pretty simple and happens at the beginning of the `trigger_notes()` routine, below.
+
+Let's look at each of these in closer detail.
 
 Dependency imports
 ------------------
@@ -243,8 +245,6 @@ sub velocity ($min, $max, $offset) {
 ```
 
 A superior implementation would use the [Getopt::Long]({{< mcpan "Getopt::Long" >}}) module to parse command-line arguments.
-
-Basically, this code is all machinery to play things in real-time. The actual arpeggiation is pretty simple and happens at the beginning of the `trigger_notes()` routine.
 
 Audio examples
 --------------
