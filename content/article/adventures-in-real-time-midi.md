@@ -67,7 +67,7 @@ Optional parameters
 
 ```perl
 my %opt = (
-    port     => 'synth', # Required MIDI device (e.g. microKorg or fluidsynth)
+    port     => 'synth', # required MIDI device (e.g. microKorg or fluidsynth)
     bpm      => 80,      # beats-per-minute
     arp_type => 'any',   # 'any' or any known to the arp module
     note_num => '5,7',   # number of notes to arp
