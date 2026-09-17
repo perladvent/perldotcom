@@ -44,7 +44,7 @@ A generative arpeggiator that runs forever, choosing random scale notes, and ran
 * Loop and periodic timer
 * Handy subroutines
 
-Basically, this code is all machinery to play things in real-time. The actual arpeggiation is pretty simple and happens at the beginning of the `trigger_notes()` routine, below.
+Basically, this code is all machinery to play things in real-time. The actual arpeggiation is pretty simple and happens at the beginning of the `trigger_notes()` routine, given the `$arper` object.
 
 Let's look at each of these in closer detail.
 
