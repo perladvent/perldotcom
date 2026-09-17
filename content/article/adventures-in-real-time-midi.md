@@ -150,6 +150,7 @@ my $loop = IO::Async::Loop->new;
 # drive the whole sequencer — clock out, note off, note on, retrigger
 my $timer = IO::Async::Timer::Periodic->new(
     interval => $clock_interval,
+    reschedule => 'hard', # anchor to a fixed schedule, don't let tempo drift
     on_tick  => sub {
         $midi_out->clock; # emit a MIDI clock tick
         $ticks++; # advance the master tick counter
