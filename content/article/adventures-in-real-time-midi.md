@@ -222,7 +222,7 @@ sub trigger_notes {
     my $on_tick = $ticks;
 
     for my $i (0 .. $#$arped) {
-        my (undef, $note) = @{ $arped->[$i] }; # a note is a duration and a list of pitches
+        my (undef, $note) = @{ $arped->[$i] }; # a note is a duration and a pitch
         # note's scaled length, floored at 1 tick
         my $step_ticks = max(1, int($raw_ticks[$i] * $scale));
 
