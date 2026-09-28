@@ -1,5 +1,13 @@
 SITE=https://www.perl.com
 
+# The one place the pinned Hugo version lives. bin/deploy reads it from the
+# environment (exported below), so update it here and nowhere else.
+HUGO_VERSION=0.161.1
+export HUGO_VERSION
+
+# Running `make` with no target shows the help menu.
+.DEFAULT_GOAL := help
+
 JSON_DIRNAME=json
 JSON_LOCAL_DIR=static/$(JSON_DIRNAME)
 
@@ -31,10 +39,6 @@ start: json contributors ## start the local server (see start-tailscale to expos
 start-tailscale: json contributors ## start the server bound to your Tailscale IP (reachable on your tailnet)
 	hugo server --bind $(shell tailscale ip -4 | head -1) --baseURL http://$(shell tailscale ip -4 | head -1):1313/ $(HUGO_SERVER_FLAGS)
 
-.PHONY: legacy-start
-legacy-start: json contributors ## start the local server
-	docker run --rm -it -v $(PWD):/src -p 1313:1313 klakegg/hugo:0.59.1-ubuntu server --buildDrafts --buildFuture --disableFastRender -d built --config hugo.toml
-
 .PHONY: deploy
 deploy: on_master json contributors ## deploy the website to the static repo
 	PERLDOTCOM_DEPLOY_VIA_MAKE=1 bin/deploy
@@ -54,6 +58,10 @@ show_live_build: ## show the build data for the live site
 .PHONY: refresh_tags
 refresh_tags: ## sync the tags with the repo
 	git fetch --tags --force
+
+.PHONY: hugo-version
+hugo-version: ## print the pinned Hugo version used for deployment
+	@echo $(HUGO_VERSION)
 
 .PHONY: on_master
 on_master:

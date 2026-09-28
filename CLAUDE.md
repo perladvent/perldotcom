@@ -25,9 +25,6 @@ make new
 # Start local development server (generates JSON metadata and runs Hugo)
 make start
 
-# Start server with pinned Hugo version (requires Docker)
-make legacy-start
-
 # List draft articles
 make show_drafts
 ```
@@ -98,7 +95,7 @@ Author profiles are stored as JSON files in `/data/author/` with fields: `name`,
 
 ### Hugo Configuration
 
-- Uses Hugo v0.147.5 for deployment (Docker-based reproducible builds)
+- Uses a pinned Hugo version for deployment (Docker-based reproducible builds; set as `HUGO_VERSION` in the Makefile, run `make hugo-version` to print it)
 - Code syntax highlighting enabled (Pygments with Monokai style)
 - Raw HTML allowed in Markdown (articles are editor-reviewed)
 - Taxonomies: authors, tags, categories
@@ -154,7 +151,7 @@ whose path ends in `.svg` is special-cased to render whole, uncropped.)
 The `make deploy` command:
 1. Validates git status
 2. Generates JSON metadata
-3. Runs Hugo in Docker (v0.147.5)
+3. Runs Hugo in Docker (pinned version; see DEPLOYMENT.md)
 4. Commits and pushes to `perl.com-staging` repository
 5. Tags the deployment with `deployed` tag
 6. Live site updates within minutes
