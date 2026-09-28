@@ -21,9 +21,9 @@ through the questions to set up your initial article template:
 You can then check your article by starting a local server using [Hugo
 ](https://gohugo.io/). Deployment uses a pinned Hugo version (run in Docker), so
 matching it is best if you're doing layout work on the site; for _articles_
-rather than layout, the latest available version is probably fine. See
-[DEPLOYMENT.md](DEPLOYMENT.md) for the exact version and how the site is built
-and published.
+rather than layout, the latest available version is probably fine. Run `make
+hugo-version` to print the pinned version, and see [DEPLOYMENT.md](DEPLOYMENT.md)
+for how the site is built and published.
 
 To start the server run:
 
