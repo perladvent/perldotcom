@@ -19,21 +19,16 @@ through the questions to set up your initial article template:
 ```
 
 You can then check your article by starting a local server using [Hugo
-](https://gohugo.io/). Note that version 0.147.5 is used for deployment, so
-that is best to use, but for _articles_ rather than layout work on the site,
-the latest available version is probably fine.
+](https://gohugo.io/). Deployment uses a pinned Hugo version (run in Docker), so
+matching it is best if you're doing layout work on the site; for _articles_
+rather than layout, the latest available version is probably fine. See
+[DEPLOYMENT.md](DEPLOYMENT.md) for the exact version and how the site is built
+and published.
 
 To start the server run:
 
 ```
 % make start
-```
-
-If you'd rather use the pinned version of Hugo which will be used for deploy
-(and you have Docker installed), run:
-
-```
-% make legacy-start
 ```
 
 Once you submit your article, an editor will help guide it to its final form.
