@@ -40,8 +40,11 @@ deploy` from their own machine. (The only GitHub Action in this repo,
   (`hugomods/hugo:debian-reg-non-root-<version>`) so every deploy is
   reproducible, regardless of the Hugo version you may have installed locally.
   The version is set in exactly one place — the `HUGO_VERSION` variable in the
-  `Makefile` — which `make deploy` passes through to `bin/deploy`. Bump it there
-  and nowhere else. To see the current value, run `make hugo-version`.
+  `Makefile` — and everything that needs it reads it from there: `make deploy`
+  passes it to `bin/deploy`, the CI workflow (`.github/workflows/test.yml`) reads
+  it via `make hugo-version`, and the Render build script
+  (`bin/render-dot-com.sh`) does the same. Bump it in the `Makefile` and nowhere
+  else. To see the current value, run `make hugo-version`.
 - **The Perl dependencies** for the metadata scripts:
 
   ```

@@ -5,8 +5,9 @@ set -e -u -x -o pipefail
 # Stolen from https://community.render.com/t/how-to-define-hugo-version/390/8
 # In your Render dashboard, set the HUGO_VERSION env var for your static site. You'll get the same experience as, say, Netlify.
 
-# It's easier to set the version here when testing out a new version.
-HUGO_VERSION=0.159.1
+# The pinned Hugo version lives in one place: HUGO_VERSION in the Makefile.
+# Read it from there so Render stays in sync with the deploy build and CI.
+HUGO_VERSION="$(make hugo-version)"
 TAR_NAME="hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz"
 
 hugo version # Output the OLD version
