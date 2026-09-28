@@ -1,17 +1,14 @@
-
   {
     "title": "Announcing the Perl Toolchain Summit 2027",
     "authors": ["philippe-bruhat"],
     "tags": ["perl-toolchain-summit", "pts"],
-    "date": "",
-    "draft": true,
+    "date": "2026-09-28T12:00:00",
+    "draft": false,
     "image": "/images/perl-toolchain-summit-key-results/pts-2026-group-photo.jpg",
     "thumbnail": "/images/perl-toolchain-summit-key-results/pts-2026-group-photo.jpg",
     "description": "Major Perl ecosystem maintainers will gather in Lyon, France for four days of intensive collaboration that will benefit the entire Perl community.",
     "categories": "community"
   }
-
-# Announcing the Perl Toolchain Summit 2027!
 
 Since the end of the Perl Toolchain Summit in Vienna, at the end of
 April, the organizers have been busy wrapping up 2026, and preparing for
@@ -32,7 +29,7 @@ a recurring Diamond sponsor of the Perl Toolchain Summit.
 Started in 2008 as the Perl QA Hackathon in Oslo, the Perl Toolchain
 Summit is an annual event that brings together the key developers
 working on the Perl toolchain. Each year (except for 2020-2022), the
-event moves from country to country all over Europe, organised by local
+event moves from country to country all over Europe, organized by local
 teams of volunteers. The surplus money from previous summits helps fund
 the next one.
 
@@ -56,7 +53,7 @@ We'll return to our usual venue there, a hotel in front of the train
 station and across the street from the airport shuttle, which has hosted
 the Summit in 2017 and 2023 (and one Sunday in 2014).
 
-The developers who maintain CPAN and associated tools and service are
+The developers who maintain CPAN and associated tools and services are
 all volunteers, scattered across the globe. This event is the one time
 in the year when they can get together.
 
