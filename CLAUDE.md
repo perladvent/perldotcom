@@ -15,7 +15,15 @@ cpm install -g --cpanfile cpanfile
 
 # Install Node dependencies (for Prettier)
 npm install
+
+# Enable the local git hooks (once per clone; sets core.hooksPath to .githooks)
+make init
 ```
+
+`make init` installs a `pre-commit` hook that runs the og:image guardrail
+(`t/no_svg_og_image.t`) when a commit touches content, images, or the og:image
+template, so a broken social-card thumbnail is caught before CI. It's opt-in per
+clone; CI runs the full test suite on every PR regardless.
 
 ### Article Creation and Development
 ```bash
@@ -140,6 +148,16 @@ and loses its edges. Keep the wide banner as `image` (it feeds the
 og:image/Twitter card, which wants ~2:1) and point `thumbnail` at a square
 variant. A square logo on a padded background circles cleanly. (A `thumbnail`
 whose path ends in `.svg` is special-cased to render whole, uncropped.)
+
+**The social card (`og:image`) must be a raster, never an SVG.** It's resolved
+from the first non-SVG value among `thumbnail`, `image`, then the author image,
+falling back to `/images/site/perl-camel.png`. Social and chat scrapers
+(Facebook, X, LinkedIn, Slack, iMessage, Discord) don't render SVG, so an
+SVG-only article silently gets the generic camel card. An SVG is fine as the
+inline hero `image`, but pair it with a PNG/JPG `thumbnail` (or `image`). Export
+those PNGs as **opaque** (flattened onto a background) — transparency can show
+through as the platform's dark-mode card colour. `t/no_svg_og_image.t` enforces
+this and the `pre-commit` hook (see Setup) runs it before commit.
 
 ## Deployment Process
 

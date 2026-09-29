@@ -15,8 +15,14 @@ through the questions to set up your initial article template:
 
 ```
 % cpm install -g --cpanfile cpanfile
+% make init    # once per clone: enables local git hooks
 % make new
 ```
+
+`make init` turns on a pre-commit check that catches a common mistake —
+using an SVG as an article's thumbnail/feature image, which breaks the
+social-media preview card. It's optional but recommended; the same check
+runs in CI on every pull request.
 
 You can then check your article by starting a local server using [Hugo
 ](https://gohugo.io/). Deployment uses a pinned Hugo version (run in Docker), so
