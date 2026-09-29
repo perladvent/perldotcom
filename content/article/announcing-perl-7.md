@@ -14,13 +14,7 @@
 
 *image credit: [Darren Wood](https://www.flickr.com/photos/darren/), ["7"](https://www.flickr.com/photos/darren/3680674672/in/photolist-6Bfqm9-ino1FQ-g9QYp-LBqJ8U-2imZyN9-2g4LBC9-JrtM4R-MsDZU1-MkbMoz-BSxoYD-KHTzJX-JYzksq-G9dfcP-G5Byr3-LrnQMb-6hwfHT-9i4upm-oJfAkJ-8cQQBf-6NVCN1-Ph8487-N1UVUo-mrXQmx-8GoTKf-6fqvZk-Gi1cPH-Mae7Mo-282AxcA-Hvehqx-HbZrvj-YoKVff-H1FRCw-d81uq-jyUXx9-JZGmJj-JTpLp-82ZDob-P19B5f-EQFLnh-aJpXi-LyYS7u-9X3iK-CCTZD-bdCtm-5SGWuB-ET4D6C-9vWh2c-4mieMj-HpYqSw-2iHee4g), on Flickr.*
 
-\
-\
-
 This morning at [The Perl Conference in the Cloud](https://perlconference.us/tpc-2020-cloud/), Sawyer X announced that Perl has a new plan moving forward. Work on Perl 7 is already underway, but it's not going to be a huge change in code or syntax. It's Perl 5 with modern defaults and it sets the stage for bigger changes later. My latest book [Preparing for Perl 7](https://leanpub.com/preparing_for_perl7) goes into much more detail.
-
-\
-\
 
 ## Perl 7 is going to be Perl 5.32, mostly
 

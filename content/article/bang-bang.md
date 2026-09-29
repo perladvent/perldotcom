@@ -12,9 +12,6 @@
 
 ![](/images/bang-bang/blackmagic.png)
 
-\
-\
-
 Interpreters read and execute scripts (whereas shells are more like a kitchen pass-through and can either execute or hand over to another interpreter). When we specify interpreter on the command line, it is the one that will be used. For instance `Rscript script.R` will execute _script.R_ using the `Rscript` interpreter.
 
 When we execute a file without explicitly giving an interpreter (for instance, like `./myscript.pl`), it is the job of the "shebang" to tell to the shell/OS which interpreter to use. The shebang is that first line of a text file that starts with `#!` and is followed by the interpreter path:

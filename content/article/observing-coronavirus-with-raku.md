@@ -19,10 +19,7 @@ I decided to ingest their CSV data and display it using different visualizations
 
 For years Perl has been known for BioPerl. Let’s see what Raku can bring to society as its great at manipulating text data. The heart of the site is a Raku program and a few modules that parse data and create static HTML pages.
 
-\
 ![covid-observer](/images/observing-coronavirus-with-raku/covid-observer.png)
-\
-\
 
 I'm going to show you a few of the most useful features that Raku offers to developers.
 

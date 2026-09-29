@@ -309,8 +309,6 @@ Perl's evolution into a kitchen-sink of capabilities provides many tools: some p
 
 One way to fight the bloat would be to distill the role of the Perl interpreter down to fewer, more powerful ideas. Objects are more powerful than subroutines, and a Metaobject Protocol more profound still. Yet beneath that, lexical scoping and a thoughtful type system could power them all<sup>†</sup>.
 
-\
-
 ---
 
 <sup>†</sup> Doug Hoyte writes in [Let Over Lambda](https://letoverlambda.com/index.cl/guest/chap2.html#sec_7): "Let and lambda are fundamental; objects and classes are derivatives."

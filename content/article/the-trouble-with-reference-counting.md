@@ -64,9 +64,6 @@ A more promising line of inquiry may be to review Perl's reference counting code
 
 Before starting that effort, we should collect data on how much time Perl is spending on GC. Two Perl core developers, Todd Rinaldo and Tony Cook have told me they think Perl spends very little time on GC relative to other operations like memory allocation, IO and so on. If 2% of the runtime is spent on GC, reducing it by 30% is nothing to brag about. It may be the case that for Perl at least, better opportunities lie elsewhere.
 
-\
-\
-
 Thanks to Tony Cook, Dave Mitchell and Todd Rinaldo for their insights on Perl's GC behavior.
 
 
