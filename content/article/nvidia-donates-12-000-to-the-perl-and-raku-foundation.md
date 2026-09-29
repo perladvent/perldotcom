@@ -3,9 +3,9 @@ canonicalUrl=""
 categories="community"
 date=2026-09-29T00:00:00
 description="The Perl and Raku Foundation is grateful to announce a gift of $12,000 from NVIDIA in support of Perl and CPAN."
-draft=true
+draft=false
 image="/images/nvidia-donates-12-000-to-the-perl-and-raku-foundation/nvidia-logo.svg"
-thumbnail="/images/nvidia-donates-12-000-to-the-perl-and-raku-foundation/nvidia-eye.svg"
+thumbnail="/images/nvidia-donates-12-000-to-the-perl-and-raku-foundation/nvidia-eye.png"
 title="NVIDIA Donates $12,000 to The Perl and Raku Foundation"
 authors=[
   "olaf-alders",
@@ -66,7 +66,7 @@ He also maintains [Langertha](https://metacpan.org/pod/Langertha):
 
 > Langertha provides a unified Perl interface for interacting with various Large Language Model (LLM) APIs. It abstracts away provider-specific differences, giving you a consistent API whether you're using OpenAI, Anthropic Claude, Ollama, Groq, Mistral, or other providers.
 
-Hopefully you'll find some inspiration above, if LLMs are part of your toolkit.
+More of Getty's tools can be found at [Getty/marketplace](https://github.com/Getty/marketplace).
 
 Thank you, NVIDIA
 -----------------
