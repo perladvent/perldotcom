@@ -23,7 +23,7 @@ use Test::More;
 
 my $hugo = qx{command -v hugo 2>/dev/null};
 chomp $hugo;
-plan skip_all => "hugo binary not found on PATH" unless $hugo;
+plan skip_all => 'hugo binary not found on PATH' unless $hugo;
 
 # Derive the base URL from Hugo's own resolved config (see t/canonical.t).
 my $BASE = do {
@@ -50,7 +50,7 @@ my $destdir = Path::Tiny->tempdir;
 my $dest    = "$destdir";
 
 my $rc = system( 'hugo', '--destination', $dest, '--quiet' );
-is( $rc, 0, "hugo build succeeded (exit 0)" );
+is( $rc, 0, 'hugo build succeeded (exit 0)' );
 
 # Return the decoded JSON-LD payloads (arrayref) found in a rendered page. Uses
 # HTML::Parser rather than a regex so quoting and attribute order can't fool us:
@@ -154,32 +154,32 @@ for my $md ( glob 'content/article/*.md' ) {
 }
 
 subtest article_blogposting => sub {
-	plan skip_all => "no article with authors+image+description and no canonicalUrl"
+	plan skip_all => 'no article with authors+image+description and no canonicalUrl'
 		unless $happy_md;
 
 	my $rel    = rel_for_article($happy_md);
 	my $blocks = ld_of($rel);
 	ok( $blocks, "article page was built ($rel)" ) or return;
-	is( scalar @$blocks, 1, "exactly one ld+json block on the article" );
+	is( scalar @$blocks, 1, 'exactly one ld+json block on the article' );
 
 	my $ld = $blocks->[0];
-	is( $ld->{'@context'}, "https://schema.org", "\@context is schema.org" );
-	is( $ld->{'@type'},    "BlogPosting",         "\@type is BlogPosting" );
-	ok( length( $ld->{headline}    // '' ), "headline is non-empty" );
-	ok( length( $ld->{description} // '' ), "description is non-empty" );
+	is( $ld->{'@context'}, 'https://schema.org', "\@context is schema.org" );
+	is( $ld->{'@type'},    'BlogPosting',         "\@type is BlogPosting" );
+	ok( length( $ld->{headline}    // '' ), 'headline is non-empty' );
+	ok( length( $ld->{description} // '' ), 'description is non-empty' );
 	like( $ld->{datePublished}, qr/^\d{4}-\d\d-\d\dT/,
-		"datePublished is ISO-8601-ish" );
+		'datePublished is ISO-8601-ish' );
 	like( $ld->{dateModified}, qr/^\d{4}-\d\d-\d\dT/,
-		"dateModified is ISO-8601-ish" );
+		'dateModified is ISO-8601-ish' );
 
 	# authors: array of Persons, each with a taxonomy url.
-	is( ref $ld->{author}, 'ARRAY', "author is an array" );
-	ok( scalar @{ $ld->{author} }, "author array is non-empty" );
+	is( ref $ld->{author}, 'ARRAY', 'author is an array' );
+	ok( scalar @{ $ld->{author} }, 'author array is non-empty' );
 	for my $a ( @{ $ld->{author} } ) {
-		is( $a->{'@type'}, 'Person', "author entry is a Person" );
-		ok( length( $a->{name} // '' ), "author name is non-empty" );
+		is( $a->{'@type'}, 'Person', 'author entry is a Person' );
+		ok( length( $a->{name} // '' ), 'author name is non-empty' );
 		like( $a->{url}, qr{^https?://.+/authors/.+/$},
-			"author has a /authors/<slug>/ url" );
+			'author has a /authors/<slug>/ url' );
 
 		# Guard the mode-A regression: the emitted author URL must point at a
 		# taxonomy page that was actually built. The happy-path fixture's
@@ -187,24 +187,24 @@ subtest article_blogposting => sub {
 		# (We deliberately do NOT iterate every content author -- a few carry
 		# pre-existing unresolved-slug data bugs that are out of scope here.)
 		if ( my ($slug) = ( $a->{url} // '' ) =~ m{/authors/([^/]+)/$} ) {
-			ok( path( $dest, "authors", $slug, "index.html" )->exists,
+			ok( path( $dest, 'authors', $slug, 'index.html' )->exists,
 				"author url resolves to a built page (authors/$slug/)" );
 		}
 	}
 
 	# image is an absolute URL.
-	like( $ld->{image}, qr{^https?://}, "image is an absolute URL" );
+	like( $ld->{image}, qr{^https?://}, 'image is an absolute URL' );
 
 	# mainEntityOfPage is the documented {@type:WebPage,@id} object.
-	is( ref $ld->{mainEntityOfPage}, 'HASH', "mainEntityOfPage is an object" );
+	is( ref $ld->{mainEntityOfPage}, 'HASH', 'mainEntityOfPage is an object' );
 	is( $ld->{mainEntityOfPage}{'@type'}, 'WebPage',
 		"mainEntityOfPage.\@type is WebPage" );
 	ok( length( $ld->{mainEntityOfPage}{'@id'} // '' ),
 		"mainEntityOfPage.\@id is present" );
 
 	# publisher shape.
-	is( $ld->{publisher}{name}, "Perl.com", "publisher name is Perl.com" );
-	is( $ld->{publisher}{logo}{width}, 6189, "publisher logo width is 6189" );
+	is( $ld->{publisher}{name}, 'Perl.com', 'publisher name is Perl.com' );
+	is( $ld->{publisher}{logo}{width}, 6189, 'publisher logo width is 6189' );
 };
 
 subtest canonical_consistency => sub {
@@ -216,17 +216,17 @@ subtest canonical_consistency => sub {
 	my $rel    = rel_for_article($canon_md);
 	my $blocks = ld_of($rel);
 	ok( $blocks, "canonicalUrl article was built ($rel)" ) or return;
-	is( scalar @$blocks, 1, "exactly one ld+json block" ) or return;
+	is( scalar @$blocks, 1, 'exactly one ld+json block' ) or return;
 
 	my $ld    = $blocks->[0];
 	my $canon = canonical_of($rel);
-	ok( length( $canon // '' ), "page has a rel=canonical href" ) or return;
+	ok( length( $canon // '' ), 'page has a rel=canonical href' ) or return;
 
-	is( $ld->{url}, $canon, "JSON-LD url equals rel=canonical" );
+	is( $ld->{url}, $canon, 'JSON-LD url equals rel=canonical' );
 	is( $ld->{mainEntityOfPage}{'@id'}, $canon,
 		"JSON-LD mainEntityOfPage.\@id equals rel=canonical" );
 	unlike( $ld->{url}, qr{^\Q$BASE\E/article/},
-		"JSON-LD url is not the perl.com permalink" );
+		'JSON-LD url is not the perl.com permalink' );
 };
 
 subtest hostile_fixture_xss => sub {
@@ -259,8 +259,8 @@ subtest hostile_fixture_xss => sub {
 	# content; layouts/data/static are symlinked from the repo and hugo.toml is
 	# copied. Path::Tiny auto-removes the tempdir when $site goes out of scope.
 	my $site = Path::Tiny->tempdir;
-	$site->child( "content", "article" )->mkpath;
-	$site->child( "content", "article", "zzz-xss.md" )->spew_utf8( <<"MD" );
+	$site->child( 'content', 'article' )->mkpath;
+	$site->child( 'content', 'article', 'zzz-xss.md' )->spew_utf8( <<"MD" );
 +++
 title = "$toml_title"
 date = "2026-01-01"
@@ -274,21 +274,21 @@ tags = []
 Hostile fixture for the JSON-LD XSS regression test. See t/json-ld.t.
 MD
 
-	my $repo = path(".")->absolute;
+	my $repo = path('.')->absolute;
 	for my $dir (qw( layouts data static assets i18n )) {
 		next unless $repo->child($dir)->exists;
 		symlink $repo->child($dir)->stringify, $site->child($dir)->stringify
 			or die "symlink $dir: $!";
 	}
-	$repo->child("hugo.toml")->copy( $site->child("hugo.toml") );
+	$repo->child('hugo.toml')->copy( $site->child('hugo.toml') );
 
-	my $pub = $site->child("public");
+	my $pub = $site->child('public');
 	my $rc  = system( 'hugo', '--source', "$site", '--destination', "$pub",
 		'--quiet' );
-	is( $rc, 0, "isolated hostile-fixture build succeeded (exit 0)" );
+	is( $rc, 0, 'isolated hostile-fixture build succeeded (exit 0)' );
 
-	my $file = $pub->child( "article", "zzz-xss", "index.html" );
-	ok( $file->exists, "hostile fixture page was built (article/zzz-xss/)" )
+	my $file = $pub->child( 'article', 'zzz-xss', 'index.html' );
+	ok( $file->exists, 'hostile fixture page was built (article/zzz-xss/)' )
 		or return;
 
 	# Pull the RAW rendered bytes of the ld+json block (not entity-decoded, so
@@ -297,34 +297,34 @@ MD
 	my $html = $file->slurp_utf8;
 	my ($raw) =
 		$html =~ m{<script type="application/ld\+json">(.*?)</script>}s;
-	ok( defined $raw, "found the ld+json <script> block" ) or return;
+	ok( defined $raw, 'found the ld+json <script> block' ) or return;
 
 	# (a) the breakout is present but HTML-escaped (< as <).
 	like( $raw, qr{\\u003c/script\\u003e}i,
-		"payload </script> is present but unicode-escaped" );
+		'payload </script> is present but unicode-escaped' );
 
 	# (b) NO literal breakout sequence survived in the raw block.
 	unlike( $raw, qr{</script><script>alert\(1\)},
-		"no literal </script><script>alert(1) in the ld+json block" );
+		'no literal </script><script>alert(1) in the ld+json block' );
 
 	# (c) still valid JSON, and the exact payload round-trips in headline.
 	my $ld = eval { decode_json($raw) };
-	ok( $ld, "ld+json block decodes cleanly" ) or return;
+	ok( $ld, 'ld+json block decodes cleanly' ) or return;
 	is( $ld->{headline}, $XSS_PAYLOAD,
-		"headline round-trips the exact payload string" );
+		'headline round-trips the exact payload string' );
 };
 
 subtest homepage_website => sub {
 	my $blocks = ld_of('index.html');
-	ok( $blocks, "homepage was built" ) or return;
-	is( scalar @$blocks, 1, "exactly one ld+json block on the homepage" );
+	ok( $blocks, 'homepage was built' ) or return;
+	is( scalar @$blocks, 1, 'exactly one ld+json block on the homepage' );
 
 	my $ld = $blocks->[0];
-	is( $ld->{'@context'}, "https://schema.org", "\@context is schema.org" );
-	is( $ld->{'@type'},    "WebSite",             "\@type is WebSite" );
-	ok( length( $ld->{name} // '' ), "name is non-empty" );
-	ok( length( $ld->{url}  // '' ), "url is non-empty" );
-	is( $ld->{publisher}{name}, "Perl.com", "publisher name is Perl.com" );
+	is( $ld->{'@context'}, 'https://schema.org', "\@context is schema.org" );
+	is( $ld->{'@type'},    'WebSite',             "\@type is WebSite" );
+	ok( length( $ld->{name} // '' ), 'name is non-empty' );
+	ok( length( $ld->{url}  // '' ), 'url is non-empty' );
+	is( $ld->{publisher}{name}, 'Perl.com', 'publisher name is Perl.com' );
 };
 
 subtest paginated_home_has_no_json_ld => sub {
@@ -333,15 +333,15 @@ subtest paginated_home_has_no_json_ld => sub {
 	SKIP: {
 		skip "no $rel in this build", 1 unless -e "$dest/$rel";
 		my $blocks = ld_of($rel);
-		is( scalar @$blocks, 0, "no ld+json block on /page/2/" );
+		is( scalar @$blocks, 0, 'no ld+json block on /page/2/' );
 	}
 };
 
 subtest list_page_has_no_json_ld => sub {
 	# The /article/ section list page must emit no JSON-LD at all.
 	my $blocks = ld_of('article/index.html');
-	ok( $blocks, "/article/ list page was built" ) or return;
-	is( scalar @$blocks, 0, "no ld+json block on the /article/ list page" );
+	ok( $blocks, '/article/ list page was built' ) or return;
+	is( scalar @$blocks, 0, 'no ld+json block on the /article/ list page' );
 };
 
 done_testing();
