@@ -28,5 +28,3 @@ Recently celebrating its version 8 release, the [Mojolicious](https://metacpan.o
 
 All three blogs will have new articles each day through December 24th. You can also jump to new articles in our convenient community article sidebar `--->`
 
-\
-

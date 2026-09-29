@@ -33,9 +33,6 @@ world. He wears the hat of the chief editor of [Perl Weekly
 newsletter](https://perlweekly.com/), and is always happy to receive
 notable Perl news items for inclusion in its next issue.
 
-\
-\
-
 #### How did you first start using Perl?
 
 I was working at a start-up company near Jerusalem that had an
@@ -68,9 +65,6 @@ notification when the build was ready. As I recall it was running on
 Windows. I also dealt with some of the bug-tracking automation that
 was running on some Unix system.
 
-\
-\
-
 #### Which Perl modules are you constantly using? How do they make your life easier?
 
 I hardly have any Perl-related work these days so I can't really say,
@@ -89,9 +83,6 @@ and [DateTime::Tiny]({{< mcpan "DateTime::Tiny" >}}) just to name a
 few. Oh and of course I love [Perl::Critic]({{< mcpan "Perl::Critic" >}}) and
 [Devel::Cover]({{< mcpan "Devel::Cover" >}}).
 
-\
-\
-
 #### Which Perl feature do you overuse?
 
 I am not sure if any. Well, maybe except of `Perl::Critic`. I just
@@ -103,9 +94,6 @@ I think I hardly ever used the fun features of Perl. I almost never
 use the `do_this and do_that` construct except for the `open or die`.
 I hardly use `$_` and I think never use it explicitly. Maybe I was never
 a real Perl programmer :)
-
-\
-\
 
 #### Which Perl feature do you wish you could use more?
 
@@ -123,9 +111,6 @@ I miss the CPAN Testers. (in these other languages). (And I do still
 encounter Perl code in some corporation written by people who have
 been writing Perl for 5-10 years and I always wonder why don't they
 actually learn Perl...)
-
-\
-\
 
 #### What one thing you'd like to change about Perl?
 
@@ -151,9 +136,6 @@ It also makes it much harder to fill
 [Perl Weekly newsletter](https://perlweekly.com/). If it wasn't for the
 [Perl Weekly Challenge](https://perlweeklychallenge.org/) we would
 have half the size.
-
-\
-\
 
 #### What is the future of Perl?
 

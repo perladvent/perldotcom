@@ -64,7 +64,5 @@ Follow hacktoberfest
 * Follow [@hacktoberfest](https://twitter.com/hacktoberfest) or [#hacktoberfest](https://twitter.com/hashtag/hacktoberfest)
 * See Perl.com's [earlier articles](/tags/hacktoberfest/).
 
-\
 Cover image © [DigitalOcean](https://www.digitalocean.com)
-\
 

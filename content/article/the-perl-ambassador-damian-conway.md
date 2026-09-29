@@ -27,9 +27,6 @@ He also wrote some of the most popular books on Perl:
 
 If you'd like me to interview you, or know someone you'd like me to interview, let me know. Take the same set of questions and send me your answers!
 
-\
-\
-
 ## When and how did you get started with Perl?
 
 In the mid-to-late 1990s, I was an academic at Australia's largest university. At the time I was working on an unusually diverse range of research topics: educational technology, programming language design, software engineering, documentation systems, human-computer interaction, natural language generation, emergent systems, image morphing, human-computer interaction, API design, geometric modelling, the psychophysics of perception, nanoscale physical simulation, and parsing techniques. I liked to think I was a polymath, but the correct word is probably "dilettante".
@@ -38,9 +35,6 @@ Anyway, I was implementing most of my software in C++, and I desperately needed 
 
 Within six months I had submitted two papers (on automating English inflexion, and on declarative command line interfaces) to the 2nd Perl Conference. Both were accepted and so I received funding from my institution to attend the conference. I don't think I had been at the conference for more than half a day before I realized that I had finally found my tribe. And the rest is history.
 
-\
-\
-
 ## What made you write *Perl Best Practices*?
 
 Mostly it was two of the three Perl virtues: Impatience and Hubris. In the early 2000s I was becoming extremely impatient with the prevailing view outside the Perl community that Perl was a "write-only" language that produced code which was impossible to read, understand or maintain. And I was equally impatient with the prevailing view inside the Perl community that "More Than One Way To Do It" was a licence (or possibly a challenge) to do it in the most terse, tricky, and obscure ways possible.
@@ -48,9 +42,6 @@ Mostly it was two of the three Perl virtues: Impatience and Hubris. In the early
 Which led to hubris: the notion that I could find and teach a set of better habits for Perl coding; habits that would automatically produce code that was cleaner, more readable, more understandable, more robust, and more maintainable that the Perl code I was then seeing (well, to be honest, that I was then seeing mostly in my own terse, tricky, obscure module implementations).
 
 So I sat down and reviewed every line of Perl code I had ever written, and a great many lines of Perl code that others had written, trying to find patterns of coding that consistently led either to excellent or to terrible code. Within six months I had over 250 such observations, and started teaching them in a two-day class. Soon after that, O'Reilly got in touch and suggested they might make a good book.
-
-\
-\
 
 ## Do you follow your own suggestions in the book?
 
@@ -64,9 +55,6 @@ In several cases (for example, [Lingua::EN::Inflect]({{< mcpan "Lingua::EN::Infl
 
 Of course, there's nothing intrinsically magical about the particular suggestions in the book. Indeed, in my current version of the class, somewhere around 20% of my advice has actually changed from what I wrote in *PBP*. The magic is in adopting and practising any set of consistent, well-thought-out, and productive coding habits.
 
-\
-\
-
 ## What do you think about "Perl 7" currently being discussed widely?
 
 I think it's great to see Perl moving out from under the lingering ghost of "Perl 6". And to see such a strong statement of positive forward motion, hopefully without too much of the attendant disruption of breaking vast swathes of existing code.
@@ -75,17 +63,11 @@ And, more importantly, I think it's vital that the widely accepted boilerplate c
 
 Of course, a plan this bold and this unanticipated will inevitably create anxiety and raise dissent. And not all those fears and disagreements will be misplaced. Even so, the very best thing about Perl 7 (whatever it ultimately proves to be) is that even just the idea of making a major version bump to usher in such fundamental changes is generating a huge amount of productive discussion and debate with the Perl community, and injecting a vast quantity of new energy, which must surely eventually lead to a better outcome, a better path forward for Perl.
 
-\
-\
-
 ## Do you follow the development of "Cor"?
 
 Yes, I've been following the Cor project with great interest for the past six months or so. I've occasionally also been consulting on the design of this proposed new mechanism, discussing particular issues and offering suggestions to Ovid on several aspects of the design. *(Editor: See our earlier [interview with Ovid](/article/the-perl-ambassador-curtis-poe/))*
 
 Needless to say, I'm immensely excited by the prospect of having a genuinely declarative interface for class definitions added right into the core of the language! Even if that happy day is likely to be a few years away yet.
-
-\
-\
 
 ## You have loads of handy modules published on CPAN. What are your top 5 contributions and why?
 
@@ -113,9 +95,6 @@ I use a great many regexes in my Perl solutions. When they go right, regexes are
 
 Talking of complex regexes, I love the PPR module because it consists almost entirely of a single regex; a single 70000-character regex that can parse the vast majority of valid Perl documents. It's such a mind-bogglingly simple and obvious idea; and yet it was so damn difficult to actually achieve. But worth every long hour of struggle. Having the ability to write a regex that matches a complete block of code, or a variable declaration, or a 'for' loop, or a 'use' statement, or any other Perl construct, opens up an entirely new universe of possibilities for validating, modifying, and refactoring Perl code. PPR is the basis for so many of the other CPAN modules of which I'm most proud, especially [Keyword::Declare]({{< mcpan "Keyword::Declare" >}}) (which allows you to safely extend the Perl syntax using Perl itself), Dios (which brings most of Raku's vastly superior OO model and syntax to Perl), and [Code::ART]({{< mcpan "Code::ART" >}}) (which provides Perl-refactoring tools for the Vim editor).
 
-\
-\
-
 ## You visit Europe regularly and give lectures on Perl/Raku related topics. Do you have any memorable story to share?
 
 I think my most memorable single experience in Europe was lecturing on Raku (or, rather, on Perl 6, as it was back then) at CERN in Geneva in 2015.
@@ -128,24 +107,15 @@ And, indeed, it was that particular experience–seeing how easy it was to sides
 
 That visit to CERN was special to me for another reason too. Before my presentation, I had the privilege of being taken on a private tour of the facility. And though I didn't manage to get down into the LHR itself (it was closed at the time for a refit), I did have my mind utterly blown by being allowed to wander around a building that seemed to be straight out of science fiction: the Antimatter Factory.
 
-\
-\
-
 ## You briefly blogged about the weekly challenge, how did you find about it?
 
 I learnt about the Weekly Challenge from the many blog posts from participants, which suddenly started popping up on my *blogs.perl.org* and *reddit.com/r/perl+rakulang* blog feeds. They seemed to be having so much fun that I couldn't resist trying it myself.
-
-\
-\
 
 ## And what was your experience with it?
 
 I loved taking part in it. Not just for the individual challenges it offered me, but also for the opportunities it gave me to showcase some of the power, expressiveness, and convenience of solving those puzzles in Raku. And in doing so to reach out beyond the Perl and Raku communities to briefly capture the attention of the wider developer world.
 
 It's well known how much I adore teaching, and the Weekly Challenge gave me yet another opportunity and outlet to indulge that passion.
-
-\
-\
 
 ## Where do you get the ideas for your next CPAN contributions?
 
@@ -162,9 +132,6 @@ But the benefit is that, having expended all those hours on creating a better so
 At a deeper level, I think I've been able to come up with so many unusual ideas in my career because I spend a great deal of time "filling the well". My wife is an artist, and she introduced me to this concept: that in order to be creative, you have to constantly refill your mind with a large number of novel and random facts, observations, and ideas. Creativity is then the process of finding new and unexpected connections between those ideas. The more ideas you have, the more links you can easily find, so the more creative you can be.
 
 And that's what I try to do. I try to read as diversely as I can, to give my creative processes the greatest possible range of building blocks and the greatest number of plausible (and implausible!) connections.
-
-\
-\
 
 ## What would you suggest to someone starting Perl?
 
@@ -187,9 +154,6 @@ One other point I would make is that Perl almost suffers from a surfeit of excel
 *Learning Perl* might be perfect for one person, but someone else might do much better with *Modern Perl*. Some folks will find that a pragmatic use-case approach like *Impatient Perl* best meets their needs, whereas others would be far better served by a text that's at almost the opposite extreme, like the CS-based theoretical framework of *Elements of Programming with Perl*.
 
 The point is: if you're looking for a book that will help you understand Perl, you should first try out at least a few of the many excellent alternatives available so you can find the one book that will help you understand Perl.
-
-\
-\
 
 ## I noticed you are associated with Raku these days. Do you still use Perl?
 
