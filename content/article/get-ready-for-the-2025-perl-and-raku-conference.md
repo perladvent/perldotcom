@@ -2,8 +2,8 @@
    "authors" : [
       "ruth-holloway"
    ],
-   "thumbnail" : "/images/get-ready-for-the-2025-perl-and-raku-conference-/palmetto_avatar.png",
-   "image" : "/images/get-ready-for-the-2025-perl-and-raku-conference-/tprc2025_851x315.png",
+   "thumbnail" : "/images/get-ready-for-the-2025-perl-and-raku-conference/palmetto_avatar.png",
+   "image" : "/images/get-ready-for-the-2025-perl-and-raku-conference/tprc2025_851x315.png",
    "draft" : false,
    "tags" : [
       "perl-conference"

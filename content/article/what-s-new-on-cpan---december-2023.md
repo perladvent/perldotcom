@@ -9,7 +9,7 @@
    "description" : "A curated look at December's new CPAN uploads",
    "categories" : "cpan",
    "title" : "What's new on CPAN - December 2023",
-   "thumbnail" : "/images/whats-new-on-cpan/orange.svg"
+   "thumbnail" : "/images/whats-new-on-cpan/orange.png"
 }
 
 

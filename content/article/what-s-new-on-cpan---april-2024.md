@@ -5,7 +5,7 @@
    ],
    "categories" : "cpan",
    "draft" : false,
-   "thumbnail" : "/images/whats-new-on-cpan/black.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/black.png",
    "date" : "2024-05-09T19:00:00",
    "image" : "/images/whats-new-on-cpan/black.svg",
    "description" : "A curated look at April's new CPAN uploads",

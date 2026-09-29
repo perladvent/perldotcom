@@ -5,7 +5,7 @@ date=2025-09-18T09:30:00
 description="The Perl and Raku Foundation announces a generous USD 10,000 donation from Geizhals Preisvergleich in support of the Perl 5 Core Maintenance Fund. This funding enables critical bug fixes and security improvements that keep Perl stable and reliable for organisations worldwide."
 draft=false
 image="/images/geizhals-donates-to-tprf/geizhals_logo_official.svg"
-thumbnail="/images/geizhals-donates-to-tprf/geizhals_logo_official.svg"
+thumbnail="/images/geizhals-donates-to-tprf/geizhals_logo_official.png"
 title="Geizhals Preisvergleich Donates USD 10,000 to The Perl and Raku Foundation"
 authors=[
   "olaf-alders",

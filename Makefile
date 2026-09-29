@@ -16,6 +16,11 @@ DEPLOYED_TAG_NAME=deployed
 BUILD_JSON_FILE=build.json
 BUILD_JSON_URL=$(SITE)/$(JSON_DIRNAME)/$(BUILD_JSON_FILE)
 
+.PHONY: init
+init: ## set up local git hooks (.githooks); run once per clone
+	git config core.hooksPath .githooks
+	@echo "git hooks enabled: core.hooksPath -> .githooks"
+
 .PHONY: new
 new: ## start a new article
 	perl bin/new-article

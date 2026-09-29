@@ -7,7 +7,7 @@
       "mathew-korica"
    ],
    "categories" : "cpan",
-   "thumbnail" : "/images/whats-new-on-cpan/gray.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/gray.png",
    "tags" : [
       "new"
    ],

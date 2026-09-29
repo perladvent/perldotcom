@@ -1,5 +1,5 @@
 {
-   "thumbnail" : "/images/whats-new-on-cpan/gray.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/gray.png",
    "draft" : false,
    "title" : "What's new on CPAN - November 2023",
    "categories" : "cpan",

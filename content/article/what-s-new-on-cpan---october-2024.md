@@ -4,7 +4,7 @@
    "authors" : [
       "mathew-korica"
    ],
-   "thumbnail" : "/images/whats-new-on-cpan/pink.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/pink.png",
    "image" : "/images/whats-new-on-cpan/pink.svg",
    "date" : "2024-12-03T00:00:00",
    "tags" : [

@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# Pre-commit guardrail for the og:image / social-card regression (issue #544).
+#
+# Runs the fast t/no_svg_og_image.t check when a commit touches content,
+# images, or the og:image template, so a broken/SVG-only card is caught
+# locally instead of on CI. The full suite still runs in CI
+# (.github/workflows/test.yml) on every pull request.
+#
+# Enable once per clone with `make init` (sets core.hooksPath to .githooks).
+# Bypass a single commit with `git commit --no-verify` if you must.
+
+set -e
+
+# Git runs hooks from the working-tree root, so relative paths work here.
+
+# Only run when staged changes could affect og:image resolution.
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+if ! printf '%s\n' "$staged" | grep -Eq '^(content/|static/images/|layouts/partials/header/ograph-twittercard\.html|t/no_svg_og_image\.t)'; then
+    exit 0
+fi
+
+if ! command -v prove >/dev/null 2>&1; then
+    echo "pre-commit: 'prove' not found; skipping og:image check (CI will still run it)." >&2
+    echo "            Install deps with: cpm install -g --cpanfile cpanfile" >&2
+    exit 0
+fi
+
+echo "pre-commit: checking og:image / social-card guardrail (t/no_svg_og_image.t)..."
+if ! prove -l t/no_svg_og_image.t >/dev/null 2>&1; then
+    echo >&2
+    echo "pre-commit: og:image guardrail FAILED. Details:" >&2
+    prove -l t/no_svg_og_image.t >&2 || true
+    echo >&2
+    echo "An article's card art is SVG-only or points at a missing file, so its" >&2
+    echo "social/chat preview would break or fall back to the site default." >&2
+    echo "Add a PNG/JPG thumbnail (or image). To commit anyway: git commit --no-verify" >&2
+    exit 1
+fi
+
+exit 0

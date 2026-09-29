@@ -5,7 +5,7 @@ date=2025-08-07T09:55:26
 description="SUSE contributes $11,500 to support The Perl and Raku Foundation's critical Perl 5 Core Maintenance Fund."
 draft=false
 image="/images/suse-donates-to-tprf/SUSE_Logo-hor_L_Green-pos_sRGB.jpg"
-thumbnail="/images/suse-donates-to-tprf/SUSE_Logo-vert_L_Green-pos_sRGB.svg"
+thumbnail="/images/suse-donates-to-tprf/SUSE_Logo-vert_L_Green-pos_sRGB.png"
 title="SUSE Donates USD 11,500 to The Perl and Raku Foundation"
 authors=[
   "olaf-alders",
