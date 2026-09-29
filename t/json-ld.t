@@ -34,47 +34,15 @@ my $BASE = do {
 };
 
 # ---------------------------------------------------------------------------
-# Hostile fixture (security regression, M2). Write a throwaway article into
-# content/article/ *before* the build so the real build renders it, and
-# guarantee removal in an END block (runs even on die). Its title carries a
-# script-breakout payload and its description carries the HTML metacharacters
-# &, " and ' -- jsonify must HTML-escape all of them so nothing can break out
-# of the <script> element.
+# Startup self-heal (belt-and-suspenders): a previous run that predates the
+# isolated-build approach below, or any earlier attempt, might have been hard
+# killed mid-build and leaked a hostile-payload article into the real content
+# tree. bin/deploy builds from the working copy without a dirty-tree check, so
+# a leaked fixture could ship to production. The current test never writes into
+# content/article/ (see hostile_fixture_xss), but scrub any historical leak now
+# so it can never pollute a real build.
 # ---------------------------------------------------------------------------
-my $XSS_PAYLOAD = q{</script><script>alert(1)</script>};
-my $XSS_DESC    = q{Ampersand & quote " apostrophe ' all at once};
-my $xss_slug    = "zzz-json-ld-xss-regression-$$";
-my $xss_file    = path( "content/article/$xss_slug.md" );
-
-# Reference a real author so a BlogPosting (not WebSite) is emitted.
-my $xss_author = do {
-	opendir my $dh, 'data/author' or die "data/author: $!";
-	my ($first) = sort grep { /\.json$/ } readdir $dh;
-	$first =~ s/\.json$//;
-	$first;
-};
-
-END {
-	$xss_file->remove if $xss_file && $xss_file->exists;
-}
-
-# Escape backslashes and double quotes for the TOML basic-string values.
-my $toml_title = $XSS_PAYLOAD =~ s/([\\"])/\\$1/gr;
-my $toml_desc  = $XSS_DESC =~ s/([\\"])/\\$1/gr;
-
-$xss_file->spew_utf8( <<"MD" );
-+++
-title = "$toml_title"
-date = "2026-01-01"
-description = "$toml_desc"
-authors = ["$xss_author"]
-draft = false
-categories = "community"
-tags = []
-+++
-
-Hostile fixture for the JSON-LD XSS regression test. See t/json-ld.t.
-MD
+unlink glob 'content/article/zzz-json-ld-xss-regression-*.md';
 
 # Cleaned up when $destdir goes out of scope. Path::Tiny uses File::Temp, which
 # honors $TMPDIR and falls back to the system temp dir when it is unset.
@@ -170,7 +138,6 @@ sub rel_for_article {
 # ---------------------------------------------------------------------------
 my ( $happy_md, $canon_md );
 for my $md ( glob 'content/article/*.md' ) {
-	next if $md eq "$xss_file";    # skip our own hostile fixture
 	my $m = eval { Local::Metadata->new_from_file($md) } or next;
 	my $has_auth  = ref $m->{authors} eq 'ARRAY' && @{ $m->{authors} };
 	my $has_img   = defined $m->{image}       && length $m->{image};
@@ -212,7 +179,17 @@ subtest article_blogposting => sub {
 		is( $a->{'@type'}, 'Person', "author entry is a Person" );
 		ok( length( $a->{name} // '' ), "author name is non-empty" );
 		like( $a->{url}, qr{^https?://.+/authors/.+/$},
-			"author has a /authors/<key>/ url" );
+			"author has a /authors/<slug>/ url" );
+
+		# Guard the mode-A regression: the emitted author URL must point at a
+		# taxonomy page that was actually built. The happy-path fixture's
+		# authors all resolve, so <dest>/authors/<slug>/index.html must exist.
+		# (We deliberately do NOT iterate every content author -- a few carry
+		# pre-existing unresolved-slug data bugs that are out of scope here.)
+		if ( my ($slug) = ( $a->{url} // '' ) =~ m{/authors/([^/]+)/$} ) {
+			ok( path( $dest, "authors", $slug, "index.html" )->exists,
+				"author url resolves to a built page (authors/$slug/)" );
+		}
 	}
 
 	# image is an absolute URL.
@@ -253,9 +230,66 @@ subtest canonical_consistency => sub {
 };
 
 subtest hostile_fixture_xss => sub {
-	my $rel  = rel_for_article("$xss_file");
-	my $file = path( $dest, $rel );
-	ok( $file->exists, "hostile fixture page was built ($rel)" ) or return;
+	# Security regression (M2). Its title carries a script-breakout payload and
+	# its description carries the HTML metacharacters &, " and ' -- jsonify must
+	# HTML-escape all of them so nothing can break out of the <script> element.
+	#
+	# The hostile article is rendered in a fully isolated throwaway site built
+	# in a tempdir, so the real content/article/ tree is NEVER touched: a hard
+	# kill mid-build cannot leak the payload into the working copy (which
+	# bin/deploy would ship). We reuse the repo's real layouts/data/static and
+	# hugo.toml via symlinks, and give the site ONLY the hostile article as its
+	# content, so the exact production template renders it.
+	my $XSS_PAYLOAD = q{</script><script>alert(1)</script>};
+	my $XSS_DESC    = q{Ampersand & quote " apostrophe ' all at once};
+
+	# Reference a real author so a BlogPosting (not WebSite) is emitted.
+	my $xss_author = do {
+		opendir my $dh, 'data/author' or die "data/author: $!";
+		my ($first) = sort grep { /\.json$/ } readdir $dh;
+		$first =~ s/\.json$//;
+		$first;
+	};
+
+	# Escape backslashes and double quotes for the TOML basic-string values.
+	my $toml_title = $XSS_PAYLOAD =~ s/([\\"])/\\$1/gr;
+	my $toml_desc  = $XSS_DESC =~ s/([\\"])/\\$1/gr;
+
+	# Build the isolated site: <tmp>/content/article/zzz-xss.md is the only
+	# content; layouts/data/static are symlinked from the repo and hugo.toml is
+	# copied. Path::Tiny auto-removes the tempdir when $site goes out of scope.
+	my $site = Path::Tiny->tempdir;
+	$site->child( "content", "article" )->mkpath;
+	$site->child( "content", "article", "zzz-xss.md" )->spew_utf8( <<"MD" );
++++
+title = "$toml_title"
+date = "2026-01-01"
+description = "$toml_desc"
+authors = ["$xss_author"]
+draft = false
+categories = "community"
+tags = []
++++
+
+Hostile fixture for the JSON-LD XSS regression test. See t/json-ld.t.
+MD
+
+	my $repo = path(".")->absolute;
+	for my $dir (qw( layouts data static assets i18n )) {
+		next unless $repo->child($dir)->exists;
+		symlink $repo->child($dir)->stringify, $site->child($dir)->stringify
+			or die "symlink $dir: $!";
+	}
+	$repo->child("hugo.toml")->copy( $site->child("hugo.toml") );
+
+	my $pub = $site->child("public");
+	my $rc  = system( 'hugo', '--source', "$site", '--destination', "$pub",
+		'--quiet' );
+	is( $rc, 0, "isolated hostile-fixture build succeeded (exit 0)" );
+
+	my $file = $pub->child( "article", "zzz-xss", "index.html" );
+	ok( $file->exists, "hostile fixture page was built (article/zzz-xss/)" )
+		or return;
 
 	# Pull the RAW rendered bytes of the ld+json block (not entity-decoded, so
 	# we can see exactly what reached the browser). The real </script> only
