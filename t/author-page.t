@@ -77,6 +77,11 @@ subtest author_header => sub {
 	my $article_pos = index( $html, 'blog-post-title' );
 	ok( $header_pos >= 0 && $article_pos > $header_pos,
 		"author header precedes the article list" );
+
+	# A divider (<hr>) separates the author header from the article list.
+	my $hr_pos = index( $html, '<hr' );
+	ok( $hr_pos > $header_pos && $hr_pos < $article_pos,
+		"divider (<hr>) sits between the author header and the article list" );
 };
 
 subtest non_author_terms_unaffected => sub {
