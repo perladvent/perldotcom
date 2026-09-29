@@ -1,0 +1,85 @@
+{{/* JSON-LD structured data (schema.org). See #508.
+
+     We build the object graph with dict/slice/append/merge and let `jsonify`
+     serialize it, rather than hand-writing JSON with string interpolation:
+     titles and descriptions contain quotes and apostrophes, and jsonify
+     escapes them correctly and guarantees the output is valid JSON.
+
+     SECURITY (load-bearing): jsonify leaves Go's encoding/json HTML-escaping ON,
+     so `<`, `>`, `&` in any value become < > &. That is what keeps
+     a `</script>` sequence in a title/author name from breaking out of this
+     <script> element. `safeJS` only re-annotates the already-safe JSON as
+     template.JS (suppressing html/template's redundant re-escaping); it does not
+     unescape. Do NOT disable jsonify's HTML escaping or switch to string
+     interpolation. Covered by the hostile-fixture case in t/json-ld.t.
+
+     Two shapes are emitted:
+       - BlogPosting  on single article pages (detected by .Params.authors)
+       - WebSite      on the homepage, first page only (.IsHome)
+     Every other kind (section/term list pages, 404, about) emits nothing. */}}
+{{- $publisher := dict
+    "@type" "Organization"
+    "@id" (absURL "/#organization")
+    "name" "Perl.com"
+    "logo" (dict
+        "@type" "ImageObject"
+        "url" (absURL "/images/site/perl-camel.png")
+        "width" 6189
+        "height" 6189)
+-}}
+{{- if .Params.authors -}}
+  {{- $canonical := partial "canonical-url.html" . -}}
+  {{- $authors := slice -}}
+  {{- range .Params.authors -}}
+    {{- $author := index hugo.Data.author . -}}
+    {{- if $author -}}
+      {{- $authors = $authors | append (dict
+          "@type" "Person"
+          "name" $author.name
+          "url" (absURL (printf "/authors/%s/" .))) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $ld := dict
+      "@context" "https://schema.org"
+      "@type" "BlogPosting"
+      "headline" .Title
+      "description" (or .Description .Site.Params.description)
+      "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00")
+      "dateModified" (.Lastmod.Format "2006-01-02T15:04:05Z07:00")
+      "url" $canonical
+      "mainEntityOfPage" (dict "@type" "WebPage" "@id" $canonical)
+      "inLanguage" "en-US"
+      "wordCount" .WordCount
+      "publisher" $publisher
+  -}}
+  {{- with .Params.categories -}}
+    {{- $ld = merge $ld (dict "articleSection" .) -}}
+  {{- end -}}
+  {{- if $authors -}}
+    {{- $ld = merge $ld (dict "author" $authors) -}}
+  {{- end -}}
+  {{- $img := or .Params.image .Params.thumbnail -}}
+  {{- if not $img -}}
+    {{- with index hugo.Data.author (index .Params.authors 0) -}}
+      {{- $img = .image -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if $img -}}
+    {{- $ld = merge $ld (dict "image" (absURL $img)) -}}
+  {{- end -}}
+  <script type="application/ld+json">{{ $ld | jsonify | safeJS }}</script>
+{{- else if .IsHome -}}
+  {{/* Homepage only, and only its first paginated page: canonical-url.html
+       returns the site root exactly on home page 1 (issue #519 logic). */}}
+  {{- if eq (partial "canonical-url.html" .) (absURL "/") -}}
+    {{- $ld := dict
+        "@context" "https://schema.org"
+        "@type" "WebSite"
+        "name" .Site.Title
+        "url" .Site.BaseURL
+        "inLanguage" "en-US"
+        "publisher" $publisher
+    -}}
+    <script type="application/ld+json">{{ $ld | jsonify | safeJS }}</script>
+  {{- end -}}
+{{- end -}}
