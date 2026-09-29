@@ -1,0 +1,52 @@
+{{/* JSON-LD structured data (schema.org). See #508.
+
+     We build the object graph with dict/slice/append and let `jsonify`
+     serialize it, rather than hand-writing JSON with string interpolation:
+     titles and descriptions contain quotes and apostrophes, and jsonify
+     escapes them correctly and guarantees the output is valid JSON.
+
+     Two shapes are emitted:
+       - BlogPosting  on single article pages (detected by .Params.authors)
+       - WebSite      on the homepage (.IsHome)
+     Every other kind (section/term list pages, 404, about) emits nothing. */}}
+{{- $publisher := dict
+    "@type" "Organization"
+    "name" "Perl.com"
+    "logo" (dict
+        "@type" "ImageObject"
+        "url" (absURL "/images/site/perl-camel.png"))
+-}}
+{{- if .Params.authors -}}
+  {{- $authors := slice -}}
+  {{- range .Params.authors -}}
+    {{- $author := index hugo.Data.author . -}}
+    {{- if $author -}}
+      {{- $authors = $authors | append (dict "@type" "Person" "name" $author.name) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $ld := dict
+      "@context" "https://schema.org"
+      "@type" "BlogPosting"
+      "headline" .Title
+      "description" (or .Description .Site.Params.description)
+      "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00")
+      "dateModified" (.Lastmod.Format "2006-01-02T15:04:05Z07:00")
+      "url" .Permalink
+      "mainEntityOfPage" .Permalink
+      "author" $authors
+      "publisher" $publisher
+  -}}
+  {{- if .Params.image -}}
+    {{- $ld = merge $ld (dict "image" (absURL .Params.image)) -}}
+  {{- end -}}
+  <script type="application/ld+json">{{ $ld | jsonify | safeJS }}</script>
+{{- else if .IsHome -}}
+  {{- $ld := dict
+      "@context" "https://schema.org"
+      "@type" "WebSite"
+      "name" .Site.Title
+      "url" .Site.BaseURL
+      "publisher" $publisher
+  -}}
+  <script type="application/ld+json">{{ $ld | jsonify | safeJS }}</script>
+{{- end -}}
