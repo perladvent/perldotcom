@@ -5,7 +5,7 @@
    "tags" : [
       "new"
    ],
-   "thumbnail" : "/images/whats-new-on-cpan/purple.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/purple.png",
    "categories" : "cpan",
    "draft" : false,
    "authors" : [

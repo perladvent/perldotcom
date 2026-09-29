@@ -11,7 +11,7 @@
    "draft" : false,
    "description" : "A curated look at February 2024's new CPAN uploads",
    "image" : "/images/whats-new-on-cpan/pink.svg",
-   "thumbnail" : "/images/whats-new-on-cpan/pink.svg"
+   "thumbnail" : "/images/whats-new-on-cpan/pink.png"
 }
 
 

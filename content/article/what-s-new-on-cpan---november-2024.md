@@ -1,6 +1,6 @@
 {
    "title" : "What's new on CPAN - November 2024",
-   "thumbnail" : "/images/whats-new-on-cpan/purple.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/purple.png",
    "date" : "2024-12-24T02:24:34",
    "categories" : "cpan",
    "description" : "A curated look at November's new CPAN uploads",

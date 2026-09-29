@@ -5,7 +5,7 @@ date=2025-07-23T10:24:25
 description="Proxmox Server Solutions GmbH contributes €10,000 to support The Perl and Raku Foundation's critical Perl 5 Core Maintenance Fund."
 draft=false
 image="/images/proxmox-donates-to-tprf/proxmox-full-lockup-color.svg"
-thumbnail="/images/proxmox-donates-to-tprf/proxmox-logo-stacked-color.svg"
+thumbnail="/images/proxmox-donates-to-tprf/proxmox-logo-stacked-color.png"
 title="Proxmox Donates €10,000 to The Perl and Raku Foundation"
 authors=[
   "olaf-alders",

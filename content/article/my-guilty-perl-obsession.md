@@ -5,7 +5,7 @@ date=2025-08-26T11:09:09
 description="Perl came for free.  How much have I contributed in return?  Absolutely nothing."
 draft=false
 image="/images/my-guilty-perl-obsession/holophrastic-black.png"
-thumbnail="/images/my-guilty-perl-obsession/holophrastic-black.svg"
+thumbnail="/images/my-guilty-perl-obsession/holophrastic-black-square.png"
 title="My Guilty Perl Obsession"
 authors=[
   "bryan-s-katz",

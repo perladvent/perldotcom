@@ -4,7 +4,7 @@
    "draft" : false,
    "description" : "A curated look at September's new CPAN uploads",
    "categories" : "cpan",
-   "thumbnail" : "/images/whats-new-on-cpan/blue.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/blue.png",
    "date" : "2024-10-14T02:07:42",
    "tags" : [
       "new"

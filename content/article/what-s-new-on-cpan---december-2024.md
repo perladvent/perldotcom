@@ -6,7 +6,7 @@
    "authors" : [
       "mathew-korica"
    ],
-   "thumbnail" : "/images/whats-new-on-cpan/black.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/black.png",
    "description" : "A curated look at December's new CPAN uploads",
    "tags" : [
       "new"

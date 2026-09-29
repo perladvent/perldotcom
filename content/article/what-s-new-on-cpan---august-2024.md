@@ -3,7 +3,7 @@
       "mathew-korica"
    ],
    "draft" : false,
-   "thumbnail" : "/images/whats-new-on-cpan/orange.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/orange.png",
    "image" : "/images/whats-new-on-cpan/orange.svg",
    "title" : "What's new on CPAN - August 2024",
    "description" : "A curated look at August's new CPAN uploads",

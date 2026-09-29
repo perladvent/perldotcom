@@ -1,6 +1,6 @@
 {
    "image" : "/images/whats-new-on-cpan/green.svg",
-   "thumbnail" : "/images/whats-new-on-cpan/green.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/green.png",
    "description" : "A curated look at May's new CPAN uploads",
    "title" : "What's new on CPAN - May 2024",
    "tags" : [

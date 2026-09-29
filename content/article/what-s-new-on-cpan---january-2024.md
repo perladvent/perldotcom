@@ -7,7 +7,7 @@
    "draft" : false,
    "image" : "/images/whats-new-on-cpan/blue.svg",
    "categories" : "cpan",
-   "thumbnail" : "/images/whats-new-on-cpan/blue.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/blue.png",
    "tags" : [
       "new"
    ],

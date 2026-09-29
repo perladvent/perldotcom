@@ -5,7 +5,7 @@
    "tags" : [
       "new"
    ],
-   "thumbnail" : "/images/whats-new-on-cpan/red.svg",
+   "thumbnail" : "/images/whats-new-on-cpan/red.png",
    "draft" : false,
    "authors" : [
       "mathew-korica"

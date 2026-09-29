@@ -11,7 +11,7 @@
    ],
    "categories" : "cpan",
    "draft" : false,
-   "thumbnail" : "/images/whats-new-on-cpan/green.svg"
+   "thumbnail" : "/images/whats-new-on-cpan/green.png"
 }
 
 
