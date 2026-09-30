@@ -50,8 +50,10 @@ my $parser = HTML::Parser->new(
     end_h => [
         sub {
             my ($tag) = @_;
-            # Pop back to and including the matching open tag, tolerating the
-            # unclosed <li> style used in the template.
+            # Pop back to and including the matching open tag. Scanning for
+            # the match (rather than assuming strict nesting) keeps parent
+            # tracking correct even if a tag is left unclosed; an end tag with
+            # no open match is simply ignored.
             for ( my $i = $#stack; $i >= 0; $i-- ) {
                 if ( $stack[$i] eq $tag ) {
                     splice @stack, $i;
