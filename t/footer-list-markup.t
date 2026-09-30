@@ -2,8 +2,8 @@ use strict;
 use warnings;
 
 use HTML::Parser ();
-use Path::Tiny qw( path );
-use Test::More;
+use Path::Tiny   qw( path );
+use Test::More import => [qw( diag done_testing is_deeply ok )];
 
 # Regression guardrail for issue #506.
 #
@@ -30,8 +30,8 @@ my %ALLOWED_IN_LIST = map { $_ => 1 } qw( li script template );
 my %VOID = map { $_ => 1 }
     qw( area base br col embed hr img input link meta param source track wbr );
 
-my @stack;      # open element names, outermost first
-my @violations; # "<tag> is an invalid direct child of <parent>"
+my @stack;         # open element names, outermost first
+my @violations;    # "<tag> is an invalid direct child of <parent>"
 
 my $parser = HTML::Parser->new(
     api_version => 3,
@@ -40,7 +40,8 @@ my $parser = HTML::Parser->new(
             my ($tag) = @_;
             my $parent = $stack[-1];
             if ( defined $parent && ( $parent eq 'ul' || $parent eq 'ol' ) ) {
-                push @violations, "<$tag> is an invalid direct child of <$parent>"
+                push @violations,
+                    "<$tag> is an invalid direct child of <$parent>"
                     unless $ALLOWED_IN_LIST{$tag};
             }
             push @stack, $tag unless $VOID{$tag};
@@ -50,11 +51,12 @@ my $parser = HTML::Parser->new(
     end_h => [
         sub {
             my ($tag) = @_;
+
             # Pop back to and including the matching open tag. Scanning for
             # the match (rather than assuming strict nesting) keeps parent
             # tracking correct even if a tag is left unclosed; an end tag with
             # no open match is simply ignored.
-            for ( my $i = $#stack; $i >= 0; $i-- ) {
+            for ( my $i = $#stack ; $i >= 0 ; $i-- ) {
                 if ( $stack[$i] eq $tag ) {
                     splice @stack, $i;
                     last;
@@ -68,7 +70,9 @@ my $parser = HTML::Parser->new(
 $parser->parse( path($file)->slurp_utf8 );
 $parser->eof;
 
-is_deeply( \@violations, [], 'footer <ul>/<ol> contain only permitted children' )
-    or diag( join "\n", @violations );
+is_deeply(
+    \@violations, [],
+    'footer <ul>/<ol> contain only permitted children'
+) or diag( join "\n", @violations );
 
 done_testing;
