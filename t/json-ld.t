@@ -123,6 +123,30 @@ sub canonical_of {
 	return $href;
 }
 
+# Parse a named og/meta property's content out of a rendered page's <head>,
+# with a real HTML tokenizer. Returns undef if the page has no such tag.
+sub og_meta {
+	my ( $rel_path, $property ) = @_;
+	my $file = path( $dest, $rel_path );
+	return unless $file->exists;
+	my $content;
+	my $p = HTML::Parser->new(
+		api_version => 3,
+		start_h     => [
+			sub {
+				my ( $tag, $attr ) = @_;
+				$content = $attr->{content}
+					if $tag eq 'meta'
+					&& ( $attr->{property} // '' ) eq $property;
+			},
+			'tagname, attr'
+		],
+	);
+	$p->parse( $file->slurp_utf8 );
+	$p->eof;
+	return $content;
+}
+
 # Map a content/article/<slug>.md file to its rendered rel path under $dest.
 sub rel_for_article {
 	my ( $md ) = @_;
@@ -171,6 +195,31 @@ subtest article_blogposting => sub {
 		'datePublished is ISO-8601-ish' );
 	like( $ld->{dateModified}, qr/^\d{4}-\d\d-\d\dT/,
 		'dateModified is ISO-8601-ish' );
+
+	# Regression for issue #550: ograph-twittercard.html once formatted
+	# og:article:published_time with the malformed layout "2006-01-01T01:01:01Z"
+	# (every field after the year reused 01, the *month* reference), rendering
+	# the month into the day/hour/minute/second. og:published_time and JSON-LD
+	# datePublished both format the same .Date with the same layout, so they must
+	# be byte-identical; under the bug they diverge (for a date-only article the
+	# buggy 00->month shift alone breaks the match).
+	my $published = og_meta( $rel, 'og:article:published_time' );
+	like( $published, qr/^\d{4}-\d\d-\d\dT/,
+		'og:article:published_time is ISO-8601-ish' );
+
+	# Absolute check, independent of any other template: the rendered date must
+	# equal the article's own front-matter date (YYYY-MM-DD). The bug rendered
+	# the month into the day, so this diverges whenever day != month.
+	my $front_date = Local::Metadata->new_from_file($happy_md)->{date};
+	is( substr( $published, 0, 10 ), substr( $front_date, 0, 10 ),
+		'og:article:published_time date matches the article front-matter date' );
+
+	# Cross-check: og:published_time and JSON-LD datePublished format the same
+	# .Date with the same layout, so they must be byte-identical. Catches the
+	# hour/minute/second fields too (for a date-only article the buggy 00->month
+	# shift alone breaks the match, even when day happens to equal month).
+	is( $published, $ld->{datePublished},
+		'og:article:published_time equals JSON-LD datePublished' );
 
 	# authors: array of Persons, each with a taxonomy url.
 	is( ref $ld->{author}, 'ARRAY', 'author is an array' );
