@@ -1,0 +1,50 @@
+name: Deploy to staging
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.159.1'
+          extended: true
+
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.38'
+          install-modules-with: cpm
+
+      - name: Install Perl dependencies
+        run: cpm install -g --cpanfile cpanfile
+
+      - name: Generate metadata
+        run: |
+          perl bin/collate_metadata
+          perl bin/tag_the_build > static/json/build.json
+          perl bin/list_contributors > content/contributors.md
+
+      - name: Build site
+        run: hugo build
+
+      - name: Deploy to staging
+        env:
+          STAGING_PAT: ${{ secrets.STAGING_PAT }}
+        run: |
+          git clone --depth 1 https://x-access-token:${STAGING_PAT}@github.com/tpf/perl.com-staging.git staging
+          rsync -a --delete public/ staging/perl.com/
+
+          mkdir -p staging/perl.com/error
+          mv staging/perl.com/404.html staging/perl.com/error/404.html || true
+
+          cd staging
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --staged --quiet || git commit -m "generate site (tpf/perldotcom ${GITHUB_SHA})"
+          git push
