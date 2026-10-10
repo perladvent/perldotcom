@@ -323,7 +323,7 @@ Arp: [ [ 'd19', 52 ], [ 'd19', 65 ], [ 'd19', 65 ], [ 'd19', 59 ], [ 'd19', 59 ]
 Stop
 ```
 
-The port that is opened is my MIDI interface to the microKORG, that is partly named `midimate`.
+The port that is opened is my MIDI interface to the microKORG, that is partly named `midimate`. It is worth pointing out that the `out_port()` function uses case-insensitive substrings/Regexps to match MIDI device names.
 
 Conclusions
 -----------
