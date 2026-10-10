@@ -17,7 +17,7 @@ Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}
 
 This will be a mostly commented-code illustration of real-time arpeggiation. It is maybe "just a hobby." But the principles of asynchronous programming, periodic execution of a set of things, are generically applicable to other types of problems.
 
-There is no perplexing music theory here; just some terms to know. A *note* is a little vector of a *pitch* (high or low) and a *duration* (long or short). A *scale* is a collection of pitches, starting at the *tonic*. An *octave* is the musical interval between one note and another, where each has the same letter name but twice (or half) its *frequency* (in Hertz). A *clock* is a *MIDI* message sent to a device to keep timing. MIDI stands for "musical instrument digital interface" and is the beating heart of a lot of digital music. An *arpeggio* is a musical *phrase* (collection) of notes with differing sort orders. An arpeggio is played over a given spread or range of *beat* durations. A beat is an atom of the *rhythm*. The rhythm is the collection of note durations of a phrase. Four beats make up a common *measure* of musical time. And a measure is a group of beats - most commonly four. Finally, the term *velocity* is equivalent to the volume or loudness of a note. Whew!
+There is no perplexing music theory here; just some terms to know. A *note* is a little vector of a *pitch* (high or low) and a *duration* (long or short). A *scale* is a collection of pitches, starting at the *tonic*. An *octave* is the musical interval between one note and another, where each has the same letter name but twice (or half) its *frequency* (in Hertz). A *clock* is a *MIDI* message sent to a device to keep timing. MIDI stands for "musical instrument digital interface" and is the beating heart of a lot of digital music. An *arpeggio* is arpeggio is usually a chord of the chosen scale, where the notes are played individually in rising or descending order. A *chord* is a collection of three or more notes. An arpeggio is played over a given spread or range of *beat* durations. A beat is an atom of the *rhythm*. The rhythm is the collection of note durations of a phrase. Four beats make up a common *measure* of musical time. And a measure is a group of beats - most commonly four. Finally, the term *velocity* is equivalent to the volume or loudness of a note. Whew!
 
 Anyway, on with the show. (And [audio examples](#audio-examples) are at the bottom.)
 
@@ -33,7 +33,7 @@ A generative arpeggiator that runs forever, choosing random scale notes, and ran
 * A universe of notes defined by a tonic pitch, a scale name, and a set of octaves
 * An asynchronous clock engine using a periodic timer to drive events and MIDI messaging
 * Phrase generation with flexible arpeggio parameters and velocity randomization
-* Graceful shutdown
+* Graceful shutdown with all-notes-off/panic being the important part.
 
 **Code overview:**
 
