@@ -332,7 +332,7 @@ You too can make MIDI music in real-time! And arpeggios are a highly useful tech
 
 Doing timed things with async code is pretty involved with quite a bit of logic. And `sleep`ing is **not** an option.
 
-These techniques have wider usefulness. :-)
+These techniques have wider usefulness. Knowledge of event systems is essential for programming graphical and interactive applications, high-concurrency network services, simulations, `$your_favourite_application_here`, and more! :-)
 
 Resources
 ---------
