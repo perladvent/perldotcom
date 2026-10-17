@@ -1,5 +1,5 @@
 {
-  "title"       : "Adventures in Real-time MIDI",
+  "title"       : "Adventures in Real-Time MIDI",
   "authors"     : ["gene-boggs"],
   "date"        : "2026-10-17T22:54:33",
   "tags"        : ["Async", "Real-time", "MIDI", "Music"],
