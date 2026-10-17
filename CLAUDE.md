@@ -143,11 +143,16 @@ image = "https://example.com/image.png"
 Thumbnails are displayed in circular format on listing pages. The circle
 uses CSS `background-size: cover` with center positioning, so it crops the
 `thumbnail` image to a centered square. Use a **square (1:1) image** for
-`thumbnail` — a wide banner (e.g. a 2:1 social/og image) gets center-cropped
-and loses its edges. Keep the wide banner as `image` (it feeds the
-og:image/Twitter card, which wants ~2:1) and point `thumbnail` at a square
-variant. A square logo on a padded background circles cleanly. (A `thumbnail`
-whose path ends in `.svg` is special-cased to render whole, uncropped.)
+`thumbnail` — a wide banner gets center-cropped and loses its edges. Keep the
+wide banner as `image` and point `thumbnail` at a square variant. A square
+logo on a padded background circles cleanly. (A `thumbnail` whose path ends in
+`.svg` is special-cased to render whole, uncropped.)
+
+The `og:image` meta tag (and so the Twitter/social card) uses `thumbnail`
+first, falling back to `image`, then the author's image
+(`layouts/partials/header/ograph-twittercard.html`). The Twitter card type is
+`summary`, a small square card, so the square thumbnail suits it. Make the
+thumbnail at least 200×200 so social previews aren't rejected as too small.
 
 **The social card (`og:image`) must be a raster, never an SVG.** It's resolved
 from the first non-SVG value among `thumbnail`, `image`, then the author image,
