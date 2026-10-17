@@ -1,7 +1,7 @@
 {
   "title"       : "Adventures in Real-time MIDI",
   "authors"     : ["gene-boggs"],
-  "date"        : "2026-09-14T11:49:00",
+  "date"        : "2026-10-17T22:54:33",
   "tags"        : ["Async", "Real-time", "MIDI", "Music"],
   "draft"       : false,
   "image"       : "/images/adventures-in-real-time-midi/arpeggios.png",
@@ -13,11 +13,11 @@
 Preamble
 --------
 
-Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I've dug deeper into what's possible. I have a few [music](https://metacpan.org/search?size=20&q=music) and [midi](https://metacpan.org/search?size=20&q=midi) modules on the cpan  and like to put them to use in real-time, now that I have been enlightened by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
+Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}}) and [writing about creating async drums](/article/making-an-asynchronous-clocking-drum-machine-in-perl/) with it, I've dug deeper into what's possible. I have a few [music](https://metacpan.org/search?size=20&q=music) and [MIDI](https://metacpan.org/search?size=20&q=midi) modules on CPAN and like to put them to use in real time, now that I have been enlightened by zen master [John Barrett](https://metacpan.org/author/JBARRETT). Ha :D
 
 This will be a mostly commented-code illustration of real-time arpeggiation. It is maybe "just a hobby." But the principles of asynchronous programming, periodic execution of a set of things, are generically applicable to other types of problems.
 
-There is no perplexing music theory here; just some terms to know. A *note* is a little vector of a *pitch* (high or low) and a *duration* (long or short). A *scale* is a collection of pitches, starting at the *tonic*. An *octave* is the musical interval between one note and another, where each has the same letter name but twice (or half) its *frequency* (in Hertz). A *clock* is a *MIDI* message sent to a device to keep timing. MIDI stands for "musical instrument digital interface" and is the beating heart of a lot of digital music. An *arpeggio* is arpeggio is usually a chord of the chosen scale, where the notes are played individually in rising or descending order. A *chord* is a collection of three or more notes. An arpeggio is played over a given spread or range of *beat* durations. A beat is an atom of the *rhythm*. The rhythm is the collection of note durations of a phrase. Four beats make up a common *measure* of musical time. And a measure is a group of beats - most commonly four. Finally, the term *velocity* is equivalent to the volume or loudness of a note. Whew!
+There is no perplexing music theory here: just some terms to know. A *note* is a little vector of a *pitch* (high or low) and a *duration* (long or short). A *scale* is a collection of pitches, starting at the *tonic*. An *octave* is the musical interval between one note and another, where each has the same letter name but twice (or half) its *frequency* (in Hertz). A *clock* is a *MIDI* message sent to a device to keep timing. MIDI stands for "musical instrument digital interface" and is the beating heart of a lot of digital music. An *arpeggio* is usually a chord of the chosen scale, where the notes are played individually in rising or descending order. A *chord* is a collection of three or more notes. An arpeggio is played over a given spread or range of *beat* durations. A beat is an atom of the *rhythm*. The rhythm is the collection of note durations of a phrase. A *measure* of musical time is a group of beats — most commonly four. Finally, the term *velocity* is equivalent to the volume or loudness of a note. Whew!
 
 Anyway, on with the show. (And [audio examples](#audio-examples) are at the bottom.)
 
@@ -26,14 +26,14 @@ Broad strokes
 
 **What this is:**
 
-A generative arpeggiator that runs forever, choosing random scale notes, and random arpeggios. This plays them on a MIDI synth, all driven by a MIDI clock.
+A generative arpeggiator that runs forever, choosing random scale notes and random arpeggios. This plays them on a MIDI synth, all driven by a MIDI clock.
 
 **The core ideas:**
 
 * A universe of notes defined by a tonic pitch, a scale name, and a set of octaves
 * An asynchronous clock engine using a periodic timer to drive events and MIDI messaging
 * Phrase generation with flexible arpeggio parameters and velocity randomization
-* Graceful shutdown with all-notes-off/panic being the important part.
+* Graceful shutdown with all-notes-off/panic being the important part
 
 **Code overview:**
 
@@ -44,7 +44,7 @@ A generative arpeggiator that runs forever, choosing random scale notes, and ran
 * Loop and periodic timer
 * Handy subroutines
 
-Basically, this code is all machinery to play things in real-time. The actual arpeggiation is pretty simple and happens at the beginning of the `trigger_notes()` routine, given the `$arper` object.
+Basically, this code is all machinery to play things in real time. The actual arpeggiation is pretty simple and happens at the beginning of the `trigger_notes()` routine, given the `$arper` object.
 
 Let's look at each of these in closer detail.
 
@@ -66,7 +66,7 @@ Optional parameters
 
 ```perl
 my %opt = (
-    port     => 'synth', # required MIDI device (e.g. microKorg or fluidsynth)
+    port     => 'synth', # required MIDI device (e.g. microKORG or fluidsynth)
     bpm      => 80,      # beats-per-minute
     arp_type => 'any',   # 'any' or any known to the arp module
     note_num => '5,7',   # number of notes to arp
@@ -76,7 +76,7 @@ my %opt = (
     tonic    => 'C',     # scale key base note
     scale    => 'minor', # scale name as known to Music::Scales
     program  => 0,       # synth program
-    channel  => 0,       # the midi channel
+    channel  => 0,       # the MIDI channel
 );
 ```
 
@@ -122,7 +122,7 @@ my @pending; # { note => $pitch, on_tick => $when_it_should_start }
 my $ticks      = 0; # clock ticks
 my $beat_count = 0; # beats!
 
-# open the midi device for output
+# open the MIDI device for output
 my $midi_out = out_port($opt{port});
 $midi_out->program_change($opt{channel}, $opt{program});
 say "Opened $opt{port}";
@@ -196,7 +196,7 @@ Handy subroutines
 sub trigger_notes {
     # pick a random note count, then that many random pitches, sorted low-to-high for the arpeggiator
     my @notes = sort { $a <=> $b }
-        map { $pitches[int rand @pitches] } 1 .. $note_nums[int rand @note_nums]; # XXX klunky
+        map { $pitches[int rand @pitches] } 1 .. $note_nums[int rand @note_nums]; # XXX clunky
 
     # get an arpeggiated note list given a random arp_type
     my $arped = $arper->arp(\@notes, 1, $arp_types[int rand @arp_types]);
@@ -258,13 +258,13 @@ This is the General MIDI piano played with [fluidsynth](https://www.fluidsynth.o
 
 Not terribly exciting, yet.
 
-The following were recorded with my [microKORG](https://www.korg.com/us/products/synthesizers/microkorg/) synthesizer. But any MIDI capable synth will do!
+The following were recorded with my [microKORG](https://www.korg.com/us/products/synthesizers/microkorg/) synthesizer. But any MIDI-capable synth will do!
 
 This one sounds like an arcade. It repeats the arp twice:
 
 {{< audio src="/media/adventures-in-real-time-midi/example-4.mp3" type="audio/mpeg" >}}
 
-With an old-school sound and already arpeggiated synth patch:
+With an old-school sound and an already arpeggiated synth patch:
 
 {{< audio src="/media/adventures-in-real-time-midi/example-1.mp3" type="audio/mpeg" >}}
 
@@ -272,7 +272,7 @@ Here is another:
 
 {{< audio src="/media/adventures-in-real-time-midi/example-2.mp3" type="audio/mpeg" >}}
 
-Ok. How about an ethereal pad arping in slow motion?
+OK. How about an ethereal pad arping in slow motion?
 
 {{< audio src="/media/adventures-in-real-time-midi/example-3.mp3" type="audio/mpeg" >}}
 
@@ -322,14 +322,14 @@ Arp: [ [ 'd19', 52 ], [ 'd19', 65 ], [ 'd19', 65 ], [ 'd19', 59 ], [ 'd19', 59 ]
 Stop
 ```
 
-The port that is opened is my MIDI interface to the microKORG, that is partly named `midimate`. It is worth pointing out that the `out_port()` function uses case-insensitive substrings/Regexps to match MIDI device names.
+The port that is opened is my MIDI interface to the microKORG, which is partly named `midimate`. It is worth pointing out that the `out_port()` function uses case-insensitive substrings/regexes to match MIDI device names.
 
 Conclusions
 -----------
 
 You too can make MIDI music in real-time! And arpeggios are a highly useful technique for "filling the silence."
 
-Doing timed things with async code is pretty involved with quite a bit of logic. And `sleep`ing is **not** an option.
+Timing events with async code takes quite a bit of logic. And `sleep`ing is **not** an option.
 
 These techniques have wider usefulness. Knowledge of event systems is essential for programming graphical and interactive applications, high-concurrency network services, simulations, `$your_favourite_application_here`, and more! :-)
 
