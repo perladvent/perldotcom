@@ -128,7 +128,7 @@ $midi_out->program_change($opt{channel}, $opt{program});
 say "Opened $opt{port}";
 ```
 
-Loop, Cleanup, and timer
+Loop, cleanup, and timer
 ------------------------
 
 ```perl
