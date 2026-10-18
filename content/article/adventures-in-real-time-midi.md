@@ -17,7 +17,7 @@ Since discovering Perl [real-time MIDI]({{< mcpan "MIDI::RtMidi::FFI::Device" >}
 
 This will be a mostly commented-code illustration of real-time arpeggiation. It is maybe "just a hobby." But the principles of asynchronous programming, periodic execution of a set of things, are generically applicable to other types of problems.
 
-There is no perplexing music theory here: just some terms to know. A *note* is a little vector of a *pitch* (high or low) and a *duration* (long or short). A *scale* is a collection of pitches, starting at the *tonic*. An *octave* is the musical interval between one note and another, where each has the same letter name but twice (or half) its *frequency* (in Hertz). A *clock* is a *MIDI* message sent to a device to keep timing. MIDI stands for "musical instrument digital interface" and is the beating heart of a lot of digital music. An *arpeggio* is usually a chord of the chosen scale, where the notes are played individually in rising or descending order. A *chord* is a collection of three or more notes. An arpeggio is played over a given spread or range of *beat* durations. A beat is an atom of the *rhythm*. The rhythm is the collection of note durations of a phrase. A *measure* of musical time is a group of beats — most commonly four. Finally, the term *velocity* is equivalent to the volume or loudness of a note. Whew!
+There is no perplexing music theory here: just some terms to know. A *note* is a little vector of a *pitch* (high or low) and a *duration* (long or short). A *scale* is a collection of pitches, starting at the *tonic*. An *octave* is the musical interval between one note and another, where each has the same letter name but twice (or half) its *frequency* (in Hertz). A *clock* is a *MIDI* message sent to a device to keep timing. MIDI stands for "musical instrument digital interface" and is the beating heart of a lot of digital music. An *arpeggio* is usually a chord of the chosen scale, where the notes are played individually in some type of order, like rising and falling. A *chord* is a collection of three or more notes. An arpeggio is played over a given spread or range of *beat* durations. A beat is an atom of the *rhythm*. The rhythm is the collection of note durations of a phrase. A *measure* of musical time is a group of beats — most commonly four. Finally, the term *velocity* is equivalent to the volume or loudness of a note. Whew!
 
 Anyway, on with the show. (And [audio examples](#audio-examples) are at the bottom.)
 
@@ -128,24 +128,19 @@ $midi_out->program_change($opt{channel}, $opt{program});
 say "Opened $opt{port}";
 ```
 
-Cleanup
--------
-
-```perl
-# Ctrl-C clean shutdown
-$SIG{INT} = sub {
-    say "\nStop";
-    stop_all_notes($midi_out); # make sure all notes are off
-    exit;
-};
-```
-
-Loop and timer
---------------
+Loop, Cleanup, and timer
+------------------------
 
 ```perl
 # loop object to own and drive all timers/events
 my $loop = IO::Async::Loop->new;
+
+# ctrl-c clean shutdown
+$loop->watch_signal(INT => sub {
+    say "\nStop";
+    stop_all_notes($midi_out);
+    $loop->stop;
+});
 
 # drive the whole sequencer — clock out, note off, note on, retrigger
 my $timer = IO::Async::Timer::Periodic->new(
