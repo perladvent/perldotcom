@@ -135,6 +135,7 @@ Loop, Cleanup, and timer
 # loop object to own and drive all timers/events
 my $loop = IO::Async::Loop->new;
 
+# ctrl-c clean shutdown
 $loop->watch_signal(INT => sub {
     say "\nStop";
     stop_all_notes($midi_out);
