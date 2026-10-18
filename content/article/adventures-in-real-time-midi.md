@@ -128,24 +128,18 @@ $midi_out->program_change($opt{channel}, $opt{program});
 say "Opened $opt{port}";
 ```
 
-Cleanup
--------
-
-```perl
-# Ctrl-C clean shutdown
-$SIG{INT} = sub {
-    say "\nStop";
-    stop_all_notes($midi_out); # make sure all notes are off
-    exit;
-};
-```
-
-Loop and timer
---------------
+Loop, Cleanup, and timer
+------------------------
 
 ```perl
 # loop object to own and drive all timers/events
 my $loop = IO::Async::Loop->new;
+
+$loop->watch_signal(INT => sub {
+    say "\nStop";
+    stop_all_notes($device);
+    $loop->stop;
+});
 
 # drive the whole sequencer — clock out, note off, note on, retrigger
 my $timer = IO::Async::Timer::Periodic->new(
