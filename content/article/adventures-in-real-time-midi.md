@@ -137,7 +137,7 @@ my $loop = IO::Async::Loop->new;
 
 $loop->watch_signal(INT => sub {
     say "\nStop";
-    stop_all_notes($device);
+    stop_all_notes($midi_out);
     $loop->stop;
 });
 
