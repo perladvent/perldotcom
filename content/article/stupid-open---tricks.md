@@ -28,7 +28,7 @@ There's a one-argument form of `open` that takes only a bareword filehandle. In 
 our $F;
 while( $F = shift @ARGV ) {
   open F;
-  while(  ) { print }
+  while(<F>) { print }
   close F;
   }
 ```
