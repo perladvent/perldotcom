@@ -13,7 +13,7 @@
 Ever been staying at a hotel and gotten annoyed that you always have to open
 a browser to log in for wireless access?  Yup, me too.  A recent instance
 was particularly frustrating and I had to pull out my favourite [Swiss Army
-chainsaw](https://www.perl.com/pub/2000/10/begperl1.html/) in order to make
+chainsaw](https://www.perl.com/pub/2000/10/begperl1.html) in order to make
 my life a bit easier.
 
 ## The situation
