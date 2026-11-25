@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000507.html",
+   "url" : "/pub/2000/05/p5pdigest/THISWEEK-20000507.html",
    "description" : " Notes Moderation is Imminent Simon's Guide to p5p Big Discussion of perldoc and Indexing X&lt;> splitpod Aliases perldoc Wishlist Tom's Plan Editorial Opinion Section Mark Fisher's man Replacement Pod::Parser Output Model roffitall Patches to perlre mktables.PL Needs Work Jarkko...",
    "authors" : [
       "mark-jason-dominus"

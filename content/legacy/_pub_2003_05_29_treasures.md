@@ -9,7 +9,7 @@
       "casey-west"
    ],
    "draft" : null,
-   "slug" : "/pub/2003/05/29/treasures.html",
+   "url" : "/pub/2003/05/29/treasures.html",
    "description" : " The Perl Core comes with a lot of little modules to help you get thejob done. Many of these modules are not well-known. Even some of the well-known modules have some nice features that are often overlooked. In this..."
 }
 

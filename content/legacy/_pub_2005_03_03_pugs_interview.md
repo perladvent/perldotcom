@@ -15,7 +15,7 @@
    "categories" : "perl-6",
    "image" : null,
    "title" : "A Plan for Pugs",
-   "slug" : "/pub/2005/03/03/pugs_interview.html",
+   "url" : "/pub/2005/03/03/pugs_interview.html",
    "description" : "Autrijus Tang, creator of the Pugs Perl 6 implementation, explains how this project may bring Perl 6 to fruition.",
    "draft" : null,
    "authors" : [

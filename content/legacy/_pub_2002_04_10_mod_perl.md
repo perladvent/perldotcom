@@ -4,7 +4,7 @@
       "stas-bekman"
    ],
    "description" : " As you have seen from my previous articles, mod_perl enabled Apache consists of two main components: Perl modules and Apache itself. While installing Apache without root privileges is easy, one should know how to install Perl modules in a...",
-   "slug" : "/pub/2002/04/10/mod_perl.html",
+   "url" : "/pub/2002/04/10/mod_perl.html",
    "thumbnail" : "/images/_pub_2002_04_10_mod_perl/111-mod_perl.gif",
    "tags" : [
       "mod-perl-superuser-root"

@@ -9,7 +9,7 @@
    "authors" : [
       "simon-cozens"
    ],
-   "slug" : "/pub/2000/01/10PerlMyths.html",
+   "url" : "/pub/2000/01/10PerlMyths.html",
    "description" : " Beginning Perl : Ten Perl Myths -> Introduction Table of Contents Perl is hard Perl looks like line noise Perl is hard because it has regexps Perl is hard because it has references Perl is just for Unix Perl..."
 }
 

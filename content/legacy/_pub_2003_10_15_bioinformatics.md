@@ -14,7 +14,7 @@
    "categories" : "science",
    "image" : null,
    "title" : "A Chromosome at a Time with Perl, Part 2",
-   "slug" : "/pub/2003/10/15/bioinformatics.html",
+   "url" : "/pub/2003/10/15/bioinformatics.html",
    "description" : " James D. Tisdall is the author of the recently released Mastering Perl for Bioinformatics. In my previous article, A Chromosome at a Time with Perl, Part I, I showed you some programming \"tricks\" that help you avoid the trap...",
    "draft" : null,
    "authors" : [

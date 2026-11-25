@@ -12,7 +12,7 @@
       "simon-cozens"
    ],
    "description" : " So you're a Perl master. You've got XS sorted. You know how the internals work. Hey, there's nothing we can teach you on perl.com that you don't already know. You think? Where Wizards Fear To Tread brings you the...",
-   "slug" : "/pub/2002/05/07/optree.html"
+   "url" : "/pub/2002/05/07/optree.html"
 }
 
 

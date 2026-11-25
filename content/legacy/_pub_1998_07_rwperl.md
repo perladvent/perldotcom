@@ -15,7 +15,7 @@
       "brent-michalski"
    ],
    "draft" : null,
-   "slug" : "/pub/1998/07/rwperl.html",
+   "url" : "/pub/1998/07/rwperl.html",
    "description" : " This article is the first in a series that will provide examples of Perl solving real-world problems, particularly in an organization. If you have your own real-life story to tell, send it to Perl.com Editor. How many times have..."
 }
 

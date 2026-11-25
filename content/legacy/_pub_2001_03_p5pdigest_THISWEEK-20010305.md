@@ -5,7 +5,7 @@
    "categories" : "community",
    "thumbnail" : null,
    "tags" : [],
-   "slug" : "/pub/2001/03/p5pdigest/THISWEEK-20010305.html",
+   "url" : "/pub/2001/03/p5pdigest/THISWEEK-20010305.html",
    "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl5-porters-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. We're trying something new this week,...",
    "authors" : [
       "simon-cozens"

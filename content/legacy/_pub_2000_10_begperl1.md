@@ -6,7 +6,7 @@
    "title" : "Beginner's Introduction to Perl",
    "image" : null,
    "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
-   "slug" : "/pub/2000/10/begperl1.html",
+   "url" : "/pub/2000/10/begperl1.html",
    "draft" : null,
    "authors" : [
       "doug-sheppard"

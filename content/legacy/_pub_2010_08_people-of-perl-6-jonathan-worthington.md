@@ -9,7 +9,7 @@
    ],
    "thumbnail" : null,
    "description" : "Jonathan Worthington is one of the lead developers of Rakudo Perl 6.  In this interview he discusses the project, its future, and what to expect from this exciting new language.",
-   "slug" : "/pub/2010/08/people-of-perl-6-jonathan-worthington.html",
+   "url" : "/pub/2010/08/people-of-perl-6-jonathan-worthington.html",
    "draft" : null,
    "authors" : [
       "chromatic"

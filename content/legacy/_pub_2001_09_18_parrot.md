@@ -12,7 +12,7 @@
    ],
    "draft" : null,
    "description" : " Last week, the first public version of Parrot was released. This week, we're going to take a close look at what Parrot is, how you can get hold of it and play with it, and what we intend for...",
-   "slug" : "/pub/2001/09/18/parrot.html"
+   "url" : "/pub/2001/09/18/parrot.html"
 }
 
 

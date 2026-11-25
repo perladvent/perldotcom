@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2012/04/perlunicook-explicit-encode-decode.html",
+   "url" : "/pub/2012/04/perlunicook-explicit-encode-decode.html",
    "description" : "℞ 12: Explicit encode/decode While the standard Perl Unicode preamble makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. On rare occasions, such as a database read, you may be given encoded...",
    "draft" : null,
    "authors" : [

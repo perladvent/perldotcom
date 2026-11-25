@@ -10,7 +10,7 @@
    "image" : null,
    "title" : "Relaunching Perl.com",
    "description" : "Welcome to the new Perl.com!  It's a great time to program Perl, and our\nintent is that Perl.com can show off our language, libraries, and\ncommunity.",
-   "slug" : "/pub/2010/07/relaunching-perlcom.html",
+   "url" : "/pub/2010/07/relaunching-perlcom.html",
    "authors" : [
       "chromatic"
    ],

@@ -3,7 +3,7 @@
    "authors" : [
       "tom-christiansen"
    ],
-   "slug" : "/pub/2012/04/perlunicook-names-of-cjk-codepoints.html",
+   "url" : "/pub/2012/04/perlunicook-names-of-cjk-codepoints.html",
    "description" : "℞ 11: Names of CJK codepoints CJK refers to Chinese, Japanese, and Korean. In the context of Unicode, it usually refers to the Han ideographs used in the modern Chinese and Japanese writing systems. As you can expect, pictoral languages...",
    "categories" : "unicode",
    "title" : "Perl Unicode Cookbook: Names of CJK Codepoints",

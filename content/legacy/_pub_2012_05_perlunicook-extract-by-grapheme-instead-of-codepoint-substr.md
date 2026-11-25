@@ -6,7 +6,7 @@
    "tags" : [],
    "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "description" : "℞ 31: Extract by grapheme instead of by codepoint (substr) The Unicode Standard Annex #29 discusses the boundaries between grapheme clusters&mdash;what users might perceive as \"characters\". The CPAN module Unicode::GCString allows you to treat a Unicode string as a sequence...",
-   "slug" : "/pub/2012/05/perlunicook-extract-by-grapheme-instead-of-codepoint-substr.html",
+   "url" : "/pub/2012/05/perlunicook-extract-by-grapheme-instead-of-codepoint-substr.html",
    "authors" : [
       "tom-christiansen"
    ],

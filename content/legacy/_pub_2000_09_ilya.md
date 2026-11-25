@@ -5,7 +5,7 @@
    "categories" : "community",
    "thumbnail" : null,
    "tags" : [],
-   "slug" : "/pub/2000/09/ilya.html",
+   "url" : "/pub/2000/09/ilya.html",
    "description" : null,
    "authors" : [
       "joe-johnston"

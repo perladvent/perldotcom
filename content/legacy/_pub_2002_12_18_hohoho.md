@@ -1,6 +1,6 @@
 {
    "description" : " You know, it's not easy having the happiness of billions of children around the world resting with your organization, and it's even harder on the IT department. The incorporated elves and pixiefolk of the North Pole, under the direction...",
-   "slug" : "/pub/2002/12/18/hohoho.html",
+   "url" : "/pub/2002/12/18/hohoho.html",
    "draft" : null,
    "authors" : [
       "alex-gough"

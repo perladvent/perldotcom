@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2002/07/30/mod_perl.html",
+   "url" : "/pub/2002/07/30/mod_perl.html",
    "description" : " Introduction If your OS supports sharing of memory (and most sane systems do), you might save a lot of RAM by sharing it between child processes. This will allow you to run more processes and hopefully better satisfy the...",
    "authors" : [
       "stas-bekman"

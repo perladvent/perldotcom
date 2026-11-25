@@ -3,7 +3,7 @@
       "simon-cozens"
    ],
    "draft" : null,
-   "slug" : "/pub/2001/01/p5pdigest/THISWEEK-20010107.html",
+   "url" : "/pub/2001/01/p5pdigest/THISWEEK-20010107.html",
    "description" : " Notes Fix for gv_handler segfault rsync needs occasional delete Outstanding Unicode fix New Solaris hints file Lots of lvalue hackery Stephen McCamant and Doug MacEachern week Things to investigate Various Notes You can subscribe to an e-mail version of...",
    "tags" : [],
    "thumbnail" : null,

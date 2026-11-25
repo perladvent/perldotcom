@@ -3,7 +3,7 @@
    "authors" : [
       "stas-bekman"
    ],
-   "slug" : "/pub/2002/05/14/mod_perl.html",
+   "url" : "/pub/2002/05/14/mod_perl.html",
    "description" : " Introduction This article is the third in our series talking about the essential Perl basics that you should know before starting to program for mod_perl. Variables Globally, Lexically Scoped and Fully Qualified You will hear a lot about namespaces,...",
    "image" : null,
    "title" : "The Perl You Need To Know - Part 3",

@@ -9,7 +9,7 @@
       "alex-mclean"
    ],
    "draft" : null,
-   "slug" : "/pub/2004/08/31/livecode.html",
+   "url" : "/pub/2004/08/31/livecode.html",
    "description" : " I've found the experiences of dancing and programming to have a great deal in common. With both I am immersed in an abstract world of animated structures, building up and breaking down many times before finally reaching a conclusion...."
 }
 

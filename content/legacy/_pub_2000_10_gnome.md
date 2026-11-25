@@ -9,7 +9,7 @@
       "perldotcom"
    ],
    "draft" : null,
-   "slug" : "/pub/2000/10/gnome.html",
+   "url" : "/pub/2000/10/gnome.html",
    "description" : " -> Table of Contents Architecture Introduction Hello, World Adding a Menu Bar Adding an About Box Adding More Chrome Final Program GNOME is the Unix desktop. It's a framework for writing graphical applications with Unix, providing drag-and-drop, interapplication communication,..."
 }
 

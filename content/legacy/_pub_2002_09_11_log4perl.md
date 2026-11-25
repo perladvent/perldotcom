@@ -11,7 +11,7 @@
    "authors" : [
       "michael-schilli"
    ],
-   "slug" : "/pub/2002/09/11/log4perl.html",
+   "url" : "/pub/2002/09/11/log4perl.html",
    "description" : "You've rolled out an application and it produces mysterious, sporadic errors? That's pretty common, even if fairly well-tested applications are exposed to real-world data. How can you track down when and where exactly your problem occurs? What kind of user..."
 }
 

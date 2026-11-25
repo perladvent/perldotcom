@@ -4,7 +4,7 @@
       "pete-sergeant"
    ],
    "description" : "It's coming up to Valentine's day again, and invariably my thoughts turn back to last year's rather memorable weekend-break to Stockholm, in which I learned two things: Stockholm makes a great Valentine's destination. My girlfriend of the time was not...",
-   "slug" : "/pub/2004/02/13/mbox2wap.html",
+   "url" : "/pub/2004/02/13/mbox2wap.html",
    "image" : null,
    "title" : "Mail to WAP Gateways",
    "categories" : "email",

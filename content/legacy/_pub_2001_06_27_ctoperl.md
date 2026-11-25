@@ -9,7 +9,7 @@
    "categories" : "perl-internals",
    "image" : null,
    "title" : "Why Not Translate Perl to C?",
-   "slug" : "/pub/2001/06/27/ctoperl.html",
+   "url" : "/pub/2001/06/27/ctoperl.html",
    "description" : "Why translating Perl to C often doesn't create faster programs",
    "authors" : [
       "mark-jason-dominus"

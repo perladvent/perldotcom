@@ -1,6 +1,6 @@
 {
    "description" : "There are a number of tools available for writing books. Many people would immediately reach for their favorite word processor, but having written one book using Microsoft Word I'm very unlikely to repeat the experience. Darren Chamberlain, Andy Wardley, and...",
-   "slug" : "/pub/2004/01/30/ttbook.html",
+   "url" : "/pub/2004/01/30/ttbook.html",
    "draft" : null,
    "authors" : [
       "dave-cross"

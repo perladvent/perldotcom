@@ -7,7 +7,7 @@
    "image" : null,
    "title" : "Adding Search Functionality to Perl Applications",
    "categories" : "data",
-   "slug" : "/pub/2003/09/25/searching.html",
+   "url" : "/pub/2003/09/25/searching.html",
    "description" : " Introduction to Searching Usually, when building an application, a lot of thought goes into how the data is entered and updated, rather than finding it again. Finding data is an afterthought, especially when developing with a small dataset. If...",
    "authors" : [
       "aaron-trevena"

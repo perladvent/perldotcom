@@ -4,7 +4,7 @@
       "chromatic"
    ],
    "description" : "Lars Dɪᴇᴄᴋᴏᴡ has sent out a call for attention for the 2011 Perl QA Hackathon: The Perl QA hackathon 2011 is taking place from Saturday, April 16th to Monday, April 18th 2011 in Amsterdam, The Netherlands. Attendance is gratis. We...",
-   "slug" : "/pub/2011/02/perl-qa-hackathon-2011-call-to-attention.html",
+   "url" : "/pub/2011/02/perl-qa-hackathon-2011-call-to-attention.html",
    "categories" : "community",
    "image" : null,
    "title" : "Perl QA Hackathon 2011: Call to Attention",

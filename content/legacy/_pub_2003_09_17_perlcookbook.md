@@ -16,7 +16,7 @@
       "perldotcom"
    ],
    "description" : " Editor's note: In this third and final batch of recipes excerpted from Perl Cookbook, you'll find solutions and code examples for extracting HTML table data, templating with HTML::Mason, and making simple changes to elements or text. Sample Recipe: Extracting...",
-   "slug" : "/pub/2003/09/17/perlcookbook.html"
+   "url" : "/pub/2003/09/17/perlcookbook.html"
 }
 
 

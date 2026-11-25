@@ -9,7 +9,7 @@
       "tom-christiansen"
    ],
    "draft" : null,
-   "slug" : "/pub/2012/05/perlunicookbook-custom-character-properties.html",
+   "url" : "/pub/2012/05/perlunicookbook-custom-character-properties.html",
    "description" : "℞ 26: Custom character properties Match Unicode Properties in Regex explained that ever Unicode character has one or more properties, specified by the Unicode consortium. You may extend these rule to define your own properties such that Perl can use..."
 }
 

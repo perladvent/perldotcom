@@ -14,7 +14,7 @@
       "perl-sdl"
    ],
    "description" : " This article is the first in a series aimed at building a full 3D engine. It could be the underlying technology for a video game, the visualization system for a scientific application, the walkthrough program for an architectural design...",
-   "slug" : "/pub/2004/12/01/3d_engine.html",
+   "url" : "/pub/2004/12/01/3d_engine.html",
    "authors" : [
       "geoff-broadwell"
    ],

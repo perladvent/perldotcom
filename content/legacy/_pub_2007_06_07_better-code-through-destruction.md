@@ -12,7 +12,7 @@
    "title" : "Better Code Through Destruction",
    "image" : null,
    "description" : " Larry Wall said that Perl makes easy things easy and hard things possible. Perl is good both for writing a two-line script that saves the world at the last minute (well, at least it saves you and your project)...",
-   "slug" : "/pub/2007/06/07/better-code-through-destruction.html",
+   "url" : "/pub/2007/06/07/better-code-through-destruction.html",
    "draft" : null,
    "authors" : [
       "igor-gariev"

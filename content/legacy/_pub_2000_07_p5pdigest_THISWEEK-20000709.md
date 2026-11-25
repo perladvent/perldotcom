@@ -9,7 +9,7 @@
       "mark-jason-dominus"
    ],
    "draft" : null,
-   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000709.html",
+   "url" : "/pub/2000/07/p5pdigest/THISWEEK-20000709.html",
    "description" : " Notes NEW! RDF Available Bug Database buildtoc use namespace Unicode Input Solution tr/a-z-0// Mutual use sprintf tests Complex Expressions in Formats Threading Failure Test Case What does changing PL_sh_path do? UNTIE Method Sarathy Fixes a Bug that Nobody Knew..."
 }
 

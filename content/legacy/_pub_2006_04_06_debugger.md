@@ -4,7 +4,7 @@
       "daniel-allen"
    ],
    "description" : " Many people who work with Perl code never touch the debugger. My goal in this article is to provide reasoned argument for adding the Perl debugger to your set of tools, as well as pointers on how to do...",
-   "slug" : "/pub/2006/04/06/debugger.html",
+   "url" : "/pub/2006/04/06/debugger.html",
    "categories" : "debugging",
    "title" : "Unraveling Code with the Debugger",
    "image" : null,

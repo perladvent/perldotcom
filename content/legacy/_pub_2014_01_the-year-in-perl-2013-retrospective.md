@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2014/01/the-year-in-perl-2013-retrospective.html",
+   "url" : "/pub/2014/01/the-year-in-perl-2013-retrospective.html",
    "description" : "Perl had a great year in 2013. Here are some highlights.",
    "draft" : null,
    "authors" : [

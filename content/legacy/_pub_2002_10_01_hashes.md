@@ -11,7 +11,7 @@
    "authors" : [
       "abhijit-menon-sen"
    ],
-   "slug" : "/pub/2002/10/01/hashes.html",
+   "url" : "/pub/2002/10/01/hashes.html",
    "description" : " It's easy to take hashes for granted in Perl. They are simple, fast, and they usually &quot;just work,&quot; so people never need to know or care about how they are implemented. Sometimes, though, it's interesting and rewarding to look..."
 }
 

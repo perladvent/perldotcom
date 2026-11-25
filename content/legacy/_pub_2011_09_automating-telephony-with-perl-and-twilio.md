@@ -12,7 +12,7 @@
       "scott-wiersdorf"
    ],
    "draft" : null,
-   "slug" : "/pub/2011/09/automating-telephony-with-perl-and-twilio.html",
+   "url" : "/pub/2011/09/automating-telephony-with-perl-and-twilio.html",
    "description" : "Perl can make your phone ring. Scott Wiersdorf demonstrates how to use Twilio's API to make and receive phone calls and to automate SMS, all from Perl."
 }
 

@@ -1,6 +1,6 @@
 {
    "description" : " It seems every month or so, there's a new Perl and CGI book out; huge thick volumes promising to teach you all you need to know about programming for the Web in 24 hours. They all start with \"Hello...",
-   "slug" : "/pub/2002/09/10/review.html",
+   "url" : "/pub/2002/09/10/review.html",
    "draft" : null,
    "authors" : [
       "simon-cozens"

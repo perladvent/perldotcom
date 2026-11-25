@@ -3,7 +3,7 @@
    "authors" : [
       "simon-cozens"
    ],
-   "slug" : "/pub/2000/11/p5pdigest/THISWEEK-20001107.html",
+   "url" : "/pub/2000/11/p5pdigest/THISWEEK-20001107.html",
    "description" : " Notes Error number parsing VMS hackery The (f)crypt of mystery Yet more self-ties Rsync vs. FTP'ing the patches Changes to README.aix The Regex Stack Problem Things nobody's fixed Craig Berry Various Notes You can subscribe to an email version...",
    "thumbnail" : null,
    "tags" : [],

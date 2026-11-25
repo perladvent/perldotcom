@@ -12,7 +12,7 @@
    "title" : "Facebook Authentication with Perl and Facebook::Graph",
    "image" : null,
    "description" : "In the first of a series on writing Facebook applications with Perl, JT Smith demonstrates how to register an application and authenticate users with Facebook::Graph.",
-   "slug" : "/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html",
+   "url" : "/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html",
    "draft" : null,
    "authors" : [
       "jt-smith"

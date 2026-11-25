@@ -14,7 +14,7 @@
       "matt-cashner"
    ],
    "description" : " Day in and day out, I write large applications in perl. I'm cursed I tell you. While large scale, long-running applications in pure perl may sound fairly easy to write, they are not. Perl, beyond a certain size and...",
-   "slug" : "/pub/2004/07/02/poeintro.html"
+   "url" : "/pub/2004/07/02/poeintro.html"
 }
 
 

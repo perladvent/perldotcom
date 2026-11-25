@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-sorting.html",
+   "url" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-sorting.html",
    "description" : "℞ 36: Case- and accent-insensitive Unicode sort The Unicode Collation Algorithm defines several levels of collation strength by which you can specify certain character properties as relevant or irrelevant to the collation ordering. In simple terms, you can use collation...",
    "draft" : null,
    "authors" : [

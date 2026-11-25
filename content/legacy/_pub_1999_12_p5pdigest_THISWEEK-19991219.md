@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991219.html",
+   "url" : "/pub/1999/12/p5pdigest/THISWEEK-19991219.html",
    "description" : " Notes Meta-Information More 5.005_63 Results $^H and %^H Perl RPMs Development Continues on Ilya's Patches Change to xsubpp Closed Filhandle in Signal Handler pad_findlex Needs to be Recursive Conversion Specifier Bug The Trivial Test eof() at the Beginning of...",
    "authors" : [
       "mark-jason-dominus"

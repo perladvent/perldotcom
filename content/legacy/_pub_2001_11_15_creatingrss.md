@@ -10,7 +10,7 @@
       "chris-ball"
    ],
    "description" : " Even if you haven't heard of the RSS acronym before, you're likely to have used RSS in the past. Whether through the slashboxes at slashdot or our own news summary at use.perl.org, the premise remains the same - RSS,...",
-   "slug" : "/pub/2001/11/15/creatingrss.html"
+   "url" : "/pub/2001/11/15/creatingrss.html"
 }
 
 

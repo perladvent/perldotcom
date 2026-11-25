@@ -9,7 +9,7 @@
    "title" : "Perl Style: Break Complex Tasks Up",
    "draft" : null,
    "date" : "1998-01-01T00:00:00-08:00",
-   "slug" : "/doc/FMTEYEWTK/style/slide31.html",
+   "url" : "/doc/FMTEYEWTK/style/slide31.html",
    "thumbnail" : null
 }
 

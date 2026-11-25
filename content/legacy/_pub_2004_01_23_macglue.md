@@ -4,7 +4,7 @@
       "simon-cozens",
       "chris-nandor"
    ],
-   "slug" : "/pub/2004/01/23/macglue.html",
+   "url" : "/pub/2004/01/23/macglue.html",
    "description" : " Thanks to the popularity of Mac OS X, the new iBook, and the PowerBook G4, it's no longer uncool to talk about owning an Apple. Longtime Mac devotees have now been joined by longtime Unix devotees and pretty much...",
    "title" : "Introducing Mac::Glue",
    "image" : null,

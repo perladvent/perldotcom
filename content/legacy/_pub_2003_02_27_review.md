@@ -1,6 +1,6 @@
 {
    "description" : " This is a book I have been looking forward to for a long time. Back when James Tisdall had just finished his Beginning Perl for Bioinformatics, I asked him to write an article about how to get into bioinf...",
-   "slug" : "/pub/2003/02/27/review.html",
+   "url" : "/pub/2003/02/27/review.html",
    "authors" : [
       "simon-cozens"
    ],

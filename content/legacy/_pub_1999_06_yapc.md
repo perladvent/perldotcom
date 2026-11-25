@@ -5,7 +5,7 @@
    "categories" : "community",
    "thumbnail" : null,
    "tags" : [],
-   "slug" : "/pub/1999/06/yapc.html",
+   "url" : "/pub/1999/06/yapc.html",
    "description" : " Yet Another Perl Conference, also known as YAPC, wasn't just another conference, it was incredible. Kevin Lenzo YAPC was thought up and coordinated by Kevin Lenzo of Carnegie Mellon University. The idea was to have a &quot;grass roots&quot; Perl...",
    "authors" : [
       "brent-michalski"

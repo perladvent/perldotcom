@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/1999/11/cozens.htm",
+   "url" : "/pub/1999/11/cozens.htm",
    "description" : null,
    "authors" : [
       "nathan-torkington"

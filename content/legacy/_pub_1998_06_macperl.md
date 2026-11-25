@@ -17,7 +17,7 @@
       "perldotcom"
    ],
    "description" : " New MacPerl CD-ROM Available Rich Morin (rdm@cfcl.com) of Prime Time Freeware has produced the MacPerl CD-ROM, a distribution of the Perl for the Macintosh along with other Mac tools and documentation. I asked him about the MacPerl community and...",
-   "slug" : "/pub/1998/06/macperl.html"
+   "url" : "/pub/1998/06/macperl.html"
 }
 
 

@@ -1,6 +1,6 @@
 {
    "description" : " Programmers have long recognized that separating code logic from presentation is good. The Perl community has produced many fine systems for doing just this. While there are many systems, they largely fall within two execution models, pipeline and callback...",
-   "slug" : "/pub/2008/03/14/reverse-callback-templating.html",
+   "url" : "/pub/2008/03/14/reverse-callback-templating.html",
    "draft" : null,
    "authors" : [
       "james-robson"

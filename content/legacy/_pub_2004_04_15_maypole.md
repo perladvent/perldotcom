@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " You have a database. You have a web server. You have a deadline. Whether it's bringing up an e-commerce storefront for a new venture, implementing a new front-end to HR's employee database, or even providing a neat way to...",
-   "slug" : "/pub/2004/04/15/maypole.html",
+   "url" : "/pub/2004/04/15/maypole.html",
    "title" : "Rapid Web Application Deployment with Maypole",
    "image" : null,
    "categories" : "web",

@@ -14,7 +14,7 @@
       "mark-stosberg"
    ],
    "draft" : null,
-   "slug" : "/pub/2005/02/24/mandrakelinux.html",
+   "url" : "/pub/2005/02/24/mandrakelinux.html",
    "description" : " Perl programmers have a special reason for choosing Mandrakelinux as their desktop operating system. Mandrakelinux uses Perl for dozens of the graphical \"value added\" utilities included with the distribution, including much of the Mandrakelinux Control Center. I asked Mandrakelinux..."
 }
 

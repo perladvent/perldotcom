@@ -5,7 +5,7 @@
    "categories" : "community",
    "image" : null,
    "title" : "Perl Today (February 2014)",
-   "slug" : "/pub/2014/02/perl-today-february-2014.html",
+   "url" : "/pub/2014/02/perl-today-february-2014.html",
    "description" : "brian d foy explores the state of Perl in 2014 by soliciting opinions from various respected Perl programmers.",
    "draft" : null,
    "authors" : [

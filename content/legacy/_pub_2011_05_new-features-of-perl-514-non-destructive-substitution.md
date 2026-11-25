@@ -15,7 +15,7 @@
    ],
    "draft" : null,
    "description" : "Perl 5.14 adds non-destructive substitution.",
-   "slug" : "/pub/2011/05/new-features-of-perl-514-non-destructive-substitution.html"
+   "url" : "/pub/2011/05/new-features-of-perl-514-non-destructive-substitution.html"
 }
 
 

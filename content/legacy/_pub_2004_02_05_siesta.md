@@ -19,7 +19,7 @@
       "simon-wistow"
    ],
    "description" : " Sometime around July 2002 there was another of the seemingly inevitable and interminable threads about mailing list managers that pop up with regrettable frequency on the London Perl Mongers mailing list. It almost certainly contained references to Reply To...",
-   "slug" : "/pub/2004/02/05/siesta.html"
+   "url" : "/pub/2004/02/05/siesta.html"
 }
 
 

@@ -16,7 +16,7 @@
    ],
    "draft" : null,
    "description" : "It's quite possible to end up with digital music files that don't have good information about what they are. Files that don't have ID3 information can rely on paths for album information, for example, and that is lost easily. M3U...",
-   "slug" : "/pub/2003/10/03/musicbrainz.html"
+   "url" : "/pub/2003/10/03/musicbrainz.html"
 }
 
 

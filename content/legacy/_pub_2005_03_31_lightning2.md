@@ -15,7 +15,7 @@
    "categories" : "development",
    "image" : null,
    "title" : "More Lightning Articles",
-   "slug" : "/pub/2005/03/31/lightning2.html",
+   "url" : "/pub/2005/03/31/lightning2.html",
    "description" : "Customize Emacs with Perl, debug your programs with line tracing, mock the DBI for testing, and manage buffering effectively-four short articles for Perl programmers.",
    "draft" : null,
    "authors" : [

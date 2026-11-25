@@ -6,7 +6,7 @@
    "thumbnail" : null,
    "tags" : [],
    "description" : " Notes Ilya Quits B::Bytecode is Ineffective Ben's map Patch split Oddities scalar Operator Doesn't perlmodlib perlnewmod Method Lookup Caching Perl in Russia Eudora Problem h2xs Backward Compatibility Various Notes You can subscribe to an email version of this summary...",
-   "slug" : "/pub/2000/06/p5pdigest/THISWEEK-20000604.html",
+   "url" : "/pub/2000/06/p5pdigest/THISWEEK-20000604.html",
    "draft" : null,
    "authors" : [
       "mark-jason-dominus"

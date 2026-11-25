@@ -14,7 +14,7 @@
    "authors" : [
       "andrew-savikas"
    ],
-   "slug" : "/pub/2005/05/26/word_control.html",
+   "url" : "/pub/2005/05/26/word_control.html",
    "description" : " In a recent lightning article, Customizing Emacs with Perl, Bob DuCharme explained how to use the Emacs shell-command-on-region function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the..."
 }
 

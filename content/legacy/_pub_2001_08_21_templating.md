@@ -7,7 +7,7 @@
    "categories" : "development",
    "title" : "Choosing a Templating System",
    "image" : null,
-   "slug" : "/pub/2001/08/21/templating.html",
+   "url" : "/pub/2001/08/21/templating.html",
    "description" : " Introduction Go on, admit it: You've written a templating system. It's OK, nearly everyone has at some point. You start with something beautifully simple like $HTML =~ s/\\$(\\w+)/${$1}/g and end up adding conditionals, loops and includes until you've created...",
    "draft" : null,
    "authors" : [

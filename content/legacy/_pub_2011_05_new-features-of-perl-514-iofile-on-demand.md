@@ -5,7 +5,7 @@
    "image" : null,
    "title" : "New Features of Perl 5.14: IO::File on Demand",
    "categories" : "development",
-   "slug" : "/pub/2011/05/new-features-of-perl-514-iofile-on-demand.html",
+   "url" : "/pub/2011/05/new-features-of-perl-514-iofile-on-demand.html",
    "description" : "Perl 5.14 loads IO::File on demand for autovivified filehandles.",
    "authors" : [
       "chromatic"

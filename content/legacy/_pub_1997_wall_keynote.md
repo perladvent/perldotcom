@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : null,
-   "slug" : "/pub/1997/wall/keynote.html",
+   "url" : "/pub/1997/wall/keynote.html",
    "title" : "The Culture of Perl",
    "image" : null,
    "categories" : "community",

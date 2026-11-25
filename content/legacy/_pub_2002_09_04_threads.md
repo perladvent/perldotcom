@@ -1,6 +1,6 @@
 {
    "description" : " Perl 5.8.0 is the first version of Perl with a stable threading implementation. Threading has the potential to change the way we program in Perl, and even the way we think about programming. This article explores Perl's new threading...",
-   "slug" : "/pub/2002/09/04/threads.html",
+   "url" : "/pub/2002/09/04/threads.html",
    "authors" : [
       "sam-tregar"
    ],

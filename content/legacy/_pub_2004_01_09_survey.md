@@ -8,7 +8,7 @@
    ],
    "thumbnail" : "/images/_pub_2004_01_09_survey/111-state_of_perl.gif",
    "description" : " A colleague of mine recently asked me about Perl's future. Specifically, he wondered if we have any tricks up our sleeves to compete against today's two most popular platforms: .NET and Java. Without a second's hesitation, I repeated the...",
-   "slug" : "/pub/2004/01/09/survey.html",
+   "url" : "/pub/2004/01/09/survey.html",
    "authors" : [
       "adam-turoff"
    ],

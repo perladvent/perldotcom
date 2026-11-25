@@ -9,7 +9,7 @@
       "chromatic"
    ],
    "draft" : null,
-   "slug" : "/pub/2012/08/embrace-the-reluctant-perl-programmer.html",
+   "url" : "/pub/2012/08/embrace-the-reluctant-perl-programmer.html",
    "description" : "editor's note: an earlier version of this article appeared at The Reluctant Perl Programmer. Per the suggestion of Ask Bjørn Hansen, this revision appears on Perl.com. Who We Are We all love Perl for different reasons. Some of us are..."
 }
 

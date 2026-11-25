@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2001/03/dbiokay.html",
+   "url" : "/pub/2001/03/dbiokay.html",
    "description" : "Many database projects use ORMs and other helpers, but using Perl's DBI by itself is easier and faster than you might think.",
    "draft" : null,
    "authors" : [

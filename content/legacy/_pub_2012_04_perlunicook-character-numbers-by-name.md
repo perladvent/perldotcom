@@ -10,7 +10,7 @@
       "tom-christiansen"
    ],
    "description" : "℞ 7: Get character number by name Unicode allows you to refer to characters by number or by name. Computers don't care, but humans do. When you have a character name, you can translate it to its number with the...",
-   "slug" : "/pub/2012/04/perlunicook-character-numbers-by-name.html"
+   "url" : "/pub/2012/04/perlunicook-character-numbers-by-name.html"
 }
 
 

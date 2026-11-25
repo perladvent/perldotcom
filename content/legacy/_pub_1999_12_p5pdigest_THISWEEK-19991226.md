@@ -9,7 +9,7 @@
    "authors" : [
       "mark-jason-dominus"
    ],
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991226.html",
+   "url" : "/pub/1999/12/p5pdigest/THISWEEK-19991226.html",
    "description" : " Notes Meta-Information Module Interface and Version Meta-Information SVs by Default Another return of PREPARE More Flushing Problems Array::Virtual #line directives DProf Various Notes Last year I fell behind on reports because I took three business trips in two weeks...."
 }
 

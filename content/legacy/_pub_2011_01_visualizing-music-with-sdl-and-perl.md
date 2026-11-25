@@ -11,7 +11,7 @@
    "image" : null,
    "title" : "Visualizing Music with SDL and Perl",
    "categories" : "graphics",
-   "slug" : "/pub/2011/01/visualizing-music-with-sdl-and-perl.html",
+   "url" : "/pub/2011/01/visualizing-music-with-sdl-and-perl.html",
    "description" : "In this edited excerpt from the SDL Perl manual, lead developer Kartik\nThakore walks through a non-game application of SDL and Perl, building a\nmusic player with visualizations in just a few lines of code.",
    "authors" : [
       "kartik-thakore"

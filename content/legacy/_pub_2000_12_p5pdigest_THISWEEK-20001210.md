@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2000/12/p5pdigest/THISWEEK-20001210.html",
+   "url" : "/pub/2000/12/p5pdigest/THISWEEK-20001210.html",
    "description" : null,
    "authors" : [
       "simon-cozens"

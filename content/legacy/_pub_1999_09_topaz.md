@@ -14,7 +14,7 @@
    ],
    "draft" : null,
    "description" : " Introduction One of the more interesting talks at the O'Reilly 1999 Open Source Convention was by Chip Salzenberg, one of the core developers of Perl. He described his work on Topaz, a new effort to completely re-write the internals...",
-   "slug" : "/pub/1999/09/topaz.html"
+   "url" : "/pub/1999/09/topaz.html"
 }
 
 

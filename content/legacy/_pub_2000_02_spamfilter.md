@@ -3,7 +3,7 @@
    "authors" : [
       "mark-jason-dominus"
    ],
-   "slug" : "/pub/2000/02/spamfilter.html",
+   "url" : "/pub/2000/02/spamfilter.html",
    "description" : "My Life with Spam -> or How I Caught the Spam and What I Did With It When I Caught it -> I wrote Part 1 of this series back in October 1999 for the LinuxPlanet web site, but the...",
    "image" : null,
    "title" : "My Life With Spam",

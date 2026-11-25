@@ -17,7 +17,7 @@
    ],
    "draft" : null,
    "description" : " About a year ago, a person asked the Fun With Perl mailing list about some code they had written to do database queries. It's important to note that this person was posting from an .it address; why will become...",
-   "slug" : "/pub/2003/10/09/refactoring.html"
+   "url" : "/pub/2003/10/09/refactoring.html"
 }
 
 

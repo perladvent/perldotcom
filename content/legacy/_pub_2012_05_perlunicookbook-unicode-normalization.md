@@ -6,7 +6,7 @@
    "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],
    "description" : "℞ 27: Unicode normalization Prescription one reminded you to always decompose and recompose Unicode data at the boundaries of your application. Unicode::Normalize can do much more for you. It supports multiple Unicode Normalization Forms. Normalization, of course, takes Unicode data...",
-   "slug" : "/pub/2012/05/perlunicookbook-unicode-normalization.html",
+   "url" : "/pub/2012/05/perlunicookbook-unicode-normalization.html",
    "draft" : null,
    "authors" : [
       "tom-christiansen"

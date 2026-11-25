@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2005/10/20/scriptome.html",
+   "url" : "/pub/2005/10/20/scriptome.html",
    "description" : " Have you ever renamed 768 files? Merged the content from 96 files into a spreadsheet? Filtered 100 lines out of a 20,000-line file? Have you ever done these things by hand? Disciples of laziness-one of the three Perl programmer's...",
    "draft" : null,
    "authors" : [

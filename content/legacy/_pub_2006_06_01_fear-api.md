@@ -13,7 +13,7 @@
    "image" : null,
    "title" : "FEAR-less Site Scraping",
    "categories" : "web",
-   "slug" : "/pub/2006/06/01/fear-api.html",
+   "url" : "/pub/2006/06/01/fear-api.html",
    "description" : " Imagine that you have an assignment that you need to fetch all of the web pages of a given website, scrape data from them, and transfer the data to another place, such as a database or plain files. This...",
    "draft" : null,
    "authors" : [

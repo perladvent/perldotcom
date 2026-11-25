@@ -8,7 +8,7 @@
    ],
    "thumbnail" : null,
    "description" : " What happens if you get a bunch of academic computer scientists and implementors of languages such as Perl, Python, Smalltalk and Curl, and lock them into a room for a day? Bringing together the academic and commercial sides of...",
-   "slug" : "/pub/2001/11/21/lightweight.html",
+   "url" : "/pub/2001/11/21/lightweight.html",
    "draft" : null,
    "authors" : [
       "simon-cozens"

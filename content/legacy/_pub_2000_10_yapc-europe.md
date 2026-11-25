@@ -9,7 +9,7 @@
       "mark-summerfield"
    ],
    "draft" : null,
-   "slug" : "/pub/2000/10/yapc-europe.html",
+   "url" : "/pub/2000/10/yapc-europe.html",
    "description" : "YAPC::Europe::London -> This is written for those poor souls who couldn't make it to give them aflavor of the wonderful event they missed. Despite being an ex-Londoner, I got on the wrong tube Friday morning. The train was packed and..."
 }
 

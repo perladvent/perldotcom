@@ -4,7 +4,7 @@
       "tom-christiansen",
       "nathan-torkington"
    ],
-   "slug" : "/pub/2003/08/21/perlcookbook.html",
+   "url" : "/pub/2003/08/21/perlcookbook.html",
    "description" : " Editor's note: The new edition of Perl Cookbook is about to hit store shelves, so to trumpet its release, we offer some recipes-new to the second edition-for your sampling pleasure. This week's excerpts include recipes from Chapter 6 (\"Pattern...",
    "image" : null,
    "title" : "Cooking with Perl",

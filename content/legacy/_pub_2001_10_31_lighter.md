@@ -5,7 +5,7 @@
    "categories" : "cpan",
    "image" : null,
    "title" : "The Lighter Side of CPAN",
-   "slug" : "/pub/2001/10/31/lighter.html",
+   "url" : "/pub/2001/10/31/lighter.html",
    "description" : " Programming can be a stressful game. We sit at our machines, day in, day out, endlessly staring at a monitor fathoming where that last devious bug has buried itself. It's not surprising then that sometimes it gets to be...",
    "draft" : null,
    "authors" : [

@@ -3,7 +3,7 @@
       "chromatic"
    ],
    "draft" : null,
-   "slug" : "/pub/2010/04/inside-perl-512.html",
+   "url" : "/pub/2010/04/inside-perl-512.html",
    "description" : "Perl 5.12 has just come out. A rejuvenated development process helps ensure a bright future for Perl as it enters its third decade of making easy things easy and hard things possible. Here's what you can expect when you upgrade...",
    "tags" : [
       "perl-5",

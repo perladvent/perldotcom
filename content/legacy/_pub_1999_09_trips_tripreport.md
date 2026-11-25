@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " Overview August 21 - 24, 1999 My main reason for attending the Open Source Conference is to observe Open Source developments and to gather business intelligence for Chevron. I learned Python. I also concentrated on understanding the business case...",
-   "slug" : "/pub/1999/09/trips/tripreport.html",
+   "url" : "/pub/1999/09/trips/tripreport.html",
    "thumbnail" : null,
    "tags" : [
       "open-source-conference",

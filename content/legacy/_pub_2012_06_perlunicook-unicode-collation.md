@@ -3,7 +3,7 @@
       "tom-christiansen"
    ],
    "draft" : null,
-   "slug" : "/pub/2012/06/perlunicook-unicode-collation.html",
+   "url" : "/pub/2012/06/perlunicook-unicode-collation.html",
    "description" : "℞ 35: Unicode collation Sorting&mdash;even pure ASCII&mdash;seems easy, at least if you know the alphabet song. Yet even something this simple gets complicated if you sort merely by codepoint. You get numbers coming in the midst of letters. You get...",
    "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],

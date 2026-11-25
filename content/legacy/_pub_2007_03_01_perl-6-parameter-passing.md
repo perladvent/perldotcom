@@ -3,7 +3,7 @@
    "authors" : [
       "phil-crow"
    ],
-   "slug" : "/pub/2007/03/01/perl-6-parameter-passing.html",
+   "url" : "/pub/2007/03/01/perl-6-parameter-passing.html",
    "description" : " Perl 6 is not finished, but you can already play with it. I hope this article will encourage you to try it. Begin by installing Pugs, a Perl 6 compiler implemented in Haskell. Note that you will also need...",
    "categories" : "perl-6",
    "image" : null,

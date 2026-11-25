@@ -12,7 +12,7 @@
       "jos-boumans"
    ],
    "description" : " /* This is a Perl comment */ Commenting in Perl \"But what?\", I hear you think, \"Perl doesn't have multi-line comments!\" That's true. Perl doesn't have multiline comments. But why is that? What is wrong with them? Mostly, it...",
-   "slug" : "/pub/2002/08/13/comment.html"
+   "url" : "/pub/2002/08/13/comment.html"
 }
 
 

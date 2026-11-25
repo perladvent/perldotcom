@@ -1,6 +1,6 @@
 {
    "thumbnail" : null,
-   "slug" : "/doc/FMTEYEWTK/style/slide17.html",
+   "url" : "/doc/FMTEYEWTK/style/slide17.html",
    "date" : "1998-01-01T00:00:00-08:00",
    "draft" : null,
    "title" : "Perl Style: Embrace Hashes",

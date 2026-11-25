@@ -4,7 +4,7 @@
       "ron-savage"
    ],
    "description" : "Perl programmers spend a lot of time reading, modifying, and writing data. When regular expressions aren't enough, turn to something more powerful: parsing.",
-   "slug" : "/pub/2012/10/an-overview-of-lexing-and-parsing.html",
+   "url" : "/pub/2012/10/an-overview-of-lexing-and-parsing.html",
    "title" : "An Overview of Lexing and Parsing",
    "image" : null,
    "categories" : "development",

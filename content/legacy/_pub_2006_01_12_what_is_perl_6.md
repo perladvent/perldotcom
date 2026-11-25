@@ -3,7 +3,7 @@
       "chromatic"
    ],
    "draft" : null,
-   "slug" : "/pub/2006/01/12/what_is_perl_6.html",
+   "url" : "/pub/2006/01/12/what_is_perl_6.html",
    "description" : "In the sixth year of Perl 6's multi-year reinvention, some of its developers reflected on why it was taking so long.",
    "thumbnail" : "/images/_pub_2006_01_12_what_is_perl_6/111-whats_perl6.gif",
    "tags" : [

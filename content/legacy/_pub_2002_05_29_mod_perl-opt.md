@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " In the next series of articles, we are going to talk about mod_perl performance issues. We will try to look at as many aspects of the mod_perl driven service as possible: hardware, software, Perl coding and finally the mod_perl...",
-   "slug" : "/pub/2002/05/29/mod_perl-opt.html",
+   "url" : "/pub/2002/05/29/mod_perl-opt.html",
    "thumbnail" : "/images/_pub_2002_05_29_mod_perl-opt/111-achieve_closure.gif",
    "tags" : [
       "mod-perl-optimizing"

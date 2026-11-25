@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2003/07/15/nocode.html",
+   "url" : "/pub/2003/07/15/nocode.html",
    "description" : " One of the most boring programming tasks in the world has to be pulling data out of a database and displaying it on a web site. Yet it's also one of the most ubiquitous. Perl programmers being lazy, there...",
    "authors" : [
       "kake-pugh"

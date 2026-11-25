@@ -13,7 +13,7 @@
    "image" : null,
    "title" : "Parsing iCal Data",
    "categories" : "science",
-   "slug" : "/pub/2005/08/18/ical_dot.html",
+   "url" : "/pub/2005/08/18/ical_dot.html",
    "description" : " One of the attributes of a killer application is that it does something cool: it allows you to view or organize information in new and interesting ways, saves you time, or helps you win that auction bid. Yet one...",
    "authors" : [
       "robert-pratte"

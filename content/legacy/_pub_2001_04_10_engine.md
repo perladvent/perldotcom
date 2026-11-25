@@ -9,7 +9,7 @@
    "image" : null,
    "title" : "Designing a Search Engine",
    "categories" : "data",
-   "slug" : "/pub/2001/04/10/engine.html",
+   "url" : "/pub/2001/04/10/engine.html",
    "description" : " A couple of months ago, I was approached by a company that I had done some work for previously, and was asked to build them a search engine to index about 200MB of HTML. However, some fairly strict rules...",
    "draft" : null,
    "authors" : [

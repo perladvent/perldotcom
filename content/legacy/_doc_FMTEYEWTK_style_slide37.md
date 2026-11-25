@@ -9,7 +9,7 @@
       "tom-christiansen"
    ],
    "thumbnail" : null,
-   "slug" : "/doc/FMTEYEWTK/style/slide37.html",
+   "url" : "/doc/FMTEYEWTK/style/slide37.html",
    "date" : "1998-01-01T00:00:00-08:00"
 }
 

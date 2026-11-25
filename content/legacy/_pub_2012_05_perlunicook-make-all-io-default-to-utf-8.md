@@ -5,7 +5,7 @@
    "categories" : "unicode",
    "image" : null,
    "title" : "Perl Unicode Cookbook: Make All I/O Default to UTF-8",
-   "slug" : "/pub/2012/05/perlunicook-make-all-io-default-to-utf-8.html",
+   "url" : "/pub/2012/05/perlunicook-make-all-io-default-to-utf-8.html",
    "description" : "℞ 18: Make all I/O and args default to utf8 The core rule of Unicode handling in Perl is \"always encode and decode at the edges of your program\". If you've configured everything such that all incoming and outgoing data...",
    "authors" : [
       "tom-christiansen"

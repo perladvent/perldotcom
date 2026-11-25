@@ -4,7 +4,7 @@
       "adam-turoff"
    ],
    "description" : "Adventures on Perl Whirl 2000 -> Can a tech conference on a luxury cruise boat possibly be legitimate? Sure it is, and then some. This past Memorial Day, I joined about 200 attendees on Perl Whirl 2000, the inaugural Geek...",
-   "slug" : "/pub/2000/06/perlwhirl.html",
+   "url" : "/pub/2000/06/perlwhirl.html",
    "image" : null,
    "title" : "Adventures on Perl Whirl 2000",
    "categories" : "community",

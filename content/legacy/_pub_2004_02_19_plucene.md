@@ -1,6 +1,6 @@
 {
    "description" : " For the past few months, my former employers and I have been working on a port of the Java Lucene search engine toolkit. On the February 3rd, Plucene was released to the world, implementing almost all of the functionality...",
-   "slug" : "/pub/2004/02/19/plucene.html",
+   "url" : "/pub/2004/02/19/plucene.html",
    "draft" : null,
    "authors" : [
       "simon-cozens"

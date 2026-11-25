@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2005/06/02/catalyst.html",
+   "url" : "/pub/2005/06/02/catalyst.html",
    "description" : " Web frameworks are an area of significant interest at the moment. Now that we've all learned the basics of web programming, we're ready to get the common stuff out of the way to concentrate on the task at hand;...",
    "authors" : [
       "jesse-sheidlower"

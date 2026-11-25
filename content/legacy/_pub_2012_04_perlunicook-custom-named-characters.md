@@ -3,7 +3,7 @@
    "authors" : [
       "tom-christiansen"
    ],
-   "slug" : "/pub/2012/04/perlunicook-custom-named-characters.html",
+   "url" : "/pub/2012/04/perlunicook-custom-named-characters.html",
    "description" : "℞ 10: Custom named characters As several other recipes demonstrate, the charnames pragma offers considerable power to use and manipulate Unicode characters by their names. Its :alias option allows you to give your own lexically scoped nicknames to existing characters,...",
    "tags" : [],
    "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",

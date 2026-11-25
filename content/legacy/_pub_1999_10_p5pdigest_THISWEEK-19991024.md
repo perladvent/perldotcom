@@ -3,7 +3,7 @@
       "mark-jason-dominus"
    ],
    "draft" : null,
-   "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991024.html",
+   "url" : "/pub/1999/10/p5pdigest/THISWEEK-19991024.html",
    "description" : "(18-24 October 1999) -> $^O STOP blocks and the broken compiler Blank lines in POD PERL_HEADER environment variable Out of date modules in Perl distribution Enhanced UNIVERSAL::isa sort improvements glob case-sensitivity reftype function New perlthread man page Win32 and fork()...",
    "tags" : [],
    "thumbnail" : null,

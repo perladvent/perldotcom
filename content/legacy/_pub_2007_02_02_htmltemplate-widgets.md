@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " My previous article, looked at extending HTML::Template through custom tags and filters. This article looks at ways to manage large, more complex pages, by bundling HTML::Template into something like GUI \"widgets\" (or \"controls\"). Imagine you have a basic page...",
-   "slug" : "/pub/2007/02/02/htmltemplate-widgets.html",
+   "url" : "/pub/2007/02/02/htmltemplate-widgets.html",
    "thumbnail" : "/images/_pub_2007_02_02_htmltemplate-widgets/111-HTML_Frag.gif",
    "tags" : [
       "html-template",

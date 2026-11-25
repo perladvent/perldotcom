@@ -14,7 +14,7 @@
       "david-wheeler"
    ],
    "draft" : null,
-   "slug" : "/pub/2004/08/27/bricolage.html",
+   "url" : "/pub/2004/08/27/bricolage.html",
    "description" : " If you've ever had to manage a web site with tens of thousands of pages of content where many people need to be able to update that content, you've no doubt recognized the need for a content management system..."
 }
 

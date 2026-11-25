@@ -5,7 +5,7 @@
    "title" : "Exegesis 3",
    "tags" : [],
    "thumbnail" : "/images/_pub_2001_10_03_exegesis3/111-exegesis.jpg",
-   "slug" : "/pub/2001/10/03/exegesis3.html",
+   "url" : "/pub/2001/10/03/exegesis3.html",
    "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 3 for the current design information. Diamond lives (context-aware); Underscore space means concatenate; fat comma means pair; A pre-star will flatten; colon-equals will...",
    "draft" : null,
    "authors" : [

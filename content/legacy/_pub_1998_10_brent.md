@@ -3,7 +3,7 @@
    "authors" : [
       "brent-michalski"
    ],
-   "slug" : "/pub/1998/10/brent.html",
+   "url" : "/pub/1998/10/brent.html",
    "description" : null,
    "image" : null,
    "title" : "Perl Rescues a Major Corporation",

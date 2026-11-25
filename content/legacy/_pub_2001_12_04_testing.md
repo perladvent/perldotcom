@@ -1,6 +1,6 @@
 {
    "description" : "Does your code work? How do you know that? Testing software with Perl is easier than you think, and it'll give you confidence that you've done the right thing.",
-   "slug" : "/pub/2001/12/04/testing.html",
+   "url" : "/pub/2001/12/04/testing.html",
    "authors" : [
       "chromatic"
    ],

@@ -7,7 +7,7 @@
    "image" : null,
    "title" : "Exegesis 4",
    "categories" : "perl-6",
-   "slug" : "/pub/2002/04/01/exegesis4.html",
+   "url" : "/pub/2002/04/01/exegesis4.html",
    "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 4 for the current design information. And I'd se-ell my-y so-oul for flow of con-tro-ol ... over Perl - The Motels, \"Total Control\"...",
    "draft" : null,
    "authors" : [

@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2001/02/p5pdigest/THISWEEK-20010212.html",
+   "url" : "/pub/2001/02/p5pdigest/THISWEEK-20010212.html",
    "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. I've been having mail problems this...",
    "authors" : [
       "simon-cozens"

@@ -6,7 +6,7 @@
    "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],
    "description" : "℞ 24: Disabling Unicode-awareness in builtin charclasses Many regex tutorials gloss over the fact that builtin character classes include far more than ASCII characters. In particular, classes such as \"word character\" (\\w), \"word boundary\" (\\b), \"whitespace\" (\\s), and \"digit\" (\\d)...",
-   "slug" : "/pub/2012/05/perlunicook-disable-unicode-awareness-in-builtin-character-classes.html",
+   "url" : "/pub/2012/05/perlunicook-disable-unicode-awareness-in-builtin-character-classes.html",
    "draft" : null,
    "authors" : [
       "tom-christiansen"

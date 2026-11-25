@@ -8,7 +8,7 @@
    "image" : null,
    "title" : "Power Regexps, Part II",
    "description" : " In the previous article, we looked at some of the more intermediate features of regular expressions, including multiline matching, quoting, and interpolation. This time, we're going to look at more-advanced features. We'll also look at some modules that can...",
-   "slug" : "/pub/2003/07/01/regexps.html",
+   "url" : "/pub/2003/07/01/regexps.html",
    "draft" : null,
    "authors" : [
       "simon-cozens"

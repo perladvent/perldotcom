@@ -1,6 +1,6 @@
 {
    "description" : " This article is the third in a series aimed at building a full 3D engine in Perl. The first article started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The...",
-   "slug" : "/pub/2005/02/17/3d_engine.html",
+   "url" : "/pub/2005/02/17/3d_engine.html",
    "authors" : [
       "geoff-broadwell"
    ],

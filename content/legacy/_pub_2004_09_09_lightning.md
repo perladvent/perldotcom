@@ -7,7 +7,7 @@
    ],
    "draft" : null,
    "description" : " Simon Cozens Serendipity - it means those occasions when things come together to give you moments of inspiration. While preparing perl.com one week, I was editing an article on how to give lightning talks by Mark Fowler and at...",
-   "slug" : "/pub/2004/09/09/lightning.html",
+   "url" : "/pub/2004/09/09/lightning.html",
    "title" : "Lightning Articles",
    "image" : null,
    "categories" : "development",

@@ -14,7 +14,7 @@
    "authors" : [
       "simon-cozens"
    ],
-   "slug" : "/pub/2003/10/23/databases.html",
+   "url" : "/pub/2003/10/23/databases.html",
    "description" : " An Embarrassing Confession I'd like to think that I'm a reasonably decent Perl programmer now. I'd like to think that I have a good grasp of how to solve relatively common problems in Perl. But, you know, it hasn't..."
 }
 

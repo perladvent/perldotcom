@@ -11,7 +11,7 @@
       "simon-cozens"
    ],
    "draft" : null,
-   "slug" : "/pub/2003/06/06/regexps.html",
+   "url" : "/pub/2003/06/06/regexps.html",
    "description" : " Everyone knows that Perl works particularly well as a text processing language, and that it has a great many tools to help the programmer slice and dice text files. Most people know that Perl's regular expressions are the mainstay..."
 }
 

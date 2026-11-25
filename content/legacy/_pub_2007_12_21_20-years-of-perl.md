@@ -1,6 +1,6 @@
 {
    "description" : "For Perl's 20th anniversary, several Perl programmers reflect on their experiences with the language.",
-   "slug" : "/pub/2007/12/21/20-years-of-perl.html",
+   "url" : "/pub/2007/12/21/20-years-of-perl.html",
    "draft" : null,
    "authors" : [
       "chromatic"

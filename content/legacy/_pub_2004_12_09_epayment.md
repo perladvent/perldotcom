@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2004/12/09/epayment.html",
+   "url" : "/pub/2004/12/09/epayment.html",
    "description" : " In the summer of 2001, the State University of New York at Buffalo (UB) hired a new Provost. She surveyed various school services and came up with a short list of must-do projects. Given the level of competition in...",
    "authors" : [
       "jim-brandt"

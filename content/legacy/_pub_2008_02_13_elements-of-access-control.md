@@ -10,7 +10,7 @@
    "image" : null,
    "title" : "Elements of Access Control",
    "categories" : "security",
-   "slug" : "/pub/2008/02/13/elements-of-access-control.html",
+   "url" : "/pub/2008/02/13/elements-of-access-control.html",
    "description" : " Why Gates? In a perfect world we wouldn't do things we should not. However the world is not like this; people do forbidden things sometimes. This also applies to computer systems used by more than one person. Almost everyone...",
    "authors" : [
       "vladi-belperchinov-shabanski"

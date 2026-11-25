@@ -6,7 +6,7 @@
    "image" : null,
    "categories" : "unicode",
    "description" : "℞ 22: Match Unicode linebreak sequence in regex Unicode defines several characters as providing vertical whitespace, like the carriage return or newline characters. Unicode also gathers several characters under the banner of a linebreak sequence. A Unicode linebreak matches the...",
-   "slug" : "/pub/2012/05/perlunicook-match-unicode-linebreak-sequence.html",
+   "url" : "/pub/2012/05/perlunicook-match-unicode-linebreak-sequence.html",
    "draft" : null,
    "authors" : [
       "tom-christiansen"

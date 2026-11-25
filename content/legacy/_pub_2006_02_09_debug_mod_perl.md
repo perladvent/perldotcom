@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2006/02/09/debug_mod_perl.html",
+   "url" : "/pub/2006/02/09/debug_mod_perl.html",
    "description" : " Because of the added complexity of being inside of the Apache web server, debugging mod_perl applications is often not as straightforward as it is with regular Perl programs or CGIs. Is the problem with your code, Apache, a CPAN...",
    "authors" : [
       "frank-wiles"

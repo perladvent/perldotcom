@@ -16,7 +16,7 @@
       "damian-conway"
    ],
    "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. As soon as she walked through my door I knew her type: she was an argument waiting...",
-   "slug" : "/pub/2003/07/29/exegesis6.html"
+   "url" : "/pub/2003/07/29/exegesis6.html"
 }
 
 

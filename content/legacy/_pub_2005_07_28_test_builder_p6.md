@@ -3,7 +3,7 @@
       "chromatic"
    ],
    "draft" : null,
-   "slug" : "/pub/2005/07/28/test_builder_p6.html",
+   "url" : "/pub/2005/07/28/test_builder_p6.html",
    "description" : "Pugs let real people write real Perl 6 code. This article presents a case study of porting Perl's venerable Test::Builder to Perl 6.",
    "tags" : [
       "parrot",

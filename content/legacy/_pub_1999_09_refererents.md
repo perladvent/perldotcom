@@ -4,7 +4,7 @@
       "damian-conway"
    ],
    "description" : " Introduction Damian Conway is the author of the newly released Object Oriented Perl, the first of a new series of Perl books from Manning. Object-oriented programming in Perl is easy. Forget the heavy theory and the sesquipedalian jargon: classes...",
-   "slug" : "/pub/1999/09/refererents.html",
+   "url" : "/pub/1999/09/refererents.html",
    "title" : "Bless My Referents",
    "image" : null,
    "categories" : "development",

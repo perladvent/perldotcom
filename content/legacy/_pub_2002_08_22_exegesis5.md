@@ -11,7 +11,7 @@
    "authors" : [
       "damian-conway"
    ],
-   "slug" : "/pub/2002/08/22/exegesis5.html",
+   "url" : "/pub/2002/08/22/exegesis5.html",
    "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 5 for the current design information. Exegesis 5 What's the diff? Starting gently Lay it out for me Interpolate ye not ... The..."
 }
 

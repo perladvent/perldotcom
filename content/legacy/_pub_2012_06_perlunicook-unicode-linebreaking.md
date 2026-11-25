@@ -10,7 +10,7 @@
    ],
    "draft" : null,
    "description" : "℞ 41: Unicode linebreaking If you've ever tried to fit a large amount of text into a display area too narrow for the full width of the text, you've dealt with the joy of linebreaking (or word wrapping). As you...",
-   "slug" : "/pub/2012/06/perlunicook-unicode-linebreaking.html"
+   "url" : "/pub/2012/06/perlunicook-unicode-linebreaking.html"
 }
 
 

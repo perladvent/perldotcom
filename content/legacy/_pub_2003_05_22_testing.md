@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " Last time, we looked at writing a simple Apache output filter - Apache::Clean - using the mod_perl 2.0 API. How did I know that the filter I presented really worked? I wrote a test suite for it, one that...",
-   "slug" : "/pub/2003/05/22/testing.html",
+   "url" : "/pub/2003/05/22/testing.html",
    "thumbnail" : null,
    "tags" : [],
    "title" : "Testing mod_perl 2.0",

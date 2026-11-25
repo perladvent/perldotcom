@@ -15,7 +15,7 @@
       "chromatic"
    ],
    "draft" : null,
-   "slug" : "/pub/2010/07/welcome-rakudo-star.html",
+   "url" : "/pub/2010/07/welcome-rakudo-star.html",
    "description" : "The first Rakudo Star release is out, making Perl 6 available to a wider range of users.  Welcome to the new era of Perl."
 }
 

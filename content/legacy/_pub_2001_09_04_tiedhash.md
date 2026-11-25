@@ -3,7 +3,7 @@
       "dave-cross"
    ],
    "draft" : null,
-   "slug" : "/pub/2001/09/04/tiedhash.html",
+   "url" : "/pub/2001/09/04/tiedhash.html",
    "description" : " Introduction In my experience, hashes are just about the most useful built-in datatype that Perl has. They are useful for so many things - from simple lookup tables to complex data structures. And, of course, most Perl Objects have...",
    "categories" : "data",
    "title" : "Changing Hash Behaviour with tie",

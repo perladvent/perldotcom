@@ -1,6 +1,6 @@
 {
    "description" : " Notes Notes sigsetjmp wrangling continues Safe Signals Large file support wrangling continues Multiple Pre-Incrementing Test::Harness Megapatch Tokeniser reporting and pretty-printing Unicode Various You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com....",
-   "slug" : "/pub/2001/01/p5pdigest/THISWEEK-20010121.html",
+   "url" : "/pub/2001/01/p5pdigest/THISWEEK-20010121.html",
    "authors" : [
       "simon-cozens"
    ],

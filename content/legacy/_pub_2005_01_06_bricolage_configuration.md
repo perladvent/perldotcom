@@ -15,7 +15,7 @@
    ],
    "thumbnail" : null,
    "description" : " In my previous article, I provided a guided tour of the Bricolage installation process. If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as Mr. Popeil used to...",
-   "slug" : "/pub/2005/01/06/bricolage_configuration.html",
+   "url" : "/pub/2005/01/06/bricolage_configuration.html",
    "draft" : null,
    "authors" : [
       "david-wheeler"

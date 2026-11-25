@@ -1,6 +1,6 @@
 {
    "description" : "A year ago, at Yet Another Perl Conference North America 19100, both Perl-the-language and Perl-the-community seemed to be headed for trouble. Longtime Perl hackers spoke openly with concern at the apparent stagnation of Perl 5 development, and how the community...",
-   "slug" : "/pub/2001/06/21/yapcreport.html",
+   "url" : "/pub/2001/06/21/yapcreport.html",
    "draft" : null,
    "authors" : [
       "schuyler-erle"

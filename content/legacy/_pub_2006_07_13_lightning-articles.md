@@ -18,7 +18,7 @@
       "test-mockobject-extends",
       "user-interfaces"
    ],
-   "slug" : "/pub/2006/07/13/lightning-articles.html",
+   "url" : "/pub/2006/07/13/lightning-articles.html",
    "description" : "Using Module::Build, using Swing from Perl, turning modules into scripts, adding mocks to test fixtures-it's time for more Perl lightning articles!",
    "authors" : [
       "chromatic",

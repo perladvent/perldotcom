@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2002/04/30/cpants.html",
+   "url" : "/pub/2002/04/30/cpants.html",
    "description" : " &quot;This is a great war long-planned, and we are but one piece in it, whatever pride may say. ... And now, all realms shall be put to the test.&quot; - Beregond, &lt;&lt;Lord of the Rings&gt;&gt; Introduction In CPANPLUS -...",
    "authors" : [
       "autrijus-tang"

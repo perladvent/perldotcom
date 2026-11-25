@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2002/04/25/review.html",
+   "url" : "/pub/2002/04/25/review.html",
    "description" : "I always feel uneasy getting review copies of books like this; review copies of books are for me to look through, tell people how good or bad they are, and then sit on the shelf looking pretty. This book, essentially,...",
    "draft" : null,
    "authors" : [

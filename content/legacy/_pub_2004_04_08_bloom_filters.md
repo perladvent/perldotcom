@@ -1,6 +1,6 @@
 {
    "description" : "Anyone who has used Perl for any length of time is familiar with the lookup hash, a handy idiom for doing existence tests",
-   "slug" : "/pub/2004/04/08/bloom_filters.html",
+   "url" : "/pub/2004/04/08/bloom_filters.html",
    "draft" : null,
    "authors" : [
       "maciej-ceglowski"

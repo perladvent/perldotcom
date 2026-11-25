@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2000/03/p5pdigest/THISWEEK-20000305.html",
+   "url" : "/pub/2000/03/p5pdigest/THISWEEK-20000305.html",
    "description" : " Notes Meta-Information Brief Update Module Warnings POD Changes Race conditions in statndard Perl utilities open Calls not checked in perldoc Big Flame Wars Chip and Jarkko Quit Templates in pack and unpack use strict in the core modules Various...",
    "authors" : [
       "mark-jason-dominus"

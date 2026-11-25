@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991114.html",
+   "url" : "/pub/1999/11/p5pdigest/THISWEEK-19991114.html",
    "description" : " Notes Lexical variables and eval More About Line Disciplines link on WinNT Regex Optimization Threads on Solaris Regex Engine Reentrancy Big Files Continue Regexp Objects again Unicode Support on EBCDIC Machines Marshalling Modules Got Perl? localtime() has Another Bug!...",
    "authors" : [
       "mark-jason-dominus"

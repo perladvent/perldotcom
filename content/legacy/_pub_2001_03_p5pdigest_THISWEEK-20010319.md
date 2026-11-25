@@ -3,7 +3,7 @@
    "authors" : [
       "simon-cozens"
    ],
-   "slug" : "/pub/2001/03/p5pdigest/THISWEEK-20010319.html",
+   "url" : "/pub/2001/03/p5pdigest/THISWEEK-20010319.html",
    "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl5-porters-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Changes and additions to the perl5-porters...",
    "image" : null,
    "title" : "This Week on p5p 2001/03/19",

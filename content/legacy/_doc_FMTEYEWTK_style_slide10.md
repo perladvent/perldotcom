@@ -10,7 +10,7 @@
    "tags" : [],
    "date" : "1998-01-01T00:00:00-08:00",
    "thumbnail" : null,
-   "slug" : "/doc/FMTEYEWTK/style/slide10.html"
+   "url" : "/doc/FMTEYEWTK/style/slide10.html"
 }
 
 -   Perl's && and || operators short circuit like C's, but return different values: they return the first thing that resolves them.

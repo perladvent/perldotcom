@@ -3,7 +3,7 @@
       "mark-jason-dominus"
    ],
    "draft" : null,
-   "slug" : "/pub/2000/12/advocacy.html",
+   "url" : "/pub/2000/12/advocacy.html",
    "description" : null,
    "image" : null,
    "title" : "Why I Hate Advocacy",

@@ -3,7 +3,7 @@
    "authors" : [
       "tom-christiansen"
    ],
-   "slug" : "/pub/2012/05/perlunicook-reverse-string-by-grapheme.html",
+   "url" : "/pub/2012/05/perlunicook-reverse-string-by-grapheme.html",
    "description" : "℞ 32: Reverse string by grapheme Because bytes and characters are not isomorphic in Unicode&mdash;and what you may see as a user-visible character (a grapheme) is not necessarily a single codepoint in a Unicode string&mdash;every string operation must be aware...",
    "categories" : "unicode",
    "title" : "Perl Unicode Cookbook: Reverse String by Grapheme",

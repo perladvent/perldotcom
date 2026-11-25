@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2010/11/the-philosophy-of-webnano.html",
+   "url" : "/pub/2010/11/the-philosophy-of-webnano.html",
    "description" : "Why do so many web applications have the same components, yet so few actually share those components as libraries?  Perhaps the philosophy of building web frameworks is the culprit.  Zbigniew Lukasiak's WebNano is an attempt to solve that problem.",
    "authors" : [
       "zbigniew-lukasiak"

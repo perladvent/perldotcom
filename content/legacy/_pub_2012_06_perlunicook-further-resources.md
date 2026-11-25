@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2012/06/perlunicook-further-resources.html",
+   "url" : "/pub/2012/06/perlunicook-further-resources.html",
    "description" : "This series has shown you several features of Unicode by example, as well as several techniques for working with Unicode correctly and easily with recent releases of Perl 5. By now you know more than many programmers do about Unicode,...",
    "draft" : null,
    "authors" : [

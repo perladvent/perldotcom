@@ -3,7 +3,7 @@
    "authors" : [
       "simon-cozens"
    ],
-   "slug" : "/pub/2001/11/07/ooperl.html",
+   "url" : "/pub/2001/11/07/ooperl.html",
    "description" : " I've recently started learning to play the game of Go. Go and Perl have many things in common - the basic stuff of which they are made, the rules of the game, are relatively simple, and hide an amazing...",
    "tags" : [
       "object-oriented",

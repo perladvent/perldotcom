@@ -14,7 +14,7 @@
    ],
    "draft" : null,
    "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 7 for the current design information. What a piece of work is Perl 6! How noble in reason! How infinite in faculty! In...",
-   "slug" : "/pub/2004/02/27/exegesis7.html"
+   "url" : "/pub/2004/02/27/exegesis7.html"
 }
 
 

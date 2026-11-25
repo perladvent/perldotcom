@@ -10,7 +10,7 @@
       "walt-mankowski"
    ],
    "description" : " Everyone who has read the Camel Book knows that the three great virtues of programming are laziness, impatience and hubris. Most of the columns that appear here at www.perl.com have to do, in one way or another, with either...",
-   "slug" : "/pub/2000/10/footpool.html"
+   "url" : "/pub/2000/10/footpool.html"
 }
 
 

@@ -7,7 +7,7 @@
    "tags" : [
       "radiator-radius-commercial-enterprise"
    ],
-   "slug" : "/pub/2002/10/15/radiator.html",
+   "url" : "/pub/2002/10/15/radiator.html",
    "description" : " Are you fed up with those who think that commercial applications need to be written in an \"enterprise\" language such as Java or C++? While we're big fans of open source at Perl.com, we're bigger fans of Perl, and...",
    "draft" : null,
    "authors" : [

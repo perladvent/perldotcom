@@ -9,7 +9,7 @@
       "mvc"
    ],
    "description" : " When we last left our intrepid web developer, he had successfully set up an online sales catalogue in 11 lines of code. Now, however, he has to move on to turning this into a sales site with a shopping...",
-   "slug" : "/pub/2004/04/29/maypole.html",
+   "url" : "/pub/2004/04/29/maypole.html",
    "draft" : null,
    "authors" : [
       "simon-cozens"

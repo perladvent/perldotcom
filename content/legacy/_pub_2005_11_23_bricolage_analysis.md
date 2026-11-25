@@ -1,6 +1,6 @@
 {
    "description" : " Previous Perl.com articles have reviewed where Bricolage fits into the universe of content management systems and worked through Bricolage installation and Bricolage configuration. Now it's time to go through the steps required to model the structure of an existing...",
-   "slug" : "/pub/2005/11/23/bricolage_analysis.html",
+   "url" : "/pub/2005/11/23/bricolage_analysis.html",
    "draft" : null,
    "authors" : [
       "david-wheeler"

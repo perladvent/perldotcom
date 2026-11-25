@@ -9,7 +9,7 @@
       "simon-cozens"
    ],
    "draft" : null,
-   "slug" : "/pub/2000/11/p5pdigest/THISWEEK-20001127.html",
+   "url" : "/pub/2000/11/p5pdigest/THISWEEK-20001127.html",
    "description" : " Notes Regexp Engine SOCKS and Sockets for, map and grep Encode Licensing PERL5OPT Unicode on Big Iron Carp SvTEMP Locales and Floats Low-Hanging Fruit Miscellaneous Notes You can subscribe to an e-mail version of this summary by sending an..."
 }
 

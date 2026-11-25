@@ -3,7 +3,7 @@
    "authors" : [
       "dale-dougherty"
    ],
-   "slug" : "/pub/1999/06/activestate.html",
+   "url" : "/pub/1999/06/activestate.html",
    "description" : " If the good news is that the world's largest software company has recognized the value of Perl and they are willing to fund new Perl development, then you know the bad news. Microsoft has entered into a three-year agreement...",
    "categories" : "community",
    "image" : null,

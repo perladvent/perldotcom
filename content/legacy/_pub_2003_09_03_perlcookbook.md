@@ -16,7 +16,7 @@
       "nathan-torkington"
    ],
    "description" : " Editor's note: The new edition of Perl Cookbook has released, so this week we continue to highlight recipes-new to the second edition-for your sampling pleasure. This week's excerpts include recipes from Chapter 14 (\"Database Access\") and Chapter 18 (\"Internet...",
-   "slug" : "/pub/2003/09/03/perlcookbook.html"
+   "url" : "/pub/2003/09/03/perlcookbook.html"
 }
 
 

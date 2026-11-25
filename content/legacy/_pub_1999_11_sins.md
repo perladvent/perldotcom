@@ -5,7 +5,7 @@
    "categories" : "development",
    "image" : null,
    "title" : "Sins of Perl Revisited",
-   "slug" : "/pub/1999/11/sins.html",
+   "url" : "/pub/1999/11/sins.html",
    "description" : "Sins of Perl Revisited -> Sins of Perl Revisited Implicit Behaviors and Hidden Context Dependencies To Paren || ! To Paren? Global Variables References vs. Non-references No Prototypes No Compiler Support for I/O or Regex Objects Haphazard Exception Model New...",
    "authors" : [
       "mark-jason-dominus"

@@ -12,7 +12,7 @@
       "mark-jason-dominus"
    ],
    "description" : "What's wrong with this picture? -> What's wrong with this picture? Reading the Input Computing Average and Total Times Sort Order Printing the Report Red Flags Get Rid of Array Size Variables Use Compound Data Structures Instead of Variable Families...",
-   "slug" : "/pub/2000/04/raceinfo.html"
+   "url" : "/pub/2000/04/raceinfo.html"
 }
 
 

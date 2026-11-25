@@ -10,7 +10,7 @@
    ],
    "draft" : null,
    "description" : " Some Basic Concepts In order to understand what you might want to do with dates and times, it's good to have a handle on some basic concepts. Here are some terms that I'll be using in this article: datetime...",
-   "slug" : "/pub/2003/03/13/datetime.html"
+   "url" : "/pub/2003/03/13/datetime.html"
 }
 
 

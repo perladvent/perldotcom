@@ -3,7 +3,7 @@
       "brent-michalski"
    ],
    "draft" : null,
-   "slug" : "/pub/1998/08/show/day1.html",
+   "url" : "/pub/1998/08/show/day1.html",
    "description" : null,
    "thumbnail" : null,
    "tags" : [],

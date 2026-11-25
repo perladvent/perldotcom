@@ -1,6 +1,6 @@
 {
    "description" : "℞ 20: Unicode casing Unicode casing is very diﬀerent from ASCII casing. Some of the complexity of Unicode comes about because Unicode characters may change dramatically when changing from upper to lower case and back. For example, the Greek language...",
-   "slug" : "/pub/2012/05/perl-unicook-unicode-casing.html",
+   "url" : "/pub/2012/05/perl-unicook-unicode-casing.html",
    "draft" : null,
    "authors" : [
       "tom-christiansen"

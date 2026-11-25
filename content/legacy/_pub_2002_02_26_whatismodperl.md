@@ -12,7 +12,7 @@
    ],
    "draft" : null,
    "description" : " In this article, I'll give an initial introduction to mod_perl, make you want to give it a try and present a few examples of the well-known sites that are powered by mod_perl enabled Apache. What Is mod_perl? mod_perl is...",
-   "slug" : "/pub/2002/02/26/whatismodperl.html"
+   "url" : "/pub/2002/02/26/whatismodperl.html"
 }
 
 

@@ -9,7 +9,7 @@
    "draft" : null,
    "title" : "Perl Style: Reduce Complexity",
    "date" : "1998-01-01T00:00:00-08:00",
-   "slug" : "/doc/FMTEYEWTK/style/slide28.html",
+   "url" : "/doc/FMTEYEWTK/style/slide28.html",
    "thumbnail" : null
 }
 

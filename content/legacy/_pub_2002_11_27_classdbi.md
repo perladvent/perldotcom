@@ -1,6 +1,6 @@
 {
    "description" : " Several articles on Perl.com, including the recent Phrasebook Design Pattern, have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon's DBIx::Recordset article attempted to show how code dealing with databases can be made...",
-   "slug" : "/pub/2002/11/27/classdbi.html",
+   "url" : "/pub/2002/11/27/classdbi.html",
    "authors" : [
       "tony-bowden"
    ],

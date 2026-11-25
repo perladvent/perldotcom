@@ -1,6 +1,6 @@
 {
    "description" : "Accordingly to Merriam-Webster Online, \"flood\" means: 1: a rising and overflowing of a body of water especially onto normally dry land; 2: an overwhelming quantity or volume. In computer software there are very similar situations when an unpredictable and irregular...",
-   "slug" : "/pub/2004/11/11/floodcontrol.html",
+   "url" : "/pub/2004/11/11/floodcontrol.html",
    "authors" : [
       "vladi-belperchinov-shabanski"
    ],
