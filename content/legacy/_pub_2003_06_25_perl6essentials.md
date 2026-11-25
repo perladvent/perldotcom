@@ -5,7 +5,7 @@
       "dan-sugalski",
       "leopold-t-tsch"
    ],
-   "slug" : "/pub/2003/06/25/perl6essentials.html",
+   "url" : "/pub/2003/06/25/perl6essentials.html",
    "description" : " Editor's note: Perl 6 Essentials is the first book to offer a peek into the next major version of the Perl language. It covers the development of Perl 6 syntax as well as Parrot, the language-independent interpreter developed as...",
    "thumbnail" : "/images/_pub_2003_06_25_perl6essentials/111-perl_design.gif",
    "tags" : [

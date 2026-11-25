@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991121.html",
+   "url" : "/pub/1999/11/p5pdigest/THISWEEK-19991121.html",
    "description" : "This week on perl5-porters (15-21 November 1999) Notes XSLoader.pm Threads Shared Interpreter threads (the current model) Cloned interpreter threads (upcoming in 5.005_63) chomp() Threading and Regexes Safe::Hole PREPARE Marshalling Modules Local Address in LWP local()izing select() and chdir() Wandering Environment...",
    "authors" : [
       "mark-jason-dominus"

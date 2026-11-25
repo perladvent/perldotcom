@@ -8,7 +8,7 @@
    "image" : null,
    "categories" : "community",
    "description" : "As part of Mark-Jason Dominus's Lightning Talks at the 2001 O'Reilly Open Source Convention, Jon Bjornstad gave a talk about a Perl/Tk program he wrote to help a mute quadriplegic friend, Sue Simpson, speak and better use her computer. Jon's...",
-   "slug" : "/pub/2001/08/27/bjornstad.html",
+   "url" : "/pub/2001/08/27/bjornstad.html",
    "draft" : null,
    "authors" : [
       "dan-brian"

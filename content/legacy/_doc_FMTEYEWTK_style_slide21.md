@@ -8,7 +8,7 @@
    ],
    "description" : null,
    "image" : null,
-   "slug" : "/doc/FMTEYEWTK/style/slide21.html",
+   "url" : "/doc/FMTEYEWTK/style/slide21.html",
    "thumbnail" : null,
    "date" : "1998-01-01T00:00:00-08:00"
 }

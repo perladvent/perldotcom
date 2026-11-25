@@ -6,7 +6,7 @@
    "thumbnail" : null,
    "tags" : [],
    "description" : null,
-   "slug" : "/pub/2000/06/dougpatch.html",
+   "url" : "/pub/2000/06/dougpatch.html",
    "draft" : null,
    "authors" : [
       "simon-cozens"

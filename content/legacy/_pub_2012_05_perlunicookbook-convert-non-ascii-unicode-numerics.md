@@ -9,7 +9,7 @@
       "tom-christiansen"
    ],
    "draft" : null,
-   "slug" : "/pub/2012/05/perlunicookbook-convert-non-ascii-unicode-numerics.html",
+   "url" : "/pub/2012/05/perlunicookbook-convert-non-ascii-unicode-numerics.html",
    "description" : "℞ 28: Convert non-ASCII Unicode numerics Unicode digits encompass far more than the ASCII characters 0 - 9. Unless you've used /a or /aa, \\d matches more than ASCII digits only. That's good! Unfortunately, Perl's implicit string-to-number conversion does not..."
 }
 

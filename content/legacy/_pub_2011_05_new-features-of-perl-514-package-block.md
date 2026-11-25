@@ -1,6 +1,6 @@
 {
    "description" : "Perl 5.14 adds a package BLOCK declaration.",
-   "slug" : "/pub/2011/05/new-features-of-perl-514-package-block.html",
+   "url" : "/pub/2011/05/new-features-of-perl-514-package-block.html",
    "draft" : null,
    "authors" : [
       "chromatic"

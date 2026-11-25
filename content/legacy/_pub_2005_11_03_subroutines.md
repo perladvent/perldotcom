@@ -13,7 +13,7 @@
    "categories" : "development",
    "title" : "Making Sense of Subroutines",
    "image" : null,
-   "slug" : "/pub/2005/11/03/subroutines.html",
+   "url" : "/pub/2005/11/03/subroutines.html",
    "description" : " Editor's Note: This article has a followup in Advanced Subroutine Techniques. A subroutine (or routine, function, procedure, macro, etc.) is, at its heart, a named chunk of work. It's shorthand that allows you to think about your problem in...",
    "draft" : null,
    "authors" : [

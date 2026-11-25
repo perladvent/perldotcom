@@ -1,6 +1,6 @@
 {
    "description" : "℞ 40: Case- and accent-insensitive locale comparisons You now know how to compare Unicode strings while ignoring case and accent differences. This approach uses the standard Unicode collation algorithm. To perform a similar comparison while respecting a speciﬁc locale's rules,...",
-   "slug" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-locale-comparison.html",
+   "url" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-locale-comparison.html",
    "authors" : [
       "tom-christiansen"
    ],

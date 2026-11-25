@@ -10,7 +10,7 @@
    ],
    "thumbnail" : "/images/_pub_2001_10_23_damians/111-damian.jpg",
    "description" : " London.pm technical meetings are always inspiring events with top notch speakers. At our most recent gathering Richard Clamp and Mark Fowler gave us \"Wax::On, Wax::Off - how to become a Perl sensei\"; Paul Mison showed us how to make...",
-   "slug" : "/pub/2001/10/23/damians.html",
+   "url" : "/pub/2001/10/23/damians.html",
    "draft" : null,
    "authors" : [
       "piers-cawley"

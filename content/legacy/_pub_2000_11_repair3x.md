@@ -10,7 +10,7 @@
    ],
    "draft" : null,
    "description" : "What's Wrong With This Picture? -> Astute readers had a number of comments about last week's Program Repair Shop and Red Flags article. Control Flow Puzzle In the article, I had a section of code that looked like this: $_...",
-   "slug" : "/pub/2000/11/repair3x.html"
+   "url" : "/pub/2000/11/repair3x.html"
 }
 
 

@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2006/12/21/using-java-classes.html",
+   "url" : "/pub/2006/12/21/using-java-classes.html",
    "description" : " I started a new job recently to refocus my career from systems administration to web development. Part of that move meant using Java as my primary language at work and using a relatively new technology from the Java Community...",
    "draft" : null,
    "authors" : [

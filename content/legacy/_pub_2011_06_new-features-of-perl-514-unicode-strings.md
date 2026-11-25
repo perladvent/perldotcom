@@ -3,7 +3,7 @@
       "chromatic"
    ],
    "draft" : null,
-   "slug" : "/pub/2011/06/new-features-of-perl-514-unicode-strings.html",
+   "url" : "/pub/2011/06/new-features-of-perl-514-unicode-strings.html",
    "description" : "Perl 5.14 provides a new feature called unicode_strings to improve Unicode string handling.",
    "categories" : "development",
    "title" : "New Features of Perl 5.14: unicode_strings",

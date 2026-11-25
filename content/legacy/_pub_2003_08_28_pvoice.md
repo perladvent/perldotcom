@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2003/08/28/pvoice.html",
+   "url" : "/pub/2003/08/28/pvoice.html",
    "description" : " We use Perl for all kinds of things. Web development, data munging, system administration, even bioinformatics; most of us have used Perl for one of these situations. A few people use Perl for building end-user applications with graphical user...",
    "draft" : null,
    "authors" : [

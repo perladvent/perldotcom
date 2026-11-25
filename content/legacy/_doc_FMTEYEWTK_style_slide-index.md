@@ -9,7 +9,7 @@
    "title" : "Perl Style",
    "draft" : null,
    "date" : "1997-12-31T00:00:00-08:00",
-   "slug" : "/doc/FMTEYEWTK/style/slide-index.html",
+   "url" : "/doc/FMTEYEWTK/style/slide-index.html",
    "thumbnail" : null
 }
 

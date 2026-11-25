@@ -4,7 +4,7 @@
       "doug-sheppard"
    ],
    "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
-   "slug" : "/pub/2000/11/begperl2.html",
+   "url" : "/pub/2000/11/begperl2.html",
    "image" : null,
    "title" : "Beginner's Introduction to Perl - Part 2",
    "categories" : "development",

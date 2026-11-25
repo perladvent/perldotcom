@@ -10,7 +10,7 @@
    ],
    "draft" : null,
    "description" : " Notes sprintf Parameter Re-ordering The Dangers (and bugs) of Unicode Self-Tying Is Broken Configure Confused By Changing Architectures Encode Switch Various Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com....",
-   "slug" : "/pub/2000/10/p5pdigest/THISWEEK-20001030.html"
+   "url" : "/pub/2000/10/p5pdigest/THISWEEK-20001030.html"
 }
 
 

@@ -1,6 +1,6 @@
 {
    "date" : "1998-01-01T00:00:00-08:00",
-   "slug" : "/doc/FMTEYEWTK/style/slide39.html",
+   "url" : "/doc/FMTEYEWTK/style/slide39.html",
    "thumbnail" : null,
    "categories" : "programming-languages",
    "authors" : [

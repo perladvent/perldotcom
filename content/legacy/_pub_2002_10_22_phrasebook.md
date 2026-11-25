@@ -8,7 +8,7 @@
       "phrasebook-languages"
    ],
    "description" : " Have you ever written a Perl application that connects to a database? If so, then you probably faced a problem of having some code like: $statement = q(select isbn from book where title = 'Design Patterns'); $sth = $dbh-&gt;prepare($statement)...",
-   "slug" : "/pub/2002/10/22/phrasebook.html",
+   "url" : "/pub/2002/10/22/phrasebook.html",
    "authors" : [
       "rani-pinchuk"
    ],

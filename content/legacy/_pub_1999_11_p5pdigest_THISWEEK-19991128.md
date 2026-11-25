@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " Notes New Meta-Information Thread Model Discussion Discussion of Line Disciplines Continues Shadow Passwords Bugs in NT Perl Sockets? Run Out of File Descriptors Lexical Variable Leak Control-Backslash Bitwise Operators Taint Bug? next Outside a Block Quiet List Various Notes...",
-   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991128.html",
+   "url" : "/pub/1999/11/p5pdigest/THISWEEK-19991128.html",
    "title" : "This Week on p5p 1999/11/28",
    "image" : null,
    "categories" : "community",

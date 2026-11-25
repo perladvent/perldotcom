@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2003/09/10/bioinformatics.html",
+   "url" : "/pub/2003/09/10/bioinformatics.html",
    "description" : " James D. Tisdall is the author of the soon-to-be-released Mastering Perl for Bioinformatics. For some time now, the use of Perl in biology has been standard practice. Perl remains the most popular language among biologists for a multitude of...",
    "authors" : [
       "james-d-tisdall"

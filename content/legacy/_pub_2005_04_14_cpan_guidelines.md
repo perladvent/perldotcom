@@ -3,7 +3,7 @@
    "authors" : [
       "rob-kinyon"
    ],
-   "slug" : "/pub/2005/04/14/cpan_guidelines.html",
+   "url" : "/pub/2005/04/14/cpan_guidelines.html",
    "description" : " When you are planning to release a module to CPAN, one of your first tasks is figure out what OS, Perl version(s), and other environments you will and will not support. Often, the answers will come from what you...",
    "thumbnail" : "/images/_pub_2005_04_14_cpan_guidelines/111-good_mods.gif",
    "tags" : [

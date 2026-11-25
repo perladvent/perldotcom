@@ -17,7 +17,7 @@
       "philipp-janert"
    ],
    "description" : " The expression \"Embedded Database\" requires an explanation. A \"database\" is an application that allows the targeted retrieval of stored data - a log-file is not a database. By \"embedded\" I mean a database that does not run in a...",
-   "slug" : "/pub/2004/09/12/embedded.html"
+   "url" : "/pub/2004/09/12/embedded.html"
 }
 
 

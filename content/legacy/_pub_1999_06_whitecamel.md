@@ -3,7 +3,7 @@
       "perldotcom"
    ],
    "draft" : null,
-   "slug" : "/pub/1999/06/whitecamel.html",
+   "url" : "/pub/1999/06/whitecamel.html",
    "description" : " Coming soon - our nomination form for the first White Camel Awards. Let us know who you think has made outstanding contributions to Perl Advocacy, Perl User Groups, and the Perl Community. The White Camel awards will be presented...",
    "thumbnail" : null,
    "tags" : [

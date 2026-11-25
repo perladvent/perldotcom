@@ -4,7 +4,7 @@
       "abel-lin"
    ],
    "description" : " Data management is a critical and challenging aspect for any online resource. With exponentially growing data sizes and popularity of rich media, even small online resources must effectively manage and distribute a significant amount of data. Moreover, the peace...",
-   "slug" : "/pub/2008/04/08/using-amazon-s3-from-perl.html",
+   "url" : "/pub/2008/04/08/using-amazon-s3-from-perl.html",
    "categories" : "web",
    "title" : "Using Amazon S3 from Perl",
    "image" : null,

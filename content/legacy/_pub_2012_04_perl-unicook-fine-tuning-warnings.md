@@ -5,7 +5,7 @@
    "categories" : "unicode",
    "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],
-   "slug" : "/pub/2012/04/perl-unicook-fine-tuning-warnings.html",
+   "url" : "/pub/2012/04/perl-unicook-fine-tuning-warnings.html",
    "description" : "℞ 2: Fine-tuning Unicode warnings It's easy to get Unicode wrong, especially when handling user input and dealing with multiple encodings. Perl is happy to help you detect unexpected conditions of your data. Perl is also happy to let you...",
    "authors" : [
       "tom-christiansen"

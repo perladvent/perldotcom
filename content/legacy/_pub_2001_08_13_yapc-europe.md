@@ -9,7 +9,7 @@
    "authors" : [
       "jouke-visser"
    ],
-   "slug" : "/pub/2001/08/13/yapc-europe.html",
+   "url" : "/pub/2001/08/13/yapc-europe.html",
    "description" : " Last year Europe had its first Yet Another Perl Conference. Leon Brocard, Jon Peterson and Greg McCarroll did a marvellous job organizing this grassroots conference - themed \"The Art of Perl\" - from scratch within two months. For the..."
 }
 

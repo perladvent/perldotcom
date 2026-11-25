@@ -13,7 +13,7 @@
       "tom-christiansen"
    ],
    "description" : "In this excerpt from Programming Perl 4e, Tom Christiansen demonstrates that, in a Unicode world, sorting correctly can be trickier than you think.",
-   "slug" : "/pub/2011/08/whats-wrong-with-sort-and-how-to-fix-it.html"
+   "url" : "/pub/2011/08/whats-wrong-with-sort-and-how-to-fix-it.html"
 }
 
 

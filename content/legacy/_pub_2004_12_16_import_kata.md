@@ -13,7 +13,7 @@
    "categories" : "testing",
    "image" : null,
    "title" : "Perl Code Kata: Testing Imports",
-   "slug" : "/pub/2004/12/16/import_kata.html",
+   "url" : "/pub/2004/12/16/import_kata.html",
    "description" : "Want to get better at Perl? This short exercise helps you understand how modules import symbols into namespaces.",
    "draft" : null,
    "authors" : [

@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " In your time as a Perl programmer, it becomes almost inevitable that at some point you will have to manage in-memory tree structures of some sort. When you do this, it becomes important to be aware of how Perl...",
-   "slug" : "/pub/2002/08/07/proxyobject.html",
+   "url" : "/pub/2002/08/07/proxyobject.html",
    "image" : null,
    "title" : "Proxy Objects",
    "categories" : "development",

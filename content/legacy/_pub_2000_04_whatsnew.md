@@ -1,6 +1,6 @@
 {
    "description" : " Table of Contents &nbsp;&nbsp;&#149;&nbsp;Unicode - Perl goes&nbsp;&nbsp;&nbsp;&nbsp;international! &nbsp;&nbsp;&#149; Better Building &nbsp;&nbsp;&#149; Improved Compiler &nbsp;&nbsp;&#149; Version Tuples &nbsp;&nbsp;&#149; Lexical Warnings &nbsp;&nbsp;&#149; Lvaluable Subroutines &nbsp;&nbsp;&#149; Weak References &nbsp;&nbsp;&#149; POSIX Character&nbsp;&nbsp;&nbsp;&nbsp;Classes &nbsp;&nbsp;&#149; Miscellaneous Bits `Darn it, who spiked my coffee with water?!'...",
-   "slug" : "/pub/2000/04/whatsnew.html",
+   "url" : "/pub/2000/04/whatsnew.html",
    "draft" : null,
    "authors" : [
       "simon-cozens"

@@ -7,7 +7,7 @@
    "categories" : "development",
    "image" : null,
    "title" : "wxPerl: Another GUI for Perl",
-   "slug" : "/pub/2001/09/12/wxtutorial1.html",
+   "url" : "/pub/2001/09/12/wxtutorial1.html",
    "description" : "wxPerl? If you don't just use Perl for creating CGI scripts, you'll probably have to create some kind of front-end for your applications sooner or later. You might use the Curses library, but if you want a nice GUI, you...",
    "authors" : [
       "jouke-visser"

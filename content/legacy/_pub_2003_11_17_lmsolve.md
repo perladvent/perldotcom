@@ -7,7 +7,7 @@
    "tags" : [
       "games-puzzles-logic-maze"
    ],
-   "slug" : "/pub/2003/11/17/lmsolve.html",
+   "url" : "/pub/2003/11/17/lmsolve.html",
    "description" : " Suppose you encounter a (single-player) riddle or a puzzle that you don't know how to solve. Let's also suppose that this puzzle involves moving between several states of the board with an enumerable number of moves emerging from one...",
    "draft" : null,
    "authors" : [

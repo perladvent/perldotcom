@@ -7,7 +7,7 @@
    "title" : "The Perl You Need To Know",
    "image" : null,
    "categories" : "web",
-   "slug" : "/pub/2002/04/23/mod_perl.html",
+   "url" : "/pub/2002/04/23/mod_perl.html",
    "description" : " Introduction Before I delve into the details of mod_perl programming, it's probably a good idea to review some important Perl basics. You will discover these invaluable when you start coding for mod_perl. I will start with pure Perl notes...",
    "authors" : [
       "stas-bekman"

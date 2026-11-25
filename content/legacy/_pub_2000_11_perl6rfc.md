@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2000/11/perl6rfc.html",
+   "url" : "/pub/2000/11/perl6rfc.html",
    "description" : " Table of Contents Problems with Proposals of Major Changes Problems with Proposals of Minor Changes Miscellaneous Problems Overall Problems Bottom Line A Very Brief Summary Discussion of major changes is pointless in the absence of a familiarity with internals...",
    "draft" : null,
    "authors" : [

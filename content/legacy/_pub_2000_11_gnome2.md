@@ -10,7 +10,7 @@
       "simon-cozens"
    ],
    "description" : "Programming GNOME Applications with Perl, Part Two -> Table of Contents The Cookbook Application The Main Screen Columned Lists Displaying Recipes Where We Are, And Where We're Going Notes on the Last Article Last month's article examined how to create...",
-   "slug" : "/pub/2000/11/gnome2.html"
+   "url" : "/pub/2000/11/gnome2.html"
 }
 
 

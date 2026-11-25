@@ -9,7 +9,7 @@
    "image" : null,
    "title" : "Synopsis 3",
    "categories" : "perl-6",
-   "slug" : "/pub/2004/03/18/synopsis3.html",
+   "url" : "/pub/2004/03/18/synopsis3.html",
    "description" : "Operator Renaming Several operators have been given new names to increase clarity and better Huffman-code the language: -> becomes ., like the rest of the world uses. The string concatenation . becomes ~. Think of it as \"stitching\" the two...",
    "authors" : [
       "luke-palmer"

@@ -12,7 +12,7 @@
    ],
    "draft" : null,
    "description" : " Having purchased the $250 cookie recipe from Neiman-Marcus, Alice wants to send it to Bob, but keep it away from Eve, who snoops on everyone's network traffic from the cubicle down the hall. How can Perl help her? Ciphers...",
-   "slug" : "/pub/2001/07/10/crypto.html"
+   "url" : "/pub/2001/07/10/crypto.html"
 }
 
 

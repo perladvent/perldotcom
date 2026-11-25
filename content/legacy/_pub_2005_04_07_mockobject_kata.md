@@ -12,7 +12,7 @@
       "test-mockobject"
    ],
    "thumbnail" : null,
-   "slug" : "/pub/2005/04/07/mockobject_kata.html",
+   "url" : "/pub/2005/04/07/mockobject_kata.html",
    "description" : " The last Perl Code Kata was on DBD::Mock, a mock DBI driver which is useful for testing Perl DBI applications. This Kata delves once again into the world of mock objects, this time using the more general Test::MockObject module....",
    "draft" : null,
    "authors" : [

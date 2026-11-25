@@ -268,7 +268,7 @@ I'll have more in Part 2, where I'll delve into XML, JSON, and CSV.
 
 * [When to use grep, sed, Awk, Perl, etc](https://unix.stackexchange.com/q/303044/109046)
 
-* Dave Cross's [Perl Command-Line Options](https://www.perl.com/pub/2004/08/09/commandline.html/)
+* Dave Cross's [Perl Command-Line Options](https://www.perl.com/pub/2004/08/09/commandline.html)
 
 * [Pitfalls of reading file into shell variable](https://stackoverflow.com/q/7427262/4082052) and my blog post on [multiline fixed-string search and replace with cli tools](https://learnbyexample.github.io/multiline-search-and-replace/)
 

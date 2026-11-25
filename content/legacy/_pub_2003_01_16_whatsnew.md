@@ -12,7 +12,7 @@
    ],
    "draft" : null,
    "description" : " It's been nearly six months since the release of Perl 5.8.0, but many people still haven't upgraded to it. We'll take a look at some of the new features it provides and describe why you should investigate them yourself....",
-   "slug" : "/pub/2003/01/16/whatsnew.html"
+   "url" : "/pub/2003/01/16/whatsnew.html"
 }
 
 

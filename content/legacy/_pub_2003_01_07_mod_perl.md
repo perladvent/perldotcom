@@ -12,7 +12,7 @@
       "stas-bekman"
    ],
    "description" : " It's desirable to avoid forking under mod_perl, as when you do, you are forking the entire Apache server - lock, stock and barrel. Not only is your Perl code and Perl interpreter being duplicated, but so is mod_ssl, mod_rewrite,...",
-   "slug" : "/pub/2003/01/07/mod_perl.html"
+   "url" : "/pub/2003/01/07/mod_perl.html"
 }
 
 

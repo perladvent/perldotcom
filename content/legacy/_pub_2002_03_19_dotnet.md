@@ -1,6 +1,6 @@
 {
    "description" : " No, I haven't sold out; I haven't gone over to the dark side; I haven't been bought. I'm one of the last people to be using closed-source software by choice. But one of the traits of any self-respecting hacker...",
-   "slug" : "/pub/2002/03/19/dotnet.html",
+   "url" : "/pub/2002/03/19/dotnet.html",
    "draft" : null,
    "authors" : [
       "simon-cozens"

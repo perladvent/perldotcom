@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2000/04/p5pdigest/THISWEEK-20000423.html",
+   "url" : "/pub/2000/04/p5pdigest/THISWEEK-20000423.html",
    "description" : " Notes Meta-Information Brief Update p5p to become Refereed? perlretut and perlrequick Threading Hilarity Line Disciplines Older Discussion of Disciplines Big Line Numbers Pseudohash Field Names, Hash Performance, and map Performance C with Embedded Perl `Unreachable' code. sprintf Precision SDF...",
    "draft" : null,
    "authors" : [

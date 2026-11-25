@@ -12,7 +12,7 @@
    ],
    "draft" : null,
    "description" : " Jumbo shrimp, military intelligence - Visual Perl? ActiveState built its reputation by bringing Perl to the Windows platform, thereby extending the reach of Perl and the size and nature of the Perl community. However, regardless of the Windows port,...",
-   "slug" : "/pub/2002/02/05/visperl.html"
+   "url" : "/pub/2002/02/05/visperl.html"
 }
 
 

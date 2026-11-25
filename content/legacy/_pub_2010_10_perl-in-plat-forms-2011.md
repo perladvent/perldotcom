@@ -6,7 +6,7 @@
    "thumbnail" : null,
    "tags" : [],
    "description" : "Thanks to Lars Dɪᴇᴄᴋᴏᴡ for sending along this notice about the Plat_Forms 2011 web development contest. Unlike other comparisons of programming languages (such as the great unmaintainable speed-tweakers micromeasurement contest and This Is Odiously Bad Empiricism), Plat_Forms features real teams...",
-   "slug" : "/pub/2010/10/perl-in-plat-forms-2011.html",
+   "url" : "/pub/2010/10/perl-in-plat-forms-2011.html",
    "draft" : null,
    "authors" : [
       "chromatic"

@@ -3,7 +3,7 @@
    "authors" : [
       "joshua-gatcomb"
    ],
-   "slug" : "/pub/2005/06/16/iterators.html",
+   "url" : "/pub/2005/06/16/iterators.html",
    "description" : " The purpose of this tutorial is to give a general overview of what iterators are, why they are useful, how to build them, and things to consider to avoid common pitfalls. I intend to give the reader enough information...",
    "tags" : [
       "functional-perl",

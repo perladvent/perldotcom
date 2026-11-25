@@ -3,7 +3,7 @@
    "title" : "Enable Backtraces with Carp::Always (Modern Perl Tips)",
    "image" : null,
    "tags" : [],
-   "slug" : "/pub/2013/10/enable-backtraces-with-carpalways-modern-perl-tips.html",
+   "url" : "/pub/2013/10/enable-backtraces-with-carpalways-modern-perl-tips.html",
    "authors" : [
       "chromatic"
    ],

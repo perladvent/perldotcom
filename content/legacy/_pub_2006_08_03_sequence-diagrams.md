@@ -15,7 +15,7 @@
       "phil-crow"
    ],
    "draft" : null,
-   "slug" : "/pub/2006/08/03/sequence-diagrams.html",
+   "url" : "/pub/2006/08/03/sequence-diagrams.html",
    "description" : " Imagine yourself in a meeting with management. You're about to begin your third attempt to explain how to process online credit card payments. After a couple of sentences, you see some eyes glazing over. Someone says, \"Perhaps you could..."
 }
 

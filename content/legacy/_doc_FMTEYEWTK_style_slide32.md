@@ -1,6 +1,6 @@
 {
    "thumbnail" : null,
-   "slug" : "/doc/FMTEYEWTK/style/slide32.html",
+   "url" : "/doc/FMTEYEWTK/style/slide32.html",
    "date" : "1998-01-01T00:00:00-08:00",
    "title" : "Perl Style: Break Programs into Separate Processes",
    "draft" : null,

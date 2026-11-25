@@ -4,7 +4,7 @@
       "bryan-warnock"
    ],
    "description" : " 3 June 2001 Notes You can subscribe to an email version of this summary by sending an empty message to perl6-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl6-thisweek-YYYYMM@simon-cozens.org, where YYYYMM is the current year and month. It was a...",
-   "slug" : "/pub/2001/06/p6pdigest/THISWEEK-20010601.html",
+   "url" : "/pub/2001/06/p6pdigest/THISWEEK-20010601.html",
    "categories" : "perl-6",
    "title" : "This Week in Perl 6 (27 May - 2 June 2001)",
    "image" : null,

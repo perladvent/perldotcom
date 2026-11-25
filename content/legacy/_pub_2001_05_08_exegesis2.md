@@ -3,7 +3,7 @@
    "authors" : [
       "damian-conway"
    ],
-   "slug" : "/pub/2001/05/08/exegesis2.html",
+   "url" : "/pub/2001/05/08/exegesis2.html",
    "description" : "Exegesis 2 -> Editor's note: this document is out of date and remains here for historic interest. See Synopsis 2 for the current design information. exegesis: n. an interpretation and explanation of a text, esp. Holy Writ This is the...",
    "tags" : [
       "perl-6"

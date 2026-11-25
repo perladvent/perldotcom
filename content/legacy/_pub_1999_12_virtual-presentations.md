@@ -3,7 +3,7 @@
    "authors" : [
       "adam-turoff"
    ],
-   "slug" : "/pub/1999/12/virtual-presentations.html",
+   "url" : "/pub/1999/12/virtual-presentations.html",
    "description" : " This summer, at yapc in Pittsburgh and again at the third Perl Conference, I was very fortunate to meet with a lot of friends from other regional Perl Monger groups. A lot of our groups have similar problems and...",
    "categories" : "community",
    "title" : "Virtual Presentations with Perl",

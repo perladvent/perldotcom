@@ -1,6 +1,6 @@
 {
    "description" : " Notes Meta-Information 5.005_63 Released Development Continues on Ilya's Patches Regex Optimizations PREPARE XSLoader Change to xsubpp Path Location New Improved File::Find DB_File Locking Technique use Parameters in XS Module Initializations next in XS-invoked Perl subroutines -Dp improvement Log::Agent Getopt::Long...",
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991212.html",
+   "url" : "/pub/1999/12/p5pdigest/THISWEEK-19991212.html",
    "draft" : null,
    "authors" : [
       "mark-jason-dominus"

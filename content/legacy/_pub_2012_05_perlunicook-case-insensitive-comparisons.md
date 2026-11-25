@@ -9,7 +9,7 @@
    "authors" : [
       "tom-christiansen"
    ],
-   "slug" : "/pub/2012/05/perlunicook-case-insensitive-comparisons.html",
+   "url" : "/pub/2012/05/perlunicook-case-insensitive-comparisons.html",
    "description" : "℞ 21: Unicode case-insensitive comparisons Unicode is more than an expanded character set. Unicode is a set of rules about how characters behave and a set of properties about each character. Comparing strings for equivalence often requires normalizing them to..."
 }
 

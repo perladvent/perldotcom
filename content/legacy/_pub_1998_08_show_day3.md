@@ -10,7 +10,7 @@
    ],
    "draft" : null,
    "description" : null,
-   "slug" : "/pub/1998/08/show/day3.html"
+   "url" : "/pub/1998/08/show/day3.html"
 }
 
 

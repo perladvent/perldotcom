@@ -8,7 +8,7 @@
    ],
    "thumbnail" : null,
    "description" : " Regular Expressions are arguably one of Perl's most useful and powerful tools. The ability to match complex strings is one of the things that makes Perl the effective \"Practical Extraction and Reporting Language\" that it is. The regular expression...",
-   "slug" : "/pub/2001/05/01/expressions.html",
+   "url" : "/pub/2001/05/01/expressions.html",
    "draft" : null,
    "tags" : []
 }

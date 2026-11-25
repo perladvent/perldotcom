@@ -15,7 +15,7 @@
    ],
    "draft" : null,
    "description" : "Suppose that you want to load a module dynamically (you have the name in a scalar), then alias a function from that module to a new name in another class. In other words, you want a renaming import. How do...",
-   "slug" : "/pub/2010/03/perl5i-makes-more-simple-things-simple.html"
+   "url" : "/pub/2010/03/perl5i-makes-more-simple-things-simple.html"
 }
 
 

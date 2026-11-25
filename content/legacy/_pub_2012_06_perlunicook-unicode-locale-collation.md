@@ -10,7 +10,7 @@
       "tom-christiansen"
    ],
    "description" : "℞ 37: Unicode locale collation As you've already seen, Unicode-aware sorting respects Unicode character properties. You can't sort by codepoint and expect to get accurate results, not even if you stick with pure ASCII. The world is a complicated place....",
-   "slug" : "/pub/2012/06/perlunicook-unicode-locale-collation.html"
+   "url" : "/pub/2012/06/perlunicook-unicode-locale-collation.html"
 }
 
 

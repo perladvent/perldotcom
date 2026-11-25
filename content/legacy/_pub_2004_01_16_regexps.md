@@ -1,6 +1,6 @@
 {
    "description" : " For some, regular expressions provide the chainsaw functionality of the much-touted Perl \"Swiss Army knife\" metaphor. They are powerful, fast, and very sharp, but like real chainsaws, can be dangerous when used without appropriate safety measures. In this article...",
-   "slug" : "/pub/2004/01/16/regexps.html",
+   "url" : "/pub/2004/01/16/regexps.html",
    "authors" : [
       "aaron-mackey"
    ],

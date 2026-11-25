@@ -3,7 +3,7 @@
       "stevan-little"
    ],
    "draft" : null,
-   "slug" : "/pub/2005/02/10/database_kata.html",
+   "url" : "/pub/2005/02/10/database_kata.html",
    "description" : " Testing code that uses a database can be tricky. The most common solution is to set up a test database with test data and run your tests against this. This, of course, requires bookkeeping code to keep your test...",
    "categories" : "data",
    "image" : null,

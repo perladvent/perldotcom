@@ -16,7 +16,7 @@
       "roberto-alamos"
    ],
    "draft" : null,
-   "slug" : "/pub/2005/10/06/wxperl_menus.html",
+   "url" : "/pub/2005/10/06/wxperl_menus.html",
    "description" : " In a previous article about wxPerl published on Perl.com, Jouke Visser taught the very basics of wxPerl programming. In this article, I will continue with Jouke's work, explaining how to add menus in our wxPerl applications. I will cover..."
 }
 

@@ -15,7 +15,7 @@
       "mark-stosberg"
    ],
    "description" : " This article provides an update on the popular and mature CGI::Application framework for web applications. It assumes a basic understanding of the system, so reviewing the previous Perl.com article about CGI::Application may be helpful background reading. CGI::Application and Catalyst...",
-   "slug" : "/pub/2006/10/19/cgi_application.html"
+   "url" : "/pub/2006/10/19/cgi_application.html"
 }
 
 

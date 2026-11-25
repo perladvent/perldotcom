@@ -1,6 +1,6 @@
 {
    "description" : " Dr. Damian Conway is best known in the United States for authoring Object Oriented Perl, published by Manning. His lectures at Perl conferences are becoming legendary and are a joy for Perl hackers of all levels. I managed to...",
-   "slug" : "/pub/2000/08/conway.html",
+   "url" : "/pub/2000/08/conway.html",
    "authors" : [
       "joe-johnston"
    ],

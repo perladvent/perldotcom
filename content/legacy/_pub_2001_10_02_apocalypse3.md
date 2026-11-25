@@ -9,7 +9,7 @@
    "authors" : [
       "larry-wall"
    ],
-   "slug" : "/pub/2001/10/02/apocalypse3.html",
+   "url" : "/pub/2001/10/02/apocalypse3.html",
    "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 03 for the latest information. Table of Contents  RFC 025: Operators: Multiway comparisons  RFC 320: Allow grouping of -X file tests..."
 }
 

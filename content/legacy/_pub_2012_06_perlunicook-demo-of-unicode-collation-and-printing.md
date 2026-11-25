@@ -9,7 +9,7 @@
       "tom-christiansen"
    ],
    "draft" : null,
-   "slug" : "/pub/2012/06/perlunicook-demo-of-unicode-collation-and-printing.html",
+   "url" : "/pub/2012/06/perlunicook-demo-of-unicode-collation-and-printing.html",
    "description" : "℞ 44: PROGRAM: Demo of Unicode collation and printing The past several weeks of Unicode recipes have explained how Unicode works and shown how to use it in your programs. If you've gone through those recipes, you now understand more..."
 }
 

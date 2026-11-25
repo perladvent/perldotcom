@@ -6,7 +6,7 @@
    "thumbnail" : null,
    "tags" : [],
    "description" : " Notes Object creation and destruction More cool PerlIO stuff What to do with bugs UV Preserving Arithmetic Code checkers Precedence Reminder about the FAQ Various Notes You can subscribe to an email version of this summary by sending an...",
-   "slug" : "/pub/2000/12/p5pdigest/THISWEEK-20001217.html",
+   "url" : "/pub/2000/12/p5pdigest/THISWEEK-20001217.html",
    "authors" : [
       "simon-cozens"
    ],

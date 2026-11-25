@@ -6,7 +6,7 @@
    "thumbnail" : null,
    "tags" : [],
    "description" : " Notes glob case-sensitivity Perl under UNICOS New perlthread man page Threading and explicit unlocking Threading and Regexes pack t Template Happy Birthday CPAN! Local Address in LWP Return of ref prototype $^O sort improvements Shell.pm enhancements. Time Zone Output...",
-   "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991031.html",
+   "url" : "/pub/1999/10/p5pdigest/THISWEEK-19991031.html",
    "draft" : null,
    "authors" : [
       "mark-jason-dominus"

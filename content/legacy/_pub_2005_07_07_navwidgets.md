@@ -11,7 +11,7 @@
    "image" : null,
    "title" : "Building Navigation Menus",
    "categories" : "web",
-   "slug" : "/pub/2005/07/07/navwidgets.html",
+   "url" : "/pub/2005/07/07/navwidgets.html",
    "description" : " Navigation menus are a group of links given at one side of the page that allows users to navigate to different places of a website. Navigation menus allow site visitors to explore other pages of the site and to...",
    "draft" : null,
    "authors" : [

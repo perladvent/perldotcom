@@ -6,7 +6,7 @@
    "tags" : [],
    "thumbnail" : null,
    "description" : " Notes Line Disciplines Continue Ben Tilly Fixes map Gack! Big Bug in 5.6 More pack Options IPC::BashEm perldiag Re-alphabetized Poor Diagnosis of sort Errors glob() function not documented Overloading Assignment POSIX Character Classes First Cite for 'Perl'? Various Notes...",
-   "slug" : "/pub/2000/04/p5pdigest/THISWEEK-20000430.html",
+   "url" : "/pub/2000/04/p5pdigest/THISWEEK-20000430.html",
    "authors" : [
       "mark-jason-dominus"
    ],

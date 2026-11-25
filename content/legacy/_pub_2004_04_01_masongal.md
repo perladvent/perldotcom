@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2004/04/01/masongal.html",
+   "url" : "/pub/2004/04/01/masongal.html",
    "description" : " Creating a photo gallery is usually considered a daunting task. Lots of people have tried it, not many have succeeded. One of the reasons for so many similar projects is that they don't often integrate well into an existing...",
    "authors" : [
       "casey-west"

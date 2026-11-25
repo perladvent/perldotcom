@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/1998/08/show/perl-photos.html",
+   "url" : "/pub/1998/08/show/perl-photos.html",
    "description" : null,
    "authors" : [
       "joseph-f-ryan"

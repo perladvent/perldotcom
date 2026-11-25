@@ -1,6 +1,6 @@
 {
    "description" : null,
-   "slug" : "/pub/1998/08/show/day4.html",
+   "url" : "/pub/1998/08/show/day4.html",
    "draft" : null,
    "authors" : [
       "brent-michalski"

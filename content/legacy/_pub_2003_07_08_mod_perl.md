@@ -1,6 +1,6 @@
 {
    "description" : " Scratching Your Own Itch Some time ago I became intrigued with Digest authentication, which uses the same general mechanism as the familiar Basic authentication scheme but offers significantly more password security without requiring an SSL connection. At the time...",
-   "slug" : "/pub/2003/07/08/mod_perl.html",
+   "url" : "/pub/2003/07/08/mod_perl.html",
    "authors" : [
       "geoffrey-young"
    ],

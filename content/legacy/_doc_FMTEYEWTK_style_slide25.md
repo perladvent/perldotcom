@@ -9,7 +9,7 @@
    "title" : "Perl Style: Using A Hash Instead of $$name",
    "draft" : null,
    "date" : "1998-01-01T00:00:00-08:00",
-   "slug" : "/doc/FMTEYEWTK/style/slide25.html",
+   "url" : "/doc/FMTEYEWTK/style/slide25.html",
    "thumbnail" : null
 }
 

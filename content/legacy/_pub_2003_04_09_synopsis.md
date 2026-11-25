@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2003/04/09/synopsis.html",
+   "url" : "/pub/2003/04/09/synopsis.html",
    "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. This document summarizes Apocalypse 6, which covers subroutines and the new type system. Subroutines and Other Code...",
    "authors" : [
       "damian-conway",

@@ -10,7 +10,7 @@
       "arun-udaya-shankar"
    ],
    "description" : " The main goal of this article is to discuss in detail about exception handling in Perl and how to implement it using Error.pm. On our way, we'll be touching upon the advantages of using exception-handling over traditional error-handling mechanisms,...",
-   "slug" : "/pub/2002/11/14/exception.html"
+   "url" : "/pub/2002/11/14/exception.html"
 }
 
 

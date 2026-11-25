@@ -12,7 +12,7 @@
       "symbolic-references"
    ],
    "description" : " Having almost achieved the state of perfect laziness, one of my favorite modules is Class::DBI::mysql. It makes MySQL database tables seem like classes, and their rows like objects. This completely relieves me from using SQL in most cases. This...",
-   "slug" : "/pub/2005/03/17/symtables.html",
+   "url" : "/pub/2005/03/17/symtables.html",
    "draft" : null,
    "authors" : [
       "phil-crow"

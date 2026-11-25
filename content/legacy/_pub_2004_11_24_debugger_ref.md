@@ -3,7 +3,7 @@
    "authors" : [
       "richard-foley"
    ],
-   "slug" : "/pub/2004/11/24/debugger_ref.html",
+   "url" : "/pub/2004/11/24/debugger_ref.html",
    "description" : "Perl's debugger is powerful but somewhat esoteric. The core perldebtut tutorial is a good introduction, but who wants to skim through pages of documentation when you only need a quick refresher on the syntax of a command? Let this printable...",
    "categories" : "debugging",
    "title" : "Perl Debugger Quick Reference",

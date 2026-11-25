@@ -10,7 +10,7 @@
       "simon-cozens"
    ],
    "description" : "> Notes Fixing the Regexp Engine UTF8 and Charnames PerlIO (again) =head3 (again) New subs.pm Congratulations Various Notes You can subscribe to an e-mail version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections and additions...",
-   "slug" : "/pub/2000/11/p5pdigest/THISWEEK-20001120.html"
+   "url" : "/pub/2000/11/p5pdigest/THISWEEK-20001120.html"
 }
 
 

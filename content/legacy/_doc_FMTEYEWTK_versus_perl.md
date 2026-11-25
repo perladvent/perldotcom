@@ -5,7 +5,7 @@
    "categories" : "programming-languages",
    "image" : null,
    "title" : "The Seven Deadly Sins of Perl",
-   "slug" : "/doc/FMTEYEWTK/versus/perl.html",
+   "url" : "/doc/FMTEYEWTK/versus/perl.html",
    "description" : "advocatus diaboli",
    "authors" : [
       "tom-christiansen"

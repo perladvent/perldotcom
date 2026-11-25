@@ -1,6 +1,6 @@
 {
    "description" : " Andy Duncan is the co-author of Perl for Oracle DBAs. My coauthor, Jared Still, and I had the task of writing a book, Perl for Oracle DBAs, about two of our favorite subjects, Perl and Oracle. Our goal was...",
-   "slug" : "/pub/2002/09/04/perlfororacle.html",
+   "url" : "/pub/2002/09/04/perlfororacle.html",
    "draft" : null,
    "authors" : [
       "andy-duncan"

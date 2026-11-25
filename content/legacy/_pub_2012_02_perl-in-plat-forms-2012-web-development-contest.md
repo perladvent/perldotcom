@@ -8,7 +8,7 @@
    "title" : "Perl in Plat_Forms 2012 Web Development Contest",
    "categories" : "community",
    "description" : "Thanks to Lars Dɪᴇᴄᴋᴏᴡ for coordinating entries into the Plat_Forms 2012 web development contest. This annual contest pits some of the best developers of frameworks and languages against each other to solve real problems. Perl developers have participated for several...",
-   "slug" : "/pub/2012/02/perl-in-plat-forms-2012-web-development-contest.html",
+   "url" : "/pub/2012/02/perl-in-plat-forms-2012-web-development-contest.html",
    "authors" : [
       "chromatic"
    ],

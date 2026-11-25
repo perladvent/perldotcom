@@ -9,7 +9,7 @@
       "tom-christiansen"
    ],
    "draft" : null,
-   "slug" : "/pub/2012/05/perlunicook-match-unicode-grapheme-cluster-in-regex.html",
+   "url" : "/pub/2012/05/perlunicook-match-unicode-grapheme-cluster-in-regex.html",
    "description" : "℞ 29: Match Unicode grapheme cluster in regex In the days of ASCII, we spoke of characters and bytes. We saw few differences between them. In the Unicode world, characters are far more than seven bits of data. Far better..."
 }
 

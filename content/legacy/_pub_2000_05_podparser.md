@@ -3,7 +3,7 @@
       "brad-appleton"
    ],
    "draft" : null,
-   "slug" : "/pub/2000/05/podparser.html",
+   "url" : "/pub/2000/05/podparser.html",
    "description" : "Pod::Parser Notes -> Some of my co-workers noticed the p5p weekly summary discussing (among other things) Pod::Parser. They mentioned it to me, and said they thought it cast me in an unfavorable light. So I'd like to clear up a...",
    "tags" : [],
    "thumbnail" : null,

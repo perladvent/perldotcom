@@ -5,7 +5,7 @@
    "image" : null,
    "tags" : [],
    "thumbnail" : null,
-   "slug" : "/pub/2001/02/p5pdigest/THISWEEK-20010206.html",
+   "url" : "/pub/2001/02/p5pdigest/THISWEEK-20010206.html",
    "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Wow. 600 messages this week, and...",
    "draft" : null,
    "authors" : [

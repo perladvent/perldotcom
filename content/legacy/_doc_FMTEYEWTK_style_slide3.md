@@ -1,7 +1,7 @@
 {
    "date" : "1998-01-01T00:00:00-08:00",
    "thumbnail" : null,
-   "slug" : "/doc/FMTEYEWTK/style/slide3.html",
+   "url" : "/doc/FMTEYEWTK/style/slide3.html",
    "image" : null,
    "description" : null,
    "authors" : [

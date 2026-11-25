@@ -20,7 +20,7 @@
    ],
    "draft" : null,
    "description" : " You use Perl at work. Sometimes you are unhappy because there is one application you always have to click on and fill all those input boxes. It's very boring. Why not let Perl do that while you go grab...",
-   "slug" : "/pub/2005/08/11/win32guitest.html"
+   "url" : "/pub/2005/08/11/win32guitest.html"
 }
 
 

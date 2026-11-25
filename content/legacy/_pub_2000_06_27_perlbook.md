@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " There are a huge number of books out there about Perl. A quick search on Amazon reveals 362 books; allowing for false positives and books where Perl is a minor part, I'd conservatively estimate there to be over 250 books...",
-   "slug" : "/pub/2000/06/27/perlbook.html",
+   "url" : "/pub/2000/06/27/perlbook.html",
    "thumbnail" : null,
    "tags" : [],
    "image" : null,

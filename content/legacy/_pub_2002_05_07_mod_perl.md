@@ -7,7 +7,7 @@
    "image" : null,
    "title" : "The Perl You Need To Know - Part 2",
    "categories" : "web",
-   "slug" : "/pub/2002/05/07/mod_perl.html",
+   "url" : "/pub/2002/05/07/mod_perl.html",
    "description" : " Introduction In this article, we continue to talk about the essential Perl basics that you should know before starting to program for mod_perl. Tracing Warnings Reports Sometimes it's hard to understand what a warning is complaining about. You see...",
    "draft" : null,
    "authors" : [

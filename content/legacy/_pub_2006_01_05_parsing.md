@@ -16,7 +16,7 @@
    ],
    "draft" : null,
    "description" : " s/(?&lt;!SHOOTING YOURSELF IN THE )FOOT/HEAD/g Most of us have tried at one time or another to use regular expressions to do things we shouldn't: parsing HTML, obfuscating code, washing dishes, etc. This is what the technical term \"showing off\"...",
-   "slug" : "/pub/2006/01/05/parsing.html"
+   "url" : "/pub/2006/01/05/parsing.html"
 }
 
 

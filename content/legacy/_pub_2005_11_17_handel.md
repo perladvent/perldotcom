@@ -1,6 +1,6 @@
 {
    "description" : " Over the years of doing various levels of web-based programming, I've come feel like Dante taking a trip through the nine circles of web programmer hell. There are certain things we must endure over and over, from project to...",
-   "slug" : "/pub/2005/11/17/handel.html",
+   "url" : "/pub/2005/11/17/handel.html",
    "authors" : [
       "christopher-h-laco"
    ],

@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " Let's face it. procmail is horrid. But for most of us, it's the only sensible way to handle mail filtering. I used to tolerate procmail, with its grotesque syntax and its less-than-helpful error messages, because it was the only...",
-   "slug" : "/pub/2001/07/17/mailfiltering.html",
+   "url" : "/pub/2001/07/17/mailfiltering.html",
    "categories" : "security",
    "image" : null,
    "title" : "Mail Filtering with Mail::Audit",

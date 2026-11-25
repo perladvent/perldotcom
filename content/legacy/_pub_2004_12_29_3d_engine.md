@@ -13,7 +13,7 @@
       "perl-opengl",
       "perl-sdl"
    ],
-   "slug" : "/pub/2004/12/29/3d_engine.html",
+   "url" : "/pub/2004/12/29/3d_engine.html",
    "description" : " This article is the second in a series aimed at building a full 3D engine in Perl. The first article, Building a 3D Engine in Perl, covered basic program structure, opening an OpenGL window using SDL, basic projection and...",
    "authors" : [
       "geoff-broadwell"

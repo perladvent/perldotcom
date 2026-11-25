@@ -9,7 +9,7 @@
    "categories" : "community",
    "title" : "A New Edition of www.perl.com",
    "image" : null,
-   "slug" : "/pub/1999/07/newperl.html",
+   "url" : "/pub/1999/07/newperl.html",
    "description" : " I'd like to welcome you to this new edition of www.perl.com and tell you about some of the changes we made to the site. Easier Navigation We simplified the navigation menu so that it's easy to find the site's...",
    "draft" : null,
    "authors" : [

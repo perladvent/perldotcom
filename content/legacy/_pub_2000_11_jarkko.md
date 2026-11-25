@@ -6,7 +6,7 @@
    "tags" : [],
    "thumbnail" : null,
    "description" : " (This is a slightly edited and expanded version of the reply I sent to perl6-meta@perl.org spurred by Mark-Jason Dominus sending the URL to his critique on the Perl 6 RFC process.) I agree partly on Mark-Jason Dominus' critique, but...",
-   "slug" : "/pub/2000/11/jarkko.html",
+   "url" : "/pub/2000/11/jarkko.html",
    "draft" : null,
    "authors" : [
       "jarkko-hietaniemi"

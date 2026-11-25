@@ -3,7 +3,7 @@
       "ivan-tubert-brohman"
    ],
    "draft" : null,
-   "slug" : "/pub/2005/06/30/annocpan.html",
+   "url" : "/pub/2005/06/30/annocpan.html",
    "description" : " AnnoCPAN is a new website that shows the documentation for every Perl module available on CPAN and allows anyone to post annotations in the margins of the documents. The notes are public, so everyone can read and reuse them...",
    "tags" : [
       "annocpan",

@@ -3,7 +3,7 @@
    "authors" : [
       "jean-louis-leroy"
    ],
-   "slug" : "/pub/2005/12/21/a_timely_start.html",
+   "url" : "/pub/2005/12/21/a_timely_start.html",
    "description" : " This article is a follow-up to the lightning talk I delivered at the recent YAPC::Europe 2005 that took place in Braga, Portugal: \"Perl Vs. Korn Shell: 1-1.\" I presented two case studies taken from my experience as Perl expert...",
    "image" : null,
    "title" : "A Timely Start",

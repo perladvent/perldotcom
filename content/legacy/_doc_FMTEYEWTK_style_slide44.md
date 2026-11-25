@@ -1,5 +1,5 @@
 {
-   "slug" : "/doc/FMTEYEWTK/style/slide44.html",
+   "url" : "/doc/FMTEYEWTK/style/slide44.html",
    "thumbnail" : null,
    "date" : "1998-01-01T00:00:00-08:00",
    "tags" : [],

@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2012/05/perlunicook-specify-a-files-encoding.html",
+   "url" : "/pub/2012/05/perlunicook-specify-a-files-encoding.html",
    "description" : "℞ 19: Open ﬁle with speciﬁc encoding While setting the default Unicode encoding for IO is sensible, sometimes the default encoding is not correct. In this case, specify the encoding for a filehandle manually in the mode option to open...",
    "authors" : [
       "tom-christiansen"

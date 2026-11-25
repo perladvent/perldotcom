@@ -5,7 +5,7 @@
    "categories" : "community",
    "thumbnail" : "/images/_pub_2001_06_12_anti_begin/111-perl-attitude.jpg",
    "tags" : [],
-   "slug" : "/pub/2001/06/12/anti_begin.html",
+   "url" : "/pub/2001/06/12/anti_begin.html",
    "description" : "A recent article here, Turning the Tides of Perl's Attitude Toward Beginners,\" described places on the Internet where beginners could get help without fear of being flamed mercilessly by insensitive, elitist Perl experts. Experienced programmers, in short, must be more...",
    "authors" : [
       "robert-kiesling"

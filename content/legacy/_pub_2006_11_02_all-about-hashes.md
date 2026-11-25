@@ -4,7 +4,7 @@
       "simon-cozens"
    ],
    "description" : " When I teach about hashes, I do what most Perl tutors and tutorials do: I introduce the hash as a \"dictionary\": a mapping between one thing and another. The classic example, for instance, is to have a set of...",
-   "slug" : "/pub/2006/11/02/all-about-hashes.html",
+   "url" : "/pub/2006/11/02/all-about-hashes.html",
    "tags" : [
       "hash-tables",
       "hashes",

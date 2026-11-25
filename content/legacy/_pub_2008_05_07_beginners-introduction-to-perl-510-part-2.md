@@ -17,7 +17,7 @@
    ],
    "draft" : null,
    "description" : " A Beginner's Introduction to Perl 5.10 talked about the core elements of Perl: variables (scalars, arrays, and hashes), math operators and some basic flow control (the for statement). Now it's time to interact with the world. (A Beginner's Introduction...",
-   "slug" : "/pub/2008/05/07/beginners-introduction-to-perl-510-part-2.html"
+   "url" : "/pub/2008/05/07/beginners-introduction-to-perl-510-part-2.html"
 }
 
 

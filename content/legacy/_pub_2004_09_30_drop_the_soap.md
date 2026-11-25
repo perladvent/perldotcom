@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2004/09/30/drop_the_soap.html",
+   "url" : "/pub/2004/09/30/drop_the_soap.html",
    "description" : "SOAP has great hype; portable, simple, efficient, flexible, and open, SOAP has it all. According to many intelligent people, writing a web service with SOAP should be a snap, and the results will speak for themselves. So they do, although...",
    "authors" : [
       "sam-tregar"

@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2012/04/perlunicook-unicode-named-character-sequences.html",
+   "url" : "/pub/2012/04/perlunicook-unicode-named-character-sequences.html",
    "description" : "℞ 9: Unicode named sequences Unicode includes the feature of named character sequences, which combine multiple Unicode characters behind a single name. The charnames pragma allows the use of these named sequences in literals, just as it allows the use...",
    "draft" : null,
    "authors" : [

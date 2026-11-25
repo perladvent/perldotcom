@@ -4,7 +4,7 @@
       "stas-bekman"
    ],
    "description" : " Stas Bekman is a coauthor of O'Reilly's upcoming Practical mod_perl. It's important to be able to monitor your production system's health. You want to monitor the memory and file system utilization, the system load, how much memory the processes...",
-   "slug" : "/pub/2003/04/02/mod_perl.html",
+   "url" : "/pub/2003/04/02/mod_perl.html",
    "image" : null,
    "title" : "Apache::VMonitor - The Visual System and Apache Server Monitor",
    "categories" : "web",

@@ -13,7 +13,7 @@
    "authors" : [
       "jeffrey-goff"
    ],
-   "slug" : "/pub/2004/07/09/xplane.html",
+   "url" : "/pub/2004/07/09/xplane.html",
    "description" : " X-Plane is an ultra-realistic flight simulator used by aviation pioneers like Burt Rutan, who uses it in his simulator for SpaceShipOne. The latest revision sports a flight model so accurate that the FAA has decided that your time spent..."
 }
 

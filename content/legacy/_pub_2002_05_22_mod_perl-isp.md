@@ -8,7 +8,7 @@
    ],
    "thumbnail" : null,
    "description" : "Introduction In this article we will talk about the nuances of providing mod_perl services and present a few ISPs that successfully provide them. You installed mod_perl on your box at home, and you fell in love with it. So now...",
-   "slug" : "/pub/2002/05/22/mod_perl-isp.html",
+   "url" : "/pub/2002/05/22/mod_perl-isp.html",
    "draft" : null,
    "authors" : [
       "stas-bekman"

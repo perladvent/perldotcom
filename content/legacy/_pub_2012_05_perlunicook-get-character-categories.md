@@ -10,7 +10,7 @@
    ],
    "draft" : null,
    "description" : "℞ 23: Get character category Unicode is a set of characters and a list of rules and properties applied to those characters. The Unicode Character Database collects those properties. The core module Unicode::UCD provides access to these properties. These general...",
-   "slug" : "/pub/2012/05/perlunicook-get-character-categories.html"
+   "url" : "/pub/2012/05/perlunicook-get-character-categories.html"
 }
 
 

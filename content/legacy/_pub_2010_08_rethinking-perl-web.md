@@ -10,7 +10,7 @@
       "web"
    ],
    "description" : "Modern Perl developments provide better capabilities for abstraction and reusable code.  Rethinking a project more than a decade old with modern techniques demonstrates how much Perl has improved-and how far it could go.",
-   "slug" : "/pub/2010/08/rethinking-perl-web.html",
+   "url" : "/pub/2010/08/rethinking-perl-web.html",
    "draft" : null,
    "authors" : [
       "chromatic"

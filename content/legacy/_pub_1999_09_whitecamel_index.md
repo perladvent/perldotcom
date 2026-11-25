@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/1999/09/whitecamel/index.html",
+   "url" : "/pub/1999/09/whitecamel/index.html",
    "description" : " The Perl Conference brought us the first \"White Camel\" awards. The White Camel Awards were created to honor individuals who devote remarkable creativity, energy, and time to the non-technical work that supports Perl's active and loyal user community. The...",
    "draft" : null,
    "authors" : [

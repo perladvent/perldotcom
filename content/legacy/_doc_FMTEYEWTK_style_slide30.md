@@ -9,7 +9,7 @@
    "draft" : null,
    "title" : "Perl Style: Loop Hoisting",
    "date" : "1998-01-01T00:00:00-08:00",
-   "slug" : "/doc/FMTEYEWTK/style/slide30.html",
+   "url" : "/doc/FMTEYEWTK/style/slide30.html",
    "thumbnail" : null
 }
 

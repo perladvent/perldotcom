@@ -1,6 +1,6 @@
 {
    "description" : " Author's note: Autrijus Tang is a speaker at this October's European Open Source Convention. In the fine tradition of the OSCON, he is a Perl hacker, entrepreneur, internationalization geek, and self-proclaimed \"Net activist, artist, and anarchist.\" AT EuroOSCON, Tang...",
-   "slug" : "/pub/2005/09/08/autrijus-tang.html",
+   "url" : "/pub/2005/09/08/autrijus-tang.html",
    "authors" : [
       "edd-dumbill"
    ],

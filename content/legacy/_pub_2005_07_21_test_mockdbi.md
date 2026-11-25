@@ -12,7 +12,7 @@
       "test-mockdbi"
    ],
    "thumbnail" : "/images/_pub_2005_07_21_test_mockdbi/111-mock_db.gif",
-   "slug" : "/pub/2005/07/21/test_mockdbi.html",
+   "url" : "/pub/2005/07/21/test_mockdbi.html",
    "description" : " Prelude How do you test DBI programs: Without having to modify your current program code or environment settings? Without having to set up multiple test databases? Without separating your test data from your test code? With tests for every...",
    "authors" : [
       "mark-leighton-fisher"

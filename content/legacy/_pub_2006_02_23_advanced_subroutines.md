@@ -15,7 +15,7 @@
    ],
    "draft" : null,
    "description" : " In \"Making Sense of Subroutines,\" I wrote about what subroutines are and why you want to use them. This article expands on that topic, discussing some of the more common techniques for subroutines to make them even more useful....",
-   "slug" : "/pub/2006/02/23/advanced_subroutines.html"
+   "url" : "/pub/2006/02/23/advanced_subroutines.html"
 }
 
 

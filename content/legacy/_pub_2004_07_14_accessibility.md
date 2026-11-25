@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " Last year Perl.com published an article about pVoice. You learned what pVoice is, why it was built, and where it was supposed to go. Maybe you wanted to do something for disabled people yourself, by writing something like a...",
-   "slug" : "/pub/2004/07/14/accessibility.html",
+   "url" : "/pub/2004/07/14/accessibility.html",
    "thumbnail" : null,
    "tags" : [
       "accessible",

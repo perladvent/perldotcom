@@ -9,7 +9,7 @@
    "authors" : [
       "doug-sheppard"
    ],
-   "slug" : "/pub/2000/11/begperl3.html",
+   "url" : "/pub/2000/11/begperl3.html",
    "description" : "s/// and m// -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's..."
 }
 

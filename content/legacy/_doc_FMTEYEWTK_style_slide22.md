@@ -9,7 +9,7 @@
    "draft" : null,
    "title" : "Perl Style: Use foreach() Loops",
    "date" : "1998-01-01T00:00:00-08:00",
-   "slug" : "/doc/FMTEYEWTK/style/slide22.html",
+   "url" : "/doc/FMTEYEWTK/style/slide22.html",
    "thumbnail" : null
 }
 

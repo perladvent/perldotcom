@@ -17,7 +17,7 @@
    ],
    "draft" : null,
    "description" : "Perl's taint mode can help you avoid using untrusted input insecurely. Here's how to practice using it.",
-   "slug" : "/pub/2004/10/21/taint_testing_kata.html"
+   "url" : "/pub/2004/10/21/taint_testing_kata.html"
 }
 
 

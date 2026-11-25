@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : "Update: Perl Profiling has evolved since this article was written, please see http://www.perl.org/about/whitepapers/perl-profiling.html for the latest information. Everyone wants their Perl code to run faster. Unfortunately, without understanding why the code is taking so long to start with, it's impossible...",
-   "slug" : "/pub/2004/06/25/profiling.html",
+   "url" : "/pub/2004/06/25/profiling.html",
    "thumbnail" : "/images/_pub_2004_06_25_profiling/111-profiling.gif",
    "tags" : [
       "optimization",

@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2003/06/19/treasures.html",
+   "url" : "/pub/2003/06/19/treasures.html",
    "description" : " In the previous hidden treasures article, we looked at some easy-to-use (but not well-known) modules in the Perl Core. In this article, we dig deeper to uncover some of the truly precious and unique gems in the Perl Core....",
    "authors" : [
       "casey-west"

@@ -11,7 +11,7 @@
       "pdf-reuse"
    ],
    "description" : " Adobe's PDF has become a standard for text documents. Most office products can export their content into PDF. However, this software reaches its limits if you want advanced tasks such as combining different PDF documents into one single document...",
-   "slug" : "/pub/2007/09/20/pdf-processing-with-perl.html",
+   "url" : "/pub/2007/09/20/pdf-processing-with-perl.html",
    "authors" : [
       "detlef-groth"
    ],

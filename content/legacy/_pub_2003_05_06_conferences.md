@@ -8,7 +8,7 @@
       "conferences-yapc-tpc-oscon"
    ],
    "description" : " The season of Perl conferences is almost upon us! In fact, the first of the YAPCs for this year is in less than a week. So I thought this would be a good time to give a tour of...",
-   "slug" : "/pub/2003/05/06/conferences.html",
+   "url" : "/pub/2003/05/06/conferences.html",
    "draft" : null,
    "authors" : [
       "simon-cozens"

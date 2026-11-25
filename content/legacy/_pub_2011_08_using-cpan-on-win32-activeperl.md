@@ -4,7 +4,7 @@
       "chromatic"
    ],
    "description" : "Christian Walde demonstrates that even ActivePerl users on Windows can use CPAN-out of the box.",
-   "slug" : "/pub/2011/08/using-cpan-on-win32-activeperl.html",
+   "url" : "/pub/2011/08/using-cpan-on-win32-activeperl.html",
    "title" : "Using CPAN on Win32 ActivePerl",
    "image" : null,
    "categories" : "windows",

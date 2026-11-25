@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2002/06/26/synopsis5.html",
+   "url" : "/pub/2002/06/26/synopsis5.html",
    "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 5 for the current design information. A summary of the changes in Apocalypse 5: Unchanged features Capturing: (...) Repetition quantifiers: *, +, and...",
    "authors" : [
       "damian-conway",

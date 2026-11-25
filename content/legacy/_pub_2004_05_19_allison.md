@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2004/05/19/allison.html",
+   "url" : "/pub/2004/05/19/allison.html",
    "description" : " This week, perl.com has the pleasure of interviewing Allison Randal, one of the key figures in the Perl community. Allison has been active in the Perl 6 design process since its inception, and is the President of the Perl...",
    "authors" : [
       "simon-cozens"

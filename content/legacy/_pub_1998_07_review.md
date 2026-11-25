@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " Overview: Perl Builder, by Solutionsoft, is the first integrated development environment (IDE) for Perl. It allows you to develop and test Perl applications in a Windows 95/98/NT environment. Test Equipment: I tested Perl Builder on a machine with a...",
-   "slug" : "/pub/1998/07/review.html",
+   "url" : "/pub/1998/07/review.html",
    "thumbnail" : null,
    "tags" : [
       "ide",

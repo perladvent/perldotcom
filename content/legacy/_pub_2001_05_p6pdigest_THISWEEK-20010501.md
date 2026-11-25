@@ -6,7 +6,7 @@
    "tags" : [],
    "thumbnail" : null,
    "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl6-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl6-thisweek-YYYYMM@simon-cozens.org, where YYYYMM is the current year and month. It's been two months since we've...",
-   "slug" : "/pub/2001/05/p6pdigest/THISWEEK-20010501.html",
+   "url" : "/pub/2001/05/p6pdigest/THISWEEK-20010501.html",
    "authors" : [
       "bryan-warnock"
    ],

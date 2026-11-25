@@ -4,7 +4,7 @@
       "dale-dougherty"
    ],
    "description" : " How to Make Perl The Language of Choice for XML Perl has been the language of choice for anyone doing serious text processing. Now efforts are underway to make Perl the language of choice for those doing \"structured\" text...",
-   "slug" : "/pub/1998/06/perl-xml.html",
+   "url" : "/pub/1998/06/perl-xml.html",
    "tags" : [
       "languages",
       "perl",

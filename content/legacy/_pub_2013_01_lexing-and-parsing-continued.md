@@ -2,7 +2,7 @@
    "title" : "Lexing and Parsing Continued",
    "image" : null,
    "tags" : [],
-   "slug" : "/pub/2013/01/lexing-and-parsing-continued.html",
+   "url" : "/pub/2013/01/lexing-and-parsing-continued.html",
    "authors" : [
       "ron-savage"
    ],

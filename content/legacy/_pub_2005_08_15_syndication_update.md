@@ -10,7 +10,7 @@
       "perldotcom"
    ],
    "description" : "O'Reilly Media, Inc. is rolling out a new syndication mechanism that provides greater control over the content we publish online. You'll notice some improvements immediately, such as better standards compliance, graphical tiles accompanying article descriptions, and enclosure support for podcatching...",
-   "slug" : "/pub/2005/08/15/syndication_update.html"
+   "url" : "/pub/2005/08/15/syndication_update.html"
 }
 
 

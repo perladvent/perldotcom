@@ -9,7 +9,7 @@
    "authors" : [
       "tom-christiansen"
    ],
-   "slug" : "/pub/2012/06/perlunicook-unicode-text-in-dbm-files-the-easy-way.html",
+   "url" : "/pub/2012/06/perlunicook-unicode-text-in-dbm-files-the-easy-way.html",
    "description" : "℞ 43: Unicode text in DBM hashes, the easy way Some Perl libraries require you to jump through hoops to handle Unicode data. Would that everything worked as easily as Perl's open pragma! For DBM files, here's how to implicitly..."
 }
 

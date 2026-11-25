@@ -1,6 +1,6 @@
 {
    "description" : " Perl 6 will soon be here. How will programming in Perl 6 be different from programming in Perl 5 for your average Perl programmer? The answer is: very different yet very much the same. A Perl 6 program viewed...",
-   "slug" : "/pub/2007/05/10/everyday-perl-6.html",
+   "url" : "/pub/2007/05/10/everyday-perl-6.html",
    "authors" : [
       "jonathan-scott-duff"
    ],

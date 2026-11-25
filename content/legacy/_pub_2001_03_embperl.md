@@ -10,7 +10,7 @@
    ],
    "thumbnail" : null,
    "description" : " Table of Contents Getting Started Hello World Web Site Global Variables Modular Files Modular File Inheritance Subroutines in EmbperlObject Conclusions This tutorial is intended as a complement to the Embperl documentation, not a replacement. We assume a basic familiarity...",
-   "slug" : "/pub/2001/03/embperl.html",
+   "url" : "/pub/2001/03/embperl.html",
    "authors" : [
       "neil-gunton"
    ],

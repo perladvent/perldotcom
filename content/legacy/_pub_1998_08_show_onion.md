@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/1998/08/show/onion.html",
+   "url" : "/pub/1998/08/show/onion.html",
    "description" : null,
    "authors" : [
       "larry-wall"

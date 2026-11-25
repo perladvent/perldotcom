@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " I have recently been working on an installation package for the Microsoft Windows series of operating systems (Windows 2000 and newer). One of the primary components of this installation package is the installation of ActiveState's distribution of Perl, known...",
-   "slug" : "/pub/2007/01/11/painless-ppm.html",
+   "url" : "/pub/2007/01/11/painless-ppm.html",
    "image" : null,
    "title" : "Painless Windows Module Installation with PPM",
    "categories" : "windows",

@@ -15,7 +15,7 @@
    "title" : "Building a 3D Engine in Perl, Part 4",
    "categories" : "games",
    "description" : " This article is the fourth in a series aimed at building a full 3D engine in Perl. The first article started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The...",
-   "slug" : "/pub/2005/08/04/3d_engine.html",
+   "url" : "/pub/2005/08/04/3d_engine.html",
    "draft" : null,
    "authors" : [
       "geoff-broadwell"

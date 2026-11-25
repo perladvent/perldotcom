@@ -3,7 +3,7 @@
    "authors" : [
       "robert-spier"
    ],
-   "slug" : "/pub/2002/09/17/ewispp.html",
+   "url" : "/pub/2002/09/17/ewispp.html",
    "description" : " As with most of my previous articles, this one grew out of a project at my $DAY_JOB. The project du-jour involves large dependency graphs, often containing thousands of nodes and edges. Some of the relationships are automatically generated and...",
    "tags" : [],
    "thumbnail" : "/images/_pub_2002_09_17_ewispp/111-webservers.gif",

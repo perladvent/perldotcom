@@ -3,7 +3,7 @@
       "alptekin-cakircali"
    ],
    "draft" : null,
-   "slug" : "/pub/2005/05/19/wireless_gw.html",
+   "url" : "/pub/2005/05/19/wireless_gw.html",
    "description" : " You have set up and configured various wireless access devices, but could not find one that included all of the features you needed. You could wait for a firmware upgrade from your manufacturer, hoping that they will include the...",
    "thumbnail" : "/images/_pub_2005_05_19_wireless_gw/111-wifi_gate.gif",
    "tags" : [

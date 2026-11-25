@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2005/01/13/phalanx.html",
+   "url" : "/pub/2005/01/13/phalanx.html",
    "description" : "Imagine a city protected by a small army of soldiers. The city's future growth requires a larger force; so a few determined lieutenants go to nearby towns and enlist aid from their police departments. These forces will come to the...",
    "draft" : null,
    "authors" : [

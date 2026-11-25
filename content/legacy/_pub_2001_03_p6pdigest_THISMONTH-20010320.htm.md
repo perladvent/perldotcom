@@ -10,7 +10,7 @@
    ],
    "draft" : null,
    "description" : null,
-   "slug" : "/pub/2001/03/p6pdigest/THISMONTH-20010320.htm"
+   "url" : "/pub/2001/03/p6pdigest/THISMONTH-20010320.htm"
 }
 
 

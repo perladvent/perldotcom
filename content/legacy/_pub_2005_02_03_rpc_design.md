@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " Sometimes data processing is better when separated into different processes that may run on the same machine or even on different ones. This is the well-known client-server technique. You can do it using a known protocol (such as http)...",
-   "slug" : "/pub/2005/02/03/rpc_design.html",
+   "url" : "/pub/2005/02/03/rpc_design.html",
    "tags" : [
       "algorithm-floodcontrol",
       "event-processing",

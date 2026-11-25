@@ -10,7 +10,7 @@
       "tom-christiansen"
    ],
    "description" : "To handle Unicode effectively, always decompose on the way in, then\nrecompose on the way out.",
-   "slug" : "/pub/2012/04/perl-unicode-cookbook-always-decompose-and-recompose.html"
+   "url" : "/pub/2012/04/perl-unicode-cookbook-always-decompose-and-recompose.html"
 }
 
 

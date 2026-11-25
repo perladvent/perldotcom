@@ -1,6 +1,6 @@
 {
    "description" : " When I last reviewed a Perl IDE, ActiveState's Komodo, I was nearly convinced; the only problem was that I use Mac OS X. Now, Late Night Software, more commonly known for their AppleScript tools, have taken their Mac programming...",
-   "slug" : "/pub/2004/05/14/affrus.html",
+   "url" : "/pub/2004/05/14/affrus.html",
    "draft" : null,
    "authors" : [
       "simon-cozens"

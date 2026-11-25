@@ -15,7 +15,7 @@
    "authors" : [
       "jeff-horwitz"
    ],
-   "slug" : "/pub/2004/12/22/mod_parrot.html",
+   "url" : "/pub/2004/12/22/mod_parrot.html",
    "description" : " It's been almost nine years since the first release of mod_perl, and it remains a very powerful tool for writing web applications and extending the capabilities of the Apache web server. However, lurking around the corner is Perl 6,..."
 }
 

@@ -1,6 +1,6 @@
 {
    "description" : "Objects and Modules -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's...",
-   "slug" : "/pub/2000/12/begperl5.html",
+   "url" : "/pub/2000/12/begperl5.html",
    "authors" : [
       "doug-sheppard"
    ],

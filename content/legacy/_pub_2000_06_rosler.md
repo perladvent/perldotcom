@@ -3,7 +3,7 @@
    "authors" : [
       "joe-johnston"
    ],
-   "slug" : "/pub/2000/06/rosler.html",
+   "url" : "/pub/2000/06/rosler.html",
    "description" : " An Interview with HP's Larry Rosler Larry Rosler was both editor of the draft standard and chairman of the Language Subcommittee for X3J11. He helped put 'ANSI' in front of C. He is also just another Perl hacker. Larry...",
    "thumbnail" : null,
    "tags" : [],

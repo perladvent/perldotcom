@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2004/05/28/testing.html",
+   "url" : "/pub/2004/05/28/testing.html",
    "description" : "Recently, Perl trainer and former perl.com editor Mark-Jason Dominus revived his Quiz of the Week mailing list; every week, subscribers are sent a Perl task of either \"regular\" or \"expert\" level. There are no prizes, but the submitted solutions are...",
    "draft" : null,
    "authors" : [

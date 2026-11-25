@@ -1,6 +1,6 @@
 {
    "description" : " Now that Content Management with Bricolage has piqued your interest, you might be wondering what you need to do to install it. I'll be the first to admit that installing Bricolage is not trivial, given that it requires several...",
-   "slug" : "/pub/2004/10/28/bricolage_installation.html",
+   "url" : "/pub/2004/10/28/bricolage_installation.html",
    "draft" : null,
    "authors" : [
       "david-wheeler"

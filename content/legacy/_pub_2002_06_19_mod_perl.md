@@ -3,7 +3,7 @@
       "stas-bekman"
    ],
    "draft" : null,
-   "slug" : "/pub/2002/06/19/mod_perl.html",
+   "url" : "/pub/2002/06/19/mod_perl.html",
    "description" : " In this article we will talk about tools that we need before we can start working on the performance of our service. Essential Tools In order to improve performance, we need measurement tools. The main tool categories are benchmarking...",
    "categories" : "web",
    "image" : null,

@@ -15,7 +15,7 @@
       "jt-smith"
    ],
    "draft" : null,
-   "slug" : "/pub/2011/04/writing-on-walls-with-facebookgraph.html",
+   "url" : "/pub/2011/04/writing-on-walls-with-facebookgraph.html",
    "description" : "JT Smith shows how to write Facebook applications with offline permissions to post to user walls with Perl and Facebook::Graph."
 }
 

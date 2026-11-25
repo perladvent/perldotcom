@@ -1,6 +1,6 @@
 {
    "description" : " First, a disclaimer. I'm not a wiki celebrity. I don't look good in StudlyCaps. I'm not part of the wiki culture — I've never contributed to Ward's Wiki, never used TWiki, am baffled by MoinMoin, and every time I...",
-   "slug" : "/pub/2003/10/31/openguides.html",
+   "url" : "/pub/2003/10/31/openguides.html",
    "draft" : null,
    "authors" : [
       "kake-pugh"

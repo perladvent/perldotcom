@@ -1,6 +1,6 @@
 {
    "description" : " In this article we will continue the topic started in the previous article. This time we talk about tools that help us with code profiling and memory usage measuring. Code Profiling Techniques The profiling process helps you to determine...",
-   "slug" : "/pub/2002/07/16/mod_perl.html",
+   "url" : "/pub/2002/07/16/mod_perl.html",
    "authors" : [
       "stas-bekman"
    ],

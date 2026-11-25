@@ -12,7 +12,7 @@
    ],
    "draft" : null,
    "description" : "Maybe you've heard about closures; they're one of those aspects of Perl - like object-oriented programming - that everyone raves about and you can't really see the big deal until you play around with them and then they just click....",
-   "slug" : "/pub/2002/05/29/closure.html"
+   "url" : "/pub/2002/05/29/closure.html"
 }
 
 

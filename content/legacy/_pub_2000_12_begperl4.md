@@ -3,7 +3,7 @@
       "doug-sheppard"
    ],
    "draft" : null,
-   "slug" : "/pub/2000/12/begperl4.html",
+   "url" : "/pub/2000/12/begperl4.html",
    "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
    "title" : "Beginners Intro to Perl - Part 4",
    "image" : null,

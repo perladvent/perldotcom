@@ -16,7 +16,7 @@
    ],
    "draft" : null,
    "description" : " -> The e-smith server and gateway system is a Linux distribution designed for small to medium enterprises. It's intended to simplify the process of setting up Internet and file-sharing services and can be administered by a non-technical user with...",
-   "slug" : "/pub/2001/02/esmith.html"
+   "url" : "/pub/2001/02/esmith.html"
 }
 
 

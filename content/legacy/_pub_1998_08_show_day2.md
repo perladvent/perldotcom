@@ -4,7 +4,7 @@
       "brent-michalski"
    ],
    "description" : null,
-   "slug" : "/pub/1998/08/show/day2.html",
+   "url" : "/pub/1998/08/show/day2.html",
    "thumbnail" : null,
    "tags" : [],
    "title" : "Day 2: Perl Mongers at The Conference",

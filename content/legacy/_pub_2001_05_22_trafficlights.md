@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : " Michael Schwern will be speaking at the O'Reilly Open Source Convention in San Diego, CA, July 23-27, 2001. Excuse me, I'm going to ramble a bit about traffic lights as they relate to language design to see whether something...",
-   "slug" : "/pub/2001/05/22/trafficlights.html",
+   "url" : "/pub/2001/05/22/trafficlights.html",
    "thumbnail" : null,
    "tags" : [
       "design",

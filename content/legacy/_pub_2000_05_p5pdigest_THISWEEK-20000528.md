@@ -6,7 +6,7 @@
    "thumbnail" : null,
    "tags" : [],
    "description" : " Notes Regex Engine Enhancements eq and UTF8 operator Caching of the get*by* Functions Forbidden Declarations Continued Perl in the News readonly Pragma Continues Magical Autoincrement Doctor, Doctor, it Hurts When I Do This! use strict 'formatting' Complex Expressions in...",
-   "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000528.html",
+   "url" : "/pub/2000/05/p5pdigest/THISWEEK-20000528.html",
    "authors" : [
       "mark-jason-dominus"
    ],

@@ -4,7 +4,7 @@
    ],
    "draft" : null,
    "description" : "Driving Windows DNS Server If you happen to manage a DNS server running on Windows 2000 or Windows 2003 with more than just a couple of dozen resource records on it, you've probably already hit the limits of the MMC...",
-   "slug" : "/pub/2005/03/24/perl_dns.html",
+   "url" : "/pub/2005/03/24/perl_dns.html",
    "title" : "Automating Windows (DNS) with Perl",
    "image" : null,
    "categories" : "windows",

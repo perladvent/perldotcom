@@ -3,7 +3,7 @@
       "james-d-tisdall"
    ],
    "draft" : null,
-   "slug" : "/pub/2001/11/16/perlbio2.html",
+   "url" : "/pub/2001/11/16/perlbio2.html",
    "description" : " The Perl programming language is popular with biologists because of its practicality. In my book, Beginning Perl for Bioinformatics, I demonstrate how many of the things biologists want to write programs for are readily-even enjoyably-accomplished with Perl. My book...",
    "thumbnail" : "/images/_pub_2001_11_16_perlbio2/111-perlprotein-ls.gif",
    "tags" : [

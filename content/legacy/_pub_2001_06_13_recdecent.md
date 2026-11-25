@@ -6,7 +6,7 @@
    "image" : null,
    "categories" : "programming-languages",
    "description" : " The Basics Parse::RecDescent is a combination compiler and interpreter. The language it uses can be thought of roughly as a macro language like CPP's, but the macros take no parameters. This may seem limiting, but the technique is very...",
-   "slug" : "/pub/2001/06/13/recdecent.html",
+   "url" : "/pub/2001/06/13/recdecent.html",
    "authors" : [
       "jeffrey-goff"
    ],

@@ -4,7 +4,7 @@
       "chromatic"
    ],
    "description" : "Thanks to Torsten Raudssus, who wrote in with this announcement. What is Plat_Forms? Plat_Forms is a contest and competition in which top-class teams of three programmers compete to implement the same requirements for a web-based system within two days, using...",
-   "slug" : "/pub/2012/08/show-off-perl-in-plat-forms-2012.html",
+   "url" : "/pub/2012/08/show-off-perl-in-plat-forms-2012.html",
    "image" : null,
    "title" : "Show off Perl in Plat_Forms 2012",
    "categories" : "community",

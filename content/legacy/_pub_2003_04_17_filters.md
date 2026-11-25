@@ -1,6 +1,6 @@
 {
    "description" : " Not too long ago, despite a relative dearth of free tuits, I decided that I had put off my investigation of mod_perl 2.0 for too long - it was time to really start kicking the tires and tinkering with...",
-   "slug" : "/pub/2003/04/17/filters.html",
+   "url" : "/pub/2003/04/17/filters.html",
    "draft" : null,
    "authors" : [
       "geoffrey-young"

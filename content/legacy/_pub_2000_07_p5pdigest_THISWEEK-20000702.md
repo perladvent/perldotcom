@@ -9,7 +9,7 @@
       "mark-jason-dominus"
    ],
    "draft" : null,
-   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000702.html",
+   "url" : "/pub/2000/07/p5pdigest/THISWEEK-20000702.html",
    "description" : " Notes More Unicode Unicode Handling HOWTO Unicode Regex Matching I18N FAQ Normalization Simon Stops Working on Unicode Speeding up method lookups my __PACKAGE__ $foo cfgperl Missing Methods Signals on Windows New File::Spec Another depressing regex engine bug s/// Appears..."
 }
 

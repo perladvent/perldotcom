@@ -1,6 +1,6 @@
 {
    "description" : " Correct configuration of the MinSpareServers, MaxSpareServers, StartServers, MaxClients, and MaxRequestsPerChild parameters is very important. There are no defaults. If they are too low, then you will underutilize the system's capabilities. If they are too high, then chances are that...",
-   "slug" : "/pub/2003/02/05/mod_perl.html",
+   "url" : "/pub/2003/02/05/mod_perl.html",
    "authors" : [
       "stas-bekman"
    ],

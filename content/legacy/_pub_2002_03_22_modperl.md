@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2002/03/22/modperl.html",
+   "url" : "/pub/2002/03/22/modperl.html",
    "description" : " Introduction In the previous article, I've shown quite amazing Web performance reports from companies that have deployed mod_perl heavily. You might be surprised but you can quite easily get similarly amazing results if you move your service to mod_perl...",
    "draft" : null,
    "authors" : [

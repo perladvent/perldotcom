@@ -8,7 +8,7 @@
       "perl-tk"
    ],
    "thumbnail" : null,
-   "slug" : "/pub/1999/10/perltk/index.html",
+   "url" : "/pub/1999/10/perltk/index.html",
    "description" : " Table of Contents  Essential Perl/Tk Programming  A Graphic Authorizing Example  TK Overview  A Pay Calculator Example  Creating A Window  Adding A Menubar  Adding Choices To A Menubar  More Menubar Choices ...",
    "authors" : [
       "brett-berry",

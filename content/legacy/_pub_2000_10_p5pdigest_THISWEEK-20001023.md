@@ -10,7 +10,7 @@
       "simon-cozens"
    ],
    "description" : " Notes What is our Unicode model? Why not use sfio? More than 256 Files / sysopen What if cc changes? Unicode on EBCDIC AIX Is Confused Unicode split fixed! Fixes to Carp open() might fail Perl 5 is 5!...",
-   "slug" : "/pub/2000/10/p5pdigest/THISWEEK-20001023.html"
+   "url" : "/pub/2000/10/p5pdigest/THISWEEK-20001023.html"
 }
 
 

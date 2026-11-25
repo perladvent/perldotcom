@@ -3,7 +3,7 @@
       "dave-cross"
    ],
    "draft" : null,
-   "slug" : "/pub/2004/06/18/variables.html",
+   "url" : "/pub/2004/06/18/variables.html",
    "description" : " One of the best ways to make your Perl code look more like ... well, like Perl code - and not like C or BASIC or whatever you used before you were introduced to Perl - is to get...",
    "thumbnail" : "/images/_pub_2004_06_18_variables/111-variables.gif",
    "tags" : [

@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2006/03/02/ajax_and_perl.html",
+   "url" : "/pub/2006/03/02/ajax_and_perl.html",
    "description" : " If you're even remotely connected to web development, you can't have failed to have heard of Ajax at some point in the last year. It probably sounded like the latest buzzword and was one of those things you stuck...",
    "authors" : [
       "dominic-mitchell"

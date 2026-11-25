@@ -3,7 +3,7 @@
    "authors" : [
       "artur-bergman"
    ],
-   "slug" : "/pub/2002/06/11/threads.html",
+   "url" : "/pub/2002/06/11/threads.html",
    "description" : " One of the big new features in perl 5.8 is that we now have real working threads available to us through the threads pragma. However, for us module authors who already have to support our modules on different versions...",
    "tags" : [
       "threads-ithreads-thread-safety"

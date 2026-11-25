@@ -6,7 +6,7 @@
    "tags" : [],
    "thumbnail" : null,
    "description" : null,
-   "slug" : "/pub/1998/08/show/udell.html",
+   "url" : "/pub/1998/08/show/udell.html",
    "draft" : null,
    "authors" : [
       "jon-udell"

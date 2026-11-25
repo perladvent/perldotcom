@@ -12,7 +12,7 @@
    ],
    "draft" : null,
    "description" : " Introduction Active Directory of Windows 2000's directory service, allowing organizations to keep and share information about networked resources and users. One significant feature of the Active Directory is that it is LDAP-compliant. Unfortunately, it is still very difficult to...",
-   "slug" : "/pub/2001/12/19/xmlrpc.html"
+   "url" : "/pub/2001/12/19/xmlrpc.html"
 }
 
 

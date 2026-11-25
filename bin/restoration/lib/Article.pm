@@ -261,7 +261,7 @@ sub front_matter {
     draft => $self->{draft},
     image => $self->{image},
     description => $self->{description},
-    slug => $self->{slug},
+    url => $self->{slug},
     thumbnail => $self->{thumbnail},
   };
 }

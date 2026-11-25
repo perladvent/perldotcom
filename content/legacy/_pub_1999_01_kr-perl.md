@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/1999/01/kr-perl.html",
+   "url" : "/pub/1999/01/kr-perl.html",
    "description" : null,
    "authors" : [
       "kim-ryan"

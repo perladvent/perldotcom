@@ -4,7 +4,7 @@
       "ricardo-signes"
    ],
    "description" : "Every software distribution is a bunch of files written and maintained by programmers. The files are of three types: code, documentation, and crap&mdash;though this distinction is too subtle. Much of the documentation and code is crap, too. It's pointless. It's...",
-   "slug" : "/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html",
+   "url" : "/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html",
    "categories" : "tooling",
    "image" : null,
    "title" : "More Code, Less Cruft: Managing Distributions with Dist::Zilla",

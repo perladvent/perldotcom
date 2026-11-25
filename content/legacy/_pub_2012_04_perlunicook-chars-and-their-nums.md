@@ -5,7 +5,7 @@
    "title" : "Perl Unicode Cookbook: Characters and Their Numbers",
    "tags" : [],
    "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
-   "slug" : "/pub/2012/04/perlunicook-chars-and-their-nums.html",
+   "url" : "/pub/2012/04/perlunicook-chars-and-their-nums.html",
    "description" : "℞ 4: Characters and their numbers Do you need to translate a codepoint to a character or a character to its codepoint? The ord and chr functions work transparently on all codepoints, not just on ASCII alone&mdash;nor in fact, not...",
    "authors" : [
       "tom-christiansen"

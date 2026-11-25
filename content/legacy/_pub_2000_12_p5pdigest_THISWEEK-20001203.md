@@ -9,7 +9,7 @@
    "authors" : [
       "simon-cozens"
    ],
-   "slug" : "/pub/2000/12/p5pdigest/THISWEEK-20001203.html",
+   "url" : "/pub/2000/12/p5pdigest/THISWEEK-20001203.html",
    "description" : " Notes Tests Charnames Regular Expression Bug xsubpp Perlipc Examples Buggy PerlIO news Dodgy Function Names Lvalue Subs Various Notes You can subscribe to an e-mail version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections..."
 }
 

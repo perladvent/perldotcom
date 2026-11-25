@@ -16,7 +16,7 @@
    ],
    "draft" : null,
    "description" : " Problems Using DBI at Application-Level Intolerance to Table and Data Mutation Error-Prone and Tedious Query Construction Manual and Complex Mapping of Database Data to Perl Data Structures Succint CGI-SQL Interaction (Database Control via ``CGI One-Liners'') Control and Monitoring of...",
-   "slug" : "/pub/2001/02/dbix.html"
+   "url" : "/pub/2001/02/dbix.html"
 }
 
 

@@ -10,7 +10,7 @@
       "dave-cross"
    ],
    "description" : " Perl has a large number of command-line options that can help to make your programs more concise and open up many new possibilities for one-off command-line scripts using Perl. In this article we'll look at some of the most...",
-   "slug" : "/pub/2004/08/09/commandline.html"
+   "url" : "/pub/2004/08/09/commandline.html"
 }
 
 

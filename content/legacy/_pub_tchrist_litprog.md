@@ -5,7 +5,7 @@
    "image" : null,
    "tags" : [],
    "thumbnail" : null,
-   "slug" : "/pub/tchrist/litprog.html",
+   "url" : "/pub/tchrist/litprog.html",
    "description" : null,
    "draft" : null,
    "authors" : [

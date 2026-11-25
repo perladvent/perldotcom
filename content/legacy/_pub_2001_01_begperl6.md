@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2001/01/begperl6.html",
+   "url" : "/pub/2001/01/begperl6.html",
    "description" : "Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular Expressions...",
    "draft" : null,
    "authors" : [

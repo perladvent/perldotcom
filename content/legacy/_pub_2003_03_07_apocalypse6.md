@@ -7,7 +7,7 @@
    "title" : "Apocalypse 6",
    "image" : null,
    "categories" : "perl-6",
-   "slug" : "/pub/2003/03/07/apocalypse6.html",
+   "url" : "/pub/2003/03/07/apocalypse6.html",
    "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 06 for the latest information. This is the Apocalypse on Subroutines. In Perl culture the term &quot;subroutine&quot; conveys the general notion of calling...",
    "authors" : [
       "larry-wall"

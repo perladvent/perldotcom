@@ -1,6 +1,6 @@
 {
    "description" : "Richard Gabriel of Sun Microsystems suggests that beginning programmers should study the source code for great works of software as part of a Master of Fine Arts course in software. Prominent Extreme Programmers talk about finding the Quality Without a...",
-   "slug" : "/pub/2004/10/07/code_reviews.html",
+   "url" : "/pub/2004/10/07/code_reviews.html",
    "draft" : null,
    "authors" : [
       "luke-schubert"
